@@ -272,6 +272,7 @@ body.private #main { display:block; }
   <div class="nav-item" onclick="nav('personal-planta')">🏭 Personal de Planta</div>
   <div class="nav-item" onclick="nav('bloqueados')">🚫 Bloqueados</div>
   <div class="nav-item" onclick="nav('auditoria')">📋 Auditoría</div>
+  <div class="nav-item" onclick="nav('acreditacion-empresa')">🏢 Acreditación Empresa</div>
   <div class="nav-group-label">Operaciones</div>
   <div class="nav-item" onclick="nav('mantenciones')">🔧 Mantenciones</div>
   <div class="nav-item" onclick="nav('contratos')">📝 Contratos y Firmas <span class="nav-badge nav-badge-orange" id="badge-firmas">0</span></div>
@@ -377,6 +378,7 @@ body.private #main { display:block; }
         <option value="curso">Curso</option>
         <option value="doc">Documento</option>
         <option value="firma">Firma</option>
+        <option value="empresa">Empresa contratista</option>
         <option value="contrato">Contrato</option>
         <option value="proyecto">Proyecto</option>
         <option value="mantencion">Mantención</option>
@@ -488,6 +490,40 @@ body.private #main { display:block; }
       </select>
     </div>
     <div class="card"><div class="table-wrap"><table id="aud-table"></table></div></div>
+  </div>
+
+  <!-- PAGE: ACREDITACION EMPRESA -->
+  <div id="page-acreditacion-empresa" class="page">
+    <div class="section-header">
+      <div><div class="section-title">🏢 Acreditación Empresa Contratista</div><div class="section-sub" id="empresa-acred-sub">Documentación legal, laboral, previsional y preventiva de la contratista</div></div>
+      <button class="btn btn-secondary" onclick="exportAcreditacionEmpresa()">⬇ Exportar CSV</button>
+    </div>
+    <div class="filters">
+      <input class="filter-input" id="filt-emp-doc-txt" placeholder="🔍 Buscar documento..." oninput="renderAcreditacionEmpresa()">
+      <select class="filter-select" id="filt-emp-doc-area" onchange="renderAcreditacionEmpresa()">
+        <option value="">Todas las áreas</option>
+        <option value="legal">Legal</option>
+        <option value="laboral">Laboral / previsional</option>
+        <option value="sst">Seguridad y salud</option>
+        <option value="operacional">Operacional minera</option>
+        <option value="financiero">Financiero / tributario</option>
+      </select>
+      <select class="filter-select" id="filt-emp-doc-est" onchange="renderAcreditacionEmpresa()">
+        <option value="">Todos los estados</option>
+        <option value="ok">Cargado y vigente</option>
+        <option value="faltante">Faltante</option>
+        <option value="vencido">Vencido / crítico</option>
+      </select>
+    </div>
+    <div class="kpi-grid" id="empresa-acred-kpis"></div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header"><div><div class="card-title">Ficha de la empresa contratista</div><div class="card-subtitle">Se usa para asociar contratos, proyectos y control documental por mandante.</div></div></div>
+      <div id="empresa-acred-ficha"></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div><div class="card-title">Checklist de acreditación de empresa</div><div class="card-subtitle">Carga respaldo desde el PC o registra enlace de nube; las fechas alimentan Alertas y Dashboard.</div></div></div>
+      <div id="empresa-acred-table"></div>
+    </div>
   </div>
 
   <!-- PAGE: MANTENCIONES -->
@@ -760,13 +796,24 @@ body.private #main { display:block; }
             <option value="emergencia">Emergencia</option>
           </select>
         </div>
+        <div class="form-group"><label class="form-label">Origen</label>
+          <select class="form-select" id="nm-origen">
+            <option value="solicitada_cliente">Solicitada por cliente</option>
+            <option value="ofrecida_contratista">Ofrecida por contratista</option>
+            <option value="emergencia_cliente">Emergencia cliente</option>
+          </select>
+        </div>
         <div class="form-group"><label class="form-label">Área / Sector</label><input class="form-input" id="nm-area" placeholder="Área/Sector en faena"></div>
+        <div class="form-group"><label class="form-label">Solicitud / OC</label><input class="form-input" id="nm-solicitud" placeholder="N° solicitud, OC o RFQ"></div>
+        <div class="form-group"><label class="form-label">Criticidad</label><select class="form-select" id="nm-criticidad"><option value="media">Media</option><option value="alta">Alta</option><option value="critica">Crítica</option><option value="baja">Baja</option></select></div>
         <div class="form-group"><label class="form-label">Fecha Inicio</label><input class="form-input" type="date" id="nm-inicio"></div>
         <div class="form-group"><label class="form-label">Fecha Término</label><input class="form-input" type="date" id="nm-termino"></div>
         <div class="form-group"><label class="form-label">HH Proyectadas</label><input class="form-input" type="number" id="nm-hh" placeholder="0"></div>
         <div class="form-group"><label class="form-label">Personal Requerido</label><input class="form-input" type="number" id="nm-req" placeholder="0"></div>
         <div class="form-group"><label class="form-label">Admin Responsable</label><input class="form-input" id="nm-admin" placeholder="Nombre del admin"></div>
         <div class="form-group"><label class="form-label">Contraparte Minera</label><input class="form-input" id="nm-contraparte" placeholder="Contacto en minera"></div>
+        <div class="form-group full"><label class="form-label">Alcance del proyecto / mantención</label><textarea class="form-textarea" id="nm-alcance" placeholder="Alcance, entregables, límites del servicio, áreas autorizadas y exclusiones."></textarea></div>
+        <div class="form-group full"><label class="form-label">Permisos críticos requeridos</label><input class="form-input" id="nm-permisos" placeholder="Ej: AST, permiso trabajo en caliente, LOTO, altura, izaje, espacios confinados"></div>
         <div class="form-group full">
           <label class="form-label">Especialidades Requeridas</label>
           <div id="nm-esps-list" style="margin:8px 0;display:flex;gap:6px;flex-wrap:wrap;"></div>
@@ -995,6 +1042,12 @@ body.private #main { display:block; }
         <div class="form-group"><label class="form-label">Término</label><input class="form-input" type="date" id="nc-termino"></div>
         <div class="form-group"><label class="form-label">Monto UF</label><input class="form-input" type="number" id="nc-monto" placeholder="0"></div>
         <div class="form-group"><label class="form-label">Estado</label><select class="form-select" id="nc-estado"><option value="activo">Activo</option><option value="proceso">En proceso</option><option value="cerrado">Cerrado</option></select></div>
+        <div class="form-group"><label class="form-label">Origen comercial</label><select class="form-select" id="nc-origen"><option value="licitacion_cliente">Licitación / solicitud cliente</option><option value="oferta_contratista">Oferta contratista</option><option value="renovacion">Renovación</option><option value="emergencia">Emergencia</option></select></div>
+        <div class="form-group"><label class="form-label">Admin contratista</label><input class="form-input" id="nc-admin-contratista" placeholder="Responsable interno"></div>
+        <div class="form-group"><label class="form-label">Admin mandante</label><input class="form-input" id="nc-admin-mandante" placeholder="Responsable minera"></div>
+        <div class="form-group"><label class="form-label">Áreas autorizadas</label><input class="form-input" id="nc-areas" placeholder="Planta, taller, chancado, campamento..."></div>
+        <div class="form-group full"><label class="form-label">Alcance contractual</label><textarea class="form-textarea" id="nc-alcance" placeholder="Servicios incluidos, exclusiones, entregables, estándares, SLA y límites de responsabilidad."></textarea></div>
+        <div class="form-group full"><label class="form-label">Entregables / hitos</label><input class="form-input" id="nc-entregables" placeholder="Informes, protocolos, estados de pago, certificaciones, cierre documental"></div>
         <div class="form-group full"><label class="form-label">Administrador / observaciones</label><input class="form-input" id="nc-notas" placeholder="Administrador, alcance o requisitos especiales"></div>
       </div>
     </div>
@@ -3204,7 +3257,7 @@ function renderDashboard() {
   if(minaF) workers=workers.filter(t=>t.mineras?.includes(minaF));
   if(contratoF) workers=workers.filter(t=>workerContratoIds(t).includes(contratoF));
   if(mantF) workers=workers.filter(t=>workerMantIds(t).includes(mantF));
-  const alertas=computeAlertas().filter(a=>workers.some(t=>t.id===a.trabId) || mantIds.includes(a.mantId));
+  const alertas=computeAlertas().filter(a=>a.tipo==='empresa' || workers.some(t=>t.id===a.trabId) || mantIds.includes(a.mantId));
   const pct100=workers.filter(t=>acreditacion(t)===100).length;
   const conVenc=workers.filter(t=>alertas.some(a=>a.trabId===t.id)).length;
   const contPend=S.firmas.filter(f=>(f.estado==='pendiente'||f.estado==='enviado')&&(!mantF||f.mantId===mantF)&&(!contratoF||getMantContratoId(f.mantId)===contratoF)).length;
@@ -3284,7 +3337,7 @@ function renderAlertas() {
   const alertas=computeAlertas(); const txt=document.getElementById('filt-alerta-txt')?.value.toLowerCase()||'', tipo=document.getElementById('filt-alerta-tipo')?.value||'', urg=document.getElementById('filt-alerta-urg')?.value||'', mina=document.getElementById('filt-alerta-mina')?.value||'', mant=document.getElementById('filt-alerta-mant')?.value||'';
   const filtered=alertas.filter(a=>{if(txt&&!a.msg.toLowerCase().includes(txt))return false; if(tipo&&a.tipo!==tipo)return false; if(urg&&a.urgencia!==urg)return false; if(mina){const t=a.trabId?S.trabajadores.find(w=>w.id===a.trabId):null; if(a.minaId!==mina && !t?.mineras?.includes(mina)) return false;} if(mant&&a.mantId!==mant&&!(a.trabId&&workerMantIds(S.trabajadores.find(w=>w.id===a.trabId)||{}).includes(mant))) return false; return true;});
   document.getElementById('alertas-sub').textContent=`${filtered.length} alertas · ${alertas.filter(a=>a.urgencia==='vencido').length} vencidas, ${alertas.filter(a=>a.urgencia==='critico').length} críticas`;
-  const tipoBadge={examen:'badge-blue',curso:'badge-orange',documento:'badge-warn',doc:'badge-warn',firma:'badge-err',contrato:'badge-blue',proyecto:'badge-orange',mantencion:'badge-orange'};
+  const tipoBadge={examen:'badge-blue',curso:'badge-orange',documento:'badge-warn',doc:'badge-warn',firma:'badge-err',empresa:'badge-blue',contrato:'badge-blue',proyecto:'badge-orange',mantencion:'badge-orange'};
   document.getElementById('alertas-list').innerHTML=filtered.map(a=>`<div class="alert-item alert-${a.urgencia==='falta'?'critico':a.urgencia}"><div class="alert-dot dot-${a.urgencia==='falta'?'critico':a.urgencia}"></div><div style="flex:1;"><div style="font-size:13px;font-weight:600;">${a.msg}</div><div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;"><span class="badge ${tipoBadge[a.tipo]||'badge-na'}">${a.tipo}</span><span class="badge ${a.urgencia==='vencido'?'badge-err':a.urgencia==='critico'||a.urgencia==='falta'?'badge-crit':'badge-warn'}">${a.urgencia}</span></div></div><div style="display:flex;gap:6px;">${a.trabId?`<button class="btn btn-ghost btn-sm" onclick="openFicha('${a.trabId}')">Ficha</button><button class="btn btn-success btn-sm" onclick="notifWA('${a.trabId}','${a.msg.replace(/['"<>]/g,'')}')">WA</button>`:`<button class="btn btn-ghost btn-sm" onclick="nav('mantenciones')">Ver</button>`}</div></div>`).join('')||'<div style="color:var(--text-muted);padding:20px;text-align:center;">Sin alertas con los filtros seleccionados</div>';
 }
 function renderContratos() {
@@ -3439,6 +3492,139 @@ openMantDetalle=function(mantId){
 };
 function quickAssignMant(mantId){const workerId=document.getElementById('mant-quick-worker').value,turno=document.getElementById('mant-quick-turno').value;if(!workerId){toast('Selecciona un trabajador','err');return;}if(!S.asignaciones.some(a=>a.mantId===mantId&&a.trabId===workerId))S.asignaciones.push({id:'asig_'+Date.now(),mantId,trabId:workerId,turno,estado:'confirmado'});const t=S.trabajadores.find(w=>w.id===workerId),mn=S.mantenciones.find(m=>m.id===mantId);if(t){t.disponibilidad='asignado';if(mn?.minaId&&!t.mineras?.includes(mn.minaId))t.mineras=[...(t.mineras||[]),mn.minaId];}persistTenant();toast('Trabajador asignado');openMantDetalle(mantId);}
 function removeMantWorker(mantId,workerId){if(!confirm('¿Dar de baja a este trabajador de la mantención?'))return;S.asignaciones=S.asignaciones.filter(a=>!(a.mantId===mantId&&a.trabId===workerId));S.hotelAsig=S.hotelAsig.filter(a=>!(a.mantId===mantId&&a.trabId===workerId));const t=S.trabajadores.find(w=>w.id===workerId);if(t&&!S.asignaciones.some(a=>a.trabId===workerId))t.disponibilidad='disponible';persistTenant();toast('Trabajador dado de baja de la mantención');openMantDetalle(mantId);}
+
+// ===================== V6.3: ACREDITACION EMPRESA + ALCANCE OPERACIONAL =====================
+const COMPANY_DOCS_V63 = [
+  {id:'rut_empresa',area:'legal',name:'RUT empresa / carpeta tributaria',vence:false,src:'SII / acreditación mandante'},
+  {id:'escritura',area:'legal',name:'Escritura de constitución y poderes',vence:false,src:'Acreditación empresa'},
+  {id:'vigencia_sociedad',area:'legal',name:'Certificado de vigencia de sociedad',vence:true,src:'Registro de Comercio'},
+  {id:'mutualidad',area:'sst',name:'Certificado de adhesión a mutualidad',vence:true,src:'Ley 16.744 / mandante'},
+  {id:'reglamento_interno',area:'sst',name:'Reglamento Interno de Orden, Higiene y Seguridad',vence:false,src:'Código del Trabajo / DT'},
+  {id:'comite_paritario',area:'sst',name:'Comité Paritario o registro de no obligación',vence:true,src:'Prevención de riesgos'},
+  {id:'f30',area:'laboral',name:'Certificado F30 obligaciones laborales y previsionales',vence:true,src:'Dirección del Trabajo'},
+  {id:'f30_1',area:'laboral',name:'Certificado F30-1 trabajadores por contrato',vence:true,src:'Dirección del Trabajo'},
+  {id:'cotizaciones',area:'laboral',name:'Pago de cotizaciones previsionales',vence:true,src:'RRHH / Previred'},
+  {id:'nomina_contrato',area:'laboral',name:'Nómina de personal por contrato, proyecto o mantención',vence:true,src:'Acreditación mandante'},
+  {id:'matriz_riesgos',area:'sst',name:'Matriz IPER / matriz de riesgos por actividad',vence:true,src:'DS 44 / gestión preventiva'},
+  {id:'procedimientos',area:'sst',name:'Procedimientos de trabajo seguro aplicables',vence:true,src:'DS 132 / mandante'},
+  {id:'programa_sst',area:'sst',name:'Programa de Seguridad y Salud en el Trabajo',vence:true,src:'DS 44 / Ley 16.744'},
+  {id:'prevencionista',area:'sst',name:'Registro del prevencionista responsable',vence:true,src:'Organización preventiva'},
+  {id:'organigrama',area:'operacional',name:'Organigrama y responsables del contrato',vence:false,src:'Mandante / contratista'},
+  {id:'polizas',area:'financiero',name:'Pólizas de seguro exigidas por contrato',vence:true,src:'Contrato comercial'},
+  {id:'tributarios',area:'financiero',name:'Certificados tributarios y comerciales',vence:true,src:'Mandante / finanzas'},
+  {id:'reglamento_especial',area:'operacional',name:'Reglamento Especial de Empresas Contratistas firmado',vence:true,src:'Ley 20.123 / mandante'},
+  {id:'credenciales_portal',area:'operacional',name:'Usuarios y vigencia en portal de acreditación minera',vence:true,src:'Sistema mandante'},
+  {id:'equipos_vehiculos',area:'operacional',name:'Listado de vehículos/equipos y documentación asociada',vence:true,src:'Acceso a faena'}
+];
+const AREA_LABEL_V63 = {legal:'Legal',laboral:'Laboral / previsional',sst:'Seguridad y salud',operacional:'Operacional minera',financiero:'Financiero / tributario'};
+function ensureCompanyDocsV63(){
+  ensureV6Collections();
+  if(!S.empresaDocs) S.empresaDocs = [];
+  COMPANY_DOCS_V63.forEach(req=>{
+    if(!S.empresaDocs.some(d=>d.reqId===req.id)) S.empresaDocs.push({id:'ed_'+req.id,reqId:req.id,area:req.area,name:req.name,vence:'',estado:'faltante',fileName:'',cloudUrl:'',notes:'',src:req.src,created:hoy()});
+  });
+  return S.empresaDocs;
+}
+const ensureV6CollectionsV63=ensureV6Collections;
+ensureV6Collections=function(){ ensureV6CollectionsV63(); if(!S.empresaDocs) S.empresaDocs=[]; };
+const snapshotStateV63=snapshotState;
+snapshotState=function(){ ensureCompanyDocsV63(); const snap=snapshotStateV63(); snap.empresaDocs=S.empresaDocs; return JSON.parse(JSON.stringify(snap)); };
+const applyStateV63=applyState;
+applyState=function(data){ applyStateV63(data); if(data?.empresaDocs) S.empresaDocs=data.empresaDocs; ensureCompanyDocsV63(); };
+const emptyTenantDataV63=emptyTenantData;
+emptyTenantData=function(nombre,rut,email,tel){ const data=emptyTenantDataV63(nombre,rut,email,tel); data.empresaDocs=[]; return data; };
+function companyDocReq(doc){ return COMPANY_DOCS_V63.find(r=>r.id===doc.reqId) || doc; }
+function companyDocState(doc){
+  const req=companyDocReq(doc);
+  if(!doc.fileName && !doc.cloudUrl) return 'faltante';
+  if(req.vence && !doc.vence) return 'faltante';
+  const e=req.vence ? estadoFecha(doc.vence) : 'vigente';
+  if(e==='vencido'||e==='critico'||e==='proximo') return e;
+  return 'ok';
+}
+function companyDocBadge(doc){
+  const st=companyDocState(doc);
+  const cls={ok:'badge-ok',faltante:'badge-err',vencido:'badge-err',critico:'badge-crit',proximo:'badge-warn'}[st]||'badge-na';
+  const label={ok:'Vigente',faltante:'Faltante',vencido:'Vencido',critico:'Crítico',proximo:'Próximo'}[st]||st;
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+function renderAcreditacionEmpresa(){
+  const docs=ensureCompanyDocsV63();
+  const txt=(document.getElementById('filt-emp-doc-txt')?.value||'').toLowerCase();
+  const area=document.getElementById('filt-emp-doc-area')?.value||'';
+  const est=document.getElementById('filt-emp-doc-est')?.value||'';
+  let list=docs;
+  if(txt) list=list.filter(d=>`${d.name} ${d.src} ${d.notes}`.toLowerCase().includes(txt));
+  if(area) list=list.filter(d=>d.area===area);
+  if(est) list=list.filter(d=>{const st=companyDocState(d); return est==='ok'?st==='ok':est==='faltante'?st==='faltante':st==='vencido'||st==='critico'||st==='proximo';});
+  const falt=docs.filter(d=>companyDocState(d)==='faltante').length;
+  const venc=docs.filter(d=>['vencido','critico','proximo'].includes(companyDocState(d))).length;
+  const pct=Math.round(((docs.length-falt-venc)/docs.length)*100);
+  document.getElementById('empresa-acred-sub').textContent=`${docs.length} requisitos empresa · ${falt} faltantes · ${venc} con vencimiento`;
+  document.getElementById('empresa-acred-kpis').innerHTML=`<div class="kpi kpi-blue"><div class="kpi-value">${docs.length}</div><div class="kpi-label">Requisitos empresa</div></div><div class="kpi kpi-green"><div class="kpi-value">${docs.filter(d=>companyDocState(d)==='ok').length}</div><div class="kpi-label">Cargados vigentes</div></div><div class="kpi kpi-red"><div class="kpi-value">${falt}</div><div class="kpi-label">Faltantes</div></div><div class="kpi kpi-orange"><div class="kpi-value">${pct}%</div><div class="kpi-label">Cumplimiento empresa</div></div>`;
+  document.getElementById('empresa-acred-ficha').innerHTML=`<div class="form-grid"><div>${infoRow('Empresa',S.empresa?.nombre||'—')}${infoRow('RUT',S.empresa?.rut||'—')}${infoRow('Representante',S.empresa?.representante||'—')}</div><div>${infoRow('Correo',S.empresa?.email||'—')}${infoRow('Teléfono',S.empresa?.tel||'—')}${infoRow('Contratos activos',S.contratos.filter(c=>c.estado!=='cerrado').length)}</div></div>`;
+  document.getElementById('empresa-acred-table').innerHTML=`<input id="empresa-doc-upload" type="file" hidden accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" onchange="handleCompanyDocFile(this)"><div class="table-wrap"><table><thead><tr><th>Documento</th><th>Área</th><th>Estado</th><th>Vence</th><th>Respaldo</th><th>Observación</th><th>Cargar</th></tr></thead><tbody>${list.map(d=>`<tr><td><b>${d.name}</b><div class="worker-rut">${d.src||''}</div></td><td><span class="badge badge-blue">${AREA_LABEL_V63[d.area]||d.area}</span></td><td>${companyDocBadge(d)}</td><td><input class="form-input" type="date" value="${d.vence||''}" onchange="saveCompanyDocField('${d.id}','vence',this.value)" style="min-width:135px;"></td><td>${d.cloudUrl?`<button class="btn btn-ghost btn-sm" onclick="window.open('${escapeAttrV62(d.cloudUrl)}','_blank')">Enlace nube</button>`:d.fileName?`<span class="badge badge-ok">${d.fileName}</span>`:'—'}</td><td><input class="form-input" value="${escapeAttrV62(d.notes||'')}" onchange="saveCompanyDocField('${d.id}','notes',this.value)" placeholder="Folio, portal o comentario"></td><td><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="triggerCompanyDocUpload('${d.id}')">PC</button><button class="btn btn-blue btn-sm" onclick="addCompanyDocCloud('${d.id}')">Nube</button></div></td></tr>`).join('')}</tbody></table></div>`;
+}
+function saveCompanyDocField(id,field,value){const d=ensureCompanyDocsV63().find(x=>x.id===id);if(!d)return;d[field]=value;d.estado=companyDocState(d);persistTenant();updateBadges();renderAcreditacionEmpresa();}
+function triggerCompanyDocUpload(id){const input=document.getElementById('empresa-doc-upload');input.dataset.docId=id;input.click();}
+function handleCompanyDocFile(input){const file=input.files?.[0];if(!file)return;const d=ensureCompanyDocsV63().find(x=>x.id===input.dataset.docId);if(!d)return;d.fileName=file.name;d.cloudUrl='';d.estado=companyDocState(d);d.created=hoy();input.value='';persistTenant();toast('Documento empresa cargado');updateBadges();renderAcreditacionEmpresa();}
+function addCompanyDocCloud(id){const url=prompt('Pega el enlace del archivo en OneDrive, Google Drive, Dropbox u otra nube:');if(!url)return;try{new URL(url);}catch(e){toast('El enlace no es válido','err');return;}const d=ensureCompanyDocsV63().find(x=>x.id===id);if(!d)return;d.cloudUrl=url;d.fileName='';d.estado=companyDocState(d);d.created=hoy();persistTenant();toast('Enlace empresa guardado');updateBadges();renderAcreditacionEmpresa();}
+function exportAcreditacionEmpresa(){const rows=[['Documento','Area','Estado','Vence','Respaldo','Fuente','Notas']];ensureCompanyDocsV63().forEach(d=>rows.push([d.name,AREA_LABEL_V63[d.area]||d.area,companyDocState(d),d.vence||'',d.fileName||d.cloudUrl||'',d.src||'',d.notes||'']));exportCSV(rows,`acreditacion_empresa_${hoy()}.csv`);toast('Acreditación empresa exportada');}
+const saveNuevoContratoV63=saveNuevoContrato;
+saveNuevoContrato=function(){
+  const nombre=document.getElementById('nc-nombre').value.trim();
+  const minaId=document.getElementById('nc-mina').value;
+  if(!nombre || !minaId) { toast('Nombre y minera son requeridos','err'); return; }
+  S.contratos.push({
+    id:'c'+Date.now(),nombre,numero:document.getElementById('nc-numero').value.trim()||`CTR-${new Date().getFullYear()}-${S.contratos.length+1}`,
+    minaId,tipo:document.getElementById('nc-tipo').value,inicio:document.getElementById('nc-inicio').value,termino:document.getElementById('nc-termino').value,
+    montoUF:parseInt(document.getElementById('nc-monto').value)||0,estado:document.getElementById('nc-estado').value,
+    origen:document.getElementById('nc-origen')?.value||'',adminContratista:document.getElementById('nc-admin-contratista')?.value||'',adminMandante:document.getElementById('nc-admin-mandante')?.value||'',
+    areasAutorizadas:document.getElementById('nc-areas')?.value||'',alcance:document.getElementById('nc-alcance')?.value.trim()||'',entregables:document.getElementById('nc-entregables')?.value.trim()||'',notas:document.getElementById('nc-notas').value.trim()
+  });
+  closeModal('modal-nuevo-contrato');persistTenant();renderCurrentPageSoft();toast('Contrato asociado a minera');
+};
+const saveNuevaMantV63=saveNuevaMant;
+saveNuevaMant=function(){
+  const nombre=document.getElementById('nm-nombre').value.trim();
+  if(!nombre){toast('Nombre es requerido','err');return;}
+  S.mantenciones.push({
+    id:'mn'+Date.now(),nombre,minaId:document.getElementById('nm-mina').value,contratoId:document.getElementById('nm-contrato').value,tipo:document.getElementById('nm-tipo').value,
+    origen:document.getElementById('nm-origen')?.value||'solicitada_cliente',area:document.getElementById('nm-area').value,solicitud:document.getElementById('nm-solicitud')?.value||'',criticidad:document.getElementById('nm-criticidad')?.value||'media',
+    inicio:document.getElementById('nm-inicio').value,termino:document.getElementById('nm-termino').value,hh:parseInt(document.getElementById('nm-hh').value)||0,personalReq:parseInt(document.getElementById('nm-req').value)||0,
+    estado:'planificada',admin:document.getElementById('nm-admin').value,contraparte:document.getElementById('nm-contraparte').value,alcance:document.getElementById('nm-alcance')?.value.trim()||'',permisos:document.getElementById('nm-permisos')?.value.trim()||'',especialidades:[...mantEsps],zonas:[]
+  });
+  mantEsps=[];closeModal('modal-nueva-mant');persistTenant();toast('Mantención creada correctamente');renderCurrentPageSoft();
+};
+const renderPageV63=renderPage;
+pageLabels['acreditacion-empresa']='Acreditación Empresa';
+pageSubs['acreditacion-empresa']='Documentos legales, laborales y preventivos de la contratista';
+renderPage=function(page){ if(page==='acreditacion-empresa') renderAcreditacionEmpresa(); else renderPageV63(page); };
+const computeAlertasV63=computeAlertas;
+computeAlertas=function(){
+  const alertas=computeAlertasV63(); let n=alertas.length+1;
+  ensureCompanyDocsV63().forEach(d=>{const st=companyDocState(d); if(st==='faltante') alertas.push({id:'al_emp_'+n++,tipo:'empresa',urgencia:'critico',msg:`Empresa contratista: falta ${d.name}`}); else if(['vencido','critico','proximo'].includes(st)) alertas.push({id:'al_emp_'+n++,tipo:'empresa',urgencia:st,msg:`Empresa contratista: ${d.name} ${st}`});});
+  const ord={vencido:0,critico:1,falta:2,proximo:3};
+  return alertas.sort((a,b)=>(ord[a.urgencia]??9)-(ord[b.urgencia]??9));
+};
+const renderContratosV63=renderContratos;
+renderContratos=function(){
+  ensureCompanyDocsV63();
+  document.getElementById('tpl-list').innerHTML=S.contractTemplates.length?S.contractTemplates.map(t=>`<span class="chip" style="background:var(--bg3);color:var(--text-muted);">${t.nombre} · ${t.tipo} · ${t.vigencia||'sin vigencia'} días</span>`).join(''):'<span style="font-size:12px;color:var(--text-muted);">Sin plantillas cargadas.</span>';
+  document.getElementById('contratos-table').innerHTML=`<thead><tr><th>Contrato</th><th>Número</th><th>Minera</th><th>Alcance / origen</th><th>Responsables</th><th>Proyectos</th><th>Vigencia</th><th>Estado</th><th></th></tr></thead><tbody>${S.contratos.map(c=>{const proy=S.mantenciones.filter(m=>m.contratoId===c.id);return `<tr><td><b>${c.nombre}</b><div class="worker-rut">${c.notas||''}</div></td><td>${c.numero}</td><td>${minaNombre(c.minaId)}</td><td><div style="font-size:12px;">${c.alcance||'Sin alcance registrado'}</div><div class="worker-rut">${c.origen||'—'} · ${c.areasAutorizadas||'sin áreas'}</div></td><td style="font-size:12px;">Contratista: ${c.adminContratista||'—'}<br>Mandante: ${c.adminMandante||'—'}</td><td>${proy.length?proy.map(p=>`<span class="chip" style="background:var(--bg3);color:var(--text-muted);">${p.nombre}</span>`).join(''):'—'}</td><td>${c.inicio||'—'} → ${c.termino||'—'} ${c.termino?badgeEstado(c.termino):''}</td><td>${estadoTag(c.estado)}</td><td><button class="btn btn-danger btn-sm" onclick="deleteContrato('${c.id}')">Eliminar</button></td></tr>`}).join('')}</tbody>`;
+  document.getElementById('firmas-table').innerHTML=`<thead><tr><th>Trabajador</th><th>Documento</th><th>Proyecto</th><th>Validación</th><th>Canal</th><th>Enviado</th><th>Firmado</th><th>Estado</th><th></th></tr></thead><tbody>${S.firmas.map(f=>{const t=S.trabajadores.find(w=>w.id===f.trabId); const mn=S.mantenciones.find(m=>m.id===f.mantId); const falt=[]; if(!t?.rut)falt.push('RUT'); if(!t?.email&&!t?.tel)falt.push('contacto'); if(!mn?.inicio||!mn?.termino)falt.push('fechas'); const estCls={borrador:'badge-na',enviado:'badge-warn',pendiente:'badge-crit',firmado:'badge-ok'}; return `<tr><td><b>${t?.nombre||f.trabId}</b></td><td>${f.tipo}</td><td style="font-size:12px;color:var(--text-muted);">${mn?.nombre||f.mantId}</td><td>${falt.length?falt.map(x=>`<span class="badge badge-err">Falta ${x}</span>`).join(' '):'<span class="badge badge-ok">OK</span>'}</td><td><span class="badge badge-blue">${f.canal}</span></td><td>${f.enviado||'—'}</td><td>${f.firmado||'—'}</td><td><span class="badge ${estCls[f.estado]||'badge-na'}">${f.estado}</span></td><td>${f.estado!=='firmado'?`<button class="btn btn-success btn-sm" onclick="marcarFirmado('${f.id}')">Firmado</button>`:''} <button class="btn btn-blue btn-sm" onclick="previewContrato('${f.trabId}','${f.mantId}','${f.tipo}')">Preview</button></td></tr>`}).join('')}</tbody>`;
+};
+const renderMantencionesV63=renderMantenciones;
+renderMantenciones=function(){
+  renderMantencionesV63();
+  document.querySelectorAll('#mant-list .mant-card').forEach((card,i)=>{const txt=(document.getElementById('filt-mant-txt')?.value||'').toLowerCase(),minaF=document.getElementById('filt-mant-mina')?.value||'',estF=document.getElementById('filt-mant-est')?.value||'',tipoF=document.getElementById('filt-mant-tipo')?.value||'';let list=S.mantenciones;if(txt)list=list.filter(m=>m.nombre.toLowerCase().includes(txt)||String(m.area||'').toLowerCase().includes(txt));if(minaF)list=list.filter(m=>m.minaId===minaF);if(estF)list=list.filter(m=>m.estado===estF);if(tipoF)list=list.filter(m=>m.tipo===tipoF);const mn=list[i];if(!mn)return;const top=card.querySelector('.mant-tags');if(top)top.insertAdjacentHTML('afterbegin',`<span class="badge badge-blue">${mn.origen||'sin origen'}</span><span class="badge ${mn.criticidad==='critica'?'badge-err':mn.criticidad==='alta'?'badge-crit':'badge-warn'}">${mn.criticidad||'media'}</span>${mn.solicitud?`<span class="badge badge-na">OC/Sol: ${mn.solicitud}</span>`:''}`);});
+};
+const openMantDetalleV63=openMantDetalle;
+openMantDetalle=function(mantId){
+  openMantDetalleV63(mantId);
+  const mn=S.mantenciones.find(m=>m.id===mantId), panel=document.getElementById('mant-tab-docs');
+  if(panel&&mn) panel.insertAdjacentHTML('afterbegin',`<div class="card" style="margin-bottom:14px"><div class="card-title">Alcance, permisos y trazabilidad</div><div class="divider"></div>${infoRow('Origen',mn.origen||'—')}${infoRow('Solicitud / OC',mn.solicitud||'—')}${infoRow('Criticidad',mn.criticidad||'—')}${infoRow('Contrato',contratoNombre(mn.contratoId))}${infoRow('Permisos críticos',mn.permisos||'—')}<div style="margin-top:8px;font-size:12px;color:var(--text-muted);">${mn.alcance||'Sin alcance registrado.'}</div></div>`);
+};
 
 // ===================== INIT SELECTS =====================
 function initSelects() {
