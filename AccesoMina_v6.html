@@ -198,6 +198,7 @@ tr:hover td { background:var(--bg3); }
 .back-btn:hover { color:var(--text); border-color:var(--border-light); }
 .blocked-badge { background:rgba(248,113,113,.2); color:var(--red); border:1px solid rgba(248,113,113,.3); padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700; }
 @media(max-width:900px){:root{--sidebar-w:0px;}#sidebar{display:none;}#main{margin-left:0;}}
+@media(max-width:900px){body.private{--sidebar-w:240px;}body.private #sidebar{display:flex;width:var(--sidebar-w);overflow-y:auto;}body.private #main{margin-left:var(--sidebar-w);}body.private #topbar{padding:0 12px;overflow-x:auto;}.topbar-right{gap:6px;}.btn-sm{padding:5px 9px;}}
 @media print { #sidebar,#topbar,.btn,.modal-overlay:not(.open){display:none!important;} #main{margin-left:0;} }
 
 /* ===== DOMIAN PUBLIC + PRIVATE ACCESS ===== */
@@ -278,6 +279,13 @@ body.private #main { display:block; }
   <div class="nav-item" onclick="nav('contratos')">📝 Contratos y Firmas <span class="nav-badge nav-badge-orange" id="badge-firmas">0</span></div>
   <div class="nav-item" onclick="nav('hoteleria')">🛏️ Hotelería</div>
   <div class="nav-item" onclick="nav('llamados')">📲 Llamados WA</div>
+  <div class="nav-item" onclick="nav('vehiculos')">🚙 Vehículos y Equipos</div>
+  <div class="nav-item" onclick="nav('acreditacion-mandante')">✅ Acreditación Mandante</div>
+  <div class="nav-item" onclick="nav('subcontratos')">🏗️ Subcontratos</div>
+  <div class="nav-item" onclick="nav('turnos')">🕒 Turnos y Jornada</div>
+  <div class="nav-item" onclick="nav('credenciales')">🎫 Credenciales</div>
+  <div class="nav-item" onclick="nav('incidentes')">⚠️ Incidentes y NC</div>
+  <div class="nav-item" onclick="nav('protocolos')">🩺 Protocolos Salud</div>
   <div class="nav-item" onclick="nav('examenes')">🧪 Exámenes</div>
   <div class="nav-item" onclick="nav('cursos')">📚 Cursos</div>
   <div class="nav-item" onclick="nav('reportes')">📊 Reportes</div>
@@ -379,6 +387,13 @@ body.private #main { display:block; }
         <option value="doc">Documento</option>
         <option value="firma">Firma</option>
         <option value="empresa">Empresa contratista</option>
+        <option value="vehiculo">Vehículo / equipo</option>
+        <option value="acreditacion">Acreditación mandante</option>
+        <option value="subcontrato">Subcontrato</option>
+        <option value="turno">Turno / jornada</option>
+        <option value="credencial">Credencial</option>
+        <option value="incidente">Incidente / NC</option>
+        <option value="protocolo">Protocolo salud</option>
         <option value="contrato">Contrato</option>
         <option value="proyecto">Proyecto</option>
         <option value="mantencion">Mantención</option>
@@ -620,6 +635,111 @@ body.private #main { display:block; }
     </div>
   </div>
 
+  <!-- PAGE: VEHICULOS Y EQUIPOS -->
+  <div id="page-vehiculos" class="page">
+    <div class="section-header">
+      <div><div class="section-title">🚙 Vehículos y Equipos</div><div class="section-sub" id="veh-sub">Camionetas, buses, grúas, manlift, equipos críticos y maquinaria</div></div>
+      <button class="btn btn-primary" onclick="addVehiculo()">+ Vehículo / Equipo</button>
+    </div>
+    <div class="filters">
+      <input class="filter-input" id="filt-veh-txt" placeholder="🔍 Patente, serie, equipo..." oninput="renderVehiculos()">
+      <select class="filter-select" id="filt-veh-mina" onchange="renderVehiculos()"><option value="">Todas las mineras</option></select>
+      <select class="filter-select" id="filt-veh-est" onchange="renderVehiculos()"><option value="">Todos los estados</option><option value="ok">Vigente</option><option value="alerta">Con alertas</option><option value="vencido">Vencido/faltante</option></select>
+    </div>
+    <div class="kpi-grid" id="veh-kpis"></div>
+    <div class="card"><div class="table-wrap"><table id="veh-table"></table></div></div>
+  </div>
+
+  <!-- PAGE: ACREDITACION MANDANTE -->
+  <div id="page-acreditacion-mandante" class="page">
+    <div class="section-header">
+      <div><div class="section-title">✅ Acreditación por Mandante</div><div class="section-sub" id="mand-sub">Estado final por minera para empresa, trabajadores, vehículos y proyectos</div></div>
+      <button class="btn btn-secondary" onclick="exportAcreditacionMandante()">⬇ Exportar CSV</button>
+    </div>
+    <div class="filters">
+      <select class="filter-select" id="filt-mand-mina" onchange="renderAcreditacionMandante()"><option value="">Todas las mineras</option></select>
+      <select class="filter-select" id="filt-mand-tipo" onchange="renderAcreditacionMandante()"><option value="">Todos los objetos</option><option value="empresa">Empresa</option><option value="trabajador">Trabajador</option><option value="vehiculo">Vehículo/equipo</option><option value="proyecto">Proyecto/mantención</option></select>
+      <select class="filter-select" id="filt-mand-estado" onchange="renderAcreditacionMandante()"><option value="">Todos los estados</option><option value="pendiente">Pendiente</option><option value="observado">Observado</option><option value="rechazado">Rechazado</option><option value="aprobado">Aprobado</option><option value="pase_emitido">Pase emitido</option></select>
+    </div>
+    <div class="kpi-grid" id="mand-kpis"></div>
+    <div class="card"><div class="table-wrap"><table id="mand-table"></table></div></div>
+  </div>
+
+  <!-- PAGE: SUBCONTRATOS -->
+  <div id="page-subcontratos" class="page">
+    <div class="section-header">
+      <div><div class="section-title">🏗️ Subcontratos</div><div class="section-sub" id="subc-sub">Empresas subcontratistas, contratos asociados, personal y cumplimiento laboral</div></div>
+      <button class="btn btn-primary" onclick="addSubcontrato()">+ Subcontratista</button>
+    </div>
+    <div class="filters">
+      <input class="filter-input" id="filt-subc-txt" placeholder="🔍 Razón social, RUT..." oninput="renderSubcontratos()">
+      <select class="filter-select" id="filt-subc-contrato" onchange="renderSubcontratos()"><option value="">Todos los contratos</option></select>
+      <select class="filter-select" id="filt-subc-est" onchange="renderSubcontratos()"><option value="">Todos los estados</option><option value="vigente">Vigente</option><option value="observado">Observado</option><option value="bloqueado">Bloqueado</option></select>
+    </div>
+    <div class="kpi-grid" id="subc-kpis"></div>
+    <div class="card"><div class="table-wrap"><table id="subc-table"></table></div></div>
+  </div>
+
+  <!-- PAGE: TURNOS Y JORNADA -->
+  <div id="page-turnos" class="page">
+    <div class="section-header">
+      <div><div class="section-title">🕒 Turnos y Jornada</div><div class="section-sub" id="turnos-sub">Turnos 7x7, 4x3, 5x2, asistencia, ingreso/salida y HH reales</div></div>
+      <button class="btn btn-primary" onclick="addTurnoJornada()">+ Registro Jornada</button>
+    </div>
+    <div class="filters">
+      <select class="filter-select" id="filt-turno-mant" onchange="renderTurnos()"><option value="">Todos los proyectos</option></select>
+      <select class="filter-select" id="filt-turno-regimen" onchange="renderTurnos()"><option value="">Todos los regímenes</option><option value="7x7">7x7</option><option value="4x3">4x3</option><option value="5x2">5x2</option><option value="turno_especial">Turno especial</option></select>
+      <select class="filter-select" id="filt-turno-dia" onchange="renderTurnos()"><option value="">Todos los turnos</option><option value="día">Día</option><option value="noche">Noche</option></select>
+    </div>
+    <div class="kpi-grid" id="turnos-kpis"></div>
+    <div class="card"><div class="table-wrap"><table id="turnos-table"></table></div></div>
+  </div>
+
+  <!-- PAGE: CREDENCIALES -->
+  <div id="page-credenciales" class="page">
+    <div class="section-header">
+      <div><div class="section-title">🎫 Credenciales y Pase Mina</div><div class="section-sub" id="cred-sub">Pases por trabajador, minera, zona autorizada y vencimiento</div></div>
+      <button class="btn btn-primary" onclick="addCredencial()">+ Credencial</button>
+    </div>
+    <div class="filters">
+      <input class="filter-input" id="filt-cred-txt" placeholder="🔍 Trabajador, pase o QR..." oninput="renderCredenciales()">
+      <select class="filter-select" id="filt-cred-mina" onchange="renderCredenciales()"><option value="">Todas las mineras</option></select>
+      <select class="filter-select" id="filt-cred-est" onchange="renderCredenciales()"><option value="">Todos los estados</option><option value="vigente">Vigente</option><option value="proximo">Próximo</option><option value="vencido">Vencido</option></select>
+    </div>
+    <div class="kpi-grid" id="cred-kpis"></div>
+    <div class="card"><div class="table-wrap"><table id="cred-table"></table></div></div>
+  </div>
+
+  <!-- PAGE: INCIDENTES -->
+  <div id="page-incidentes" class="page">
+    <div class="section-header">
+      <div><div class="section-title">⚠️ Incidentes, Observaciones y No Conformidades</div><div class="section-sub" id="inc-sub">Hallazgos de seguridad, auditoría y acciones correctivas</div></div>
+      <button class="btn btn-primary" onclick="addIncidente()">+ Registro</button>
+    </div>
+    <div class="filters">
+      <select class="filter-select" id="filt-inc-mant" onchange="renderIncidentes()"><option value="">Todos los proyectos</option></select>
+      <select class="filter-select" id="filt-inc-tipo" onchange="renderIncidentes()"><option value="">Todos los tipos</option><option value="incidente">Incidente</option><option value="observacion">Observación</option><option value="no_conformidad">No conformidad</option><option value="hallazgo_auditoria">Hallazgo auditoría</option></select>
+      <select class="filter-select" id="filt-inc-est" onchange="renderIncidentes()"><option value="">Todos los estados</option><option value="abierto">Abierto</option><option value="en_cierre">En cierre</option><option value="cerrado">Cerrado</option></select>
+    </div>
+    <div class="kpi-grid" id="inc-kpis"></div>
+    <div class="card"><div class="table-wrap"><table id="inc-table"></table></div></div>
+  </div>
+
+  <!-- PAGE: PROTOCOLOS SALUD -->
+  <div id="page-protocolos" class="page">
+    <div class="section-header">
+      <div><div class="section-title">🩺 Protocolos de Salud Ocupacional</div><div class="section-sub" id="prot-sub">Hipobaria, ruido, sílice, UV, psicosocial, sustancias peligrosas, altura y alcohol/drogas</div></div>
+      <button class="btn btn-primary" onclick="addProtocoloSalud()">+ Protocolo</button>
+    </div>
+    <div class="filters">
+      <select class="filter-select" id="filt-prot-tipo" onchange="renderProtocolos()"><option value="">Todos los protocolos</option><option value="hipobaria">Hipobaria</option><option value="ruido">Ruido</option><option value="silice">Sílice</option><option value="uv">Radiación UV</option><option value="psicosocial">Psicosocial</option><option value="sustancias">Sustancias peligrosas</option><option value="altura_fisica">Altura física</option><option value="alcohol_drogas">Alcohol y drogas</option></select>
+      <select class="filter-select" id="filt-prot-mina" onchange="renderProtocolos()"><option value="">Todas las mineras</option></select>
+      <select class="filter-select" id="filt-prot-est" onchange="renderProtocolos()"><option value="">Todos los estados</option><option value="vigente">Vigente</option><option value="proximo">Próximo</option><option value="vencido">Vencido</option></select>
+    </div>
+    <div class="kpi-grid" id="prot-kpis"></div>
+    <div class="card"><div class="table-wrap"><table id="prot-table"></table></div></div>
+  </div>
+
   <!-- PAGE: EXAMENES -->
   <div id="page-examenes" class="page">
     <div class="section-header">
@@ -696,6 +816,14 @@ body.private #main { display:block; }
       <div class="report-card" onclick="exportMinerasContratos()"><div class="report-icon">🏔️</div><div class="report-title">Mineras y Contratos</div><div class="report-desc">Mandantes, contratos, proyectos y vínculos</div></div>
       <div class="report-card" onclick="exportCallouts()"><div class="report-icon">📲</div><div class="report-title">Llamados WA</div><div class="report-desc">Grupos, convocatorias y trazabilidad</div></div>
       <div class="report-card" onclick="exportDocumentosTrabajadores()"><div class="report-icon">📄</div><div class="report-title">Documentos por Trabajador</div><div class="report-desc">Carga documental, archivos y validación</div></div>
+      <div class="report-card" onclick="exportAcreditacionMandante()"><div class="report-icon">✅</div><div class="report-title">Acreditación Mandante</div><div class="report-desc">Estado final por minera, empresa, personas, vehículos y proyectos</div></div>
+      <div class="report-card" onclick="exportVehiculos()"><div class="report-icon">🚙</div><div class="report-title">Vehículos y Equipos</div><div class="report-desc">Documentos, operador, minera, certificaciones y vencimientos</div></div>
+      <div class="report-card" onclick="exportSubcontratos()"><div class="report-icon">🏗️</div><div class="report-title">Subcontratos</div><div class="report-desc">Subcontratistas, cumplimiento laboral y dotación asociada</div></div>
+      <div class="report-card" onclick="exportTurnos()"><div class="report-icon">🕒</div><div class="report-title">Turnos y Jornada</div><div class="report-desc">Regímenes, asistencia, ingreso/salida y horas hombre reales</div></div>
+      <div class="report-card" onclick="exportCredenciales()"><div class="report-icon">🎫</div><div class="report-title">Credenciales</div><div class="report-desc">Pases mina, zonas autorizadas, QR y vencimientos</div></div>
+      <div class="report-card" onclick="exportIncidentes()"><div class="report-icon">⚠️</div><div class="report-title">Incidentes y NC</div><div class="report-desc">Hallazgos, acciones correctivas, responsables y cierres</div></div>
+      <div class="report-card" onclick="exportProtocolos()"><div class="report-icon">🩺</div><div class="report-title">Protocolos Salud</div><div class="report-desc">Hipobaria, ruido, sílice, UV, psicosocial y otros protocolos</div></div>
+      <div class="report-card" onclick="exportResumenEjecutivo()"><div class="report-icon">📈</div><div class="report-title">Resumen Ejecutivo</div><div class="report-desc">Totales, alertas, dotación, hotelería y costos operacionales</div></div>
     </div>
   </div>
 
@@ -3624,6 +3752,153 @@ openMantDetalle=function(mantId){
   openMantDetalleV63(mantId);
   const mn=S.mantenciones.find(m=>m.id===mantId), panel=document.getElementById('mant-tab-docs');
   if(panel&&mn) panel.insertAdjacentHTML('afterbegin',`<div class="card" style="margin-bottom:14px"><div class="card-title">Alcance, permisos y trazabilidad</div><div class="divider"></div>${infoRow('Origen',mn.origen||'—')}${infoRow('Solicitud / OC',mn.solicitud||'—')}${infoRow('Criticidad',mn.criticidad||'—')}${infoRow('Contrato',contratoNombre(mn.contratoId))}${infoRow('Permisos críticos',mn.permisos||'—')}<div style="margin-top:8px;font-size:12px;color:var(--text-muted);">${mn.alcance||'Sin alcance registrado.'}</div></div>`);
+};
+
+// ===================== V6.4: OPERACION MINERA COMPLETA =====================
+const DOC_FLOW_V64=['cargado','enviado','observado','corregido','aprobado','rechazado'];
+const ACC_STATES_V64=['pendiente','observado','rechazado','aprobado','pase_emitido'];
+const PERMISOS_TRABAJO_V64=[
+  'AST / ART','HCR / Charla diaria','Permiso trabajo en caliente','Permiso izaje','Permiso trabajo en altura','Permiso espacios confinados','LOTO / Energías peligrosas','Permiso sustancias peligrosas'
+];
+const PROTO_LABELS_V64={hipobaria:'Hipobaria',ruido:'Ruido',silice:'Sílice',uv:'Radiación UV',psicosocial:'Psicosocial',sustancias:'Sustancias peligrosas',altura_fisica:'Altura física',alcohol_drogas:'Alcohol y drogas'};
+function escV64(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function stateBadgeV64(st){
+  const cls={vigente:'badge-ok',ok:'badge-ok',aprobado:'badge-ok',pase_emitido:'badge-ok',cerrado:'badge-ok',pendiente:'badge-warn',enviado:'badge-blue',cargado:'badge-blue',corregido:'badge-blue',observado:'badge-crit',en_cierre:'badge-crit',proximo:'badge-warn',critico:'badge-crit',rechazado:'badge-err',bloqueado:'badge-err',vencido:'badge-err',faltante:'badge-err',abierto:'badge-err'}[st]||'badge-na';
+  return `<span class="badge ${cls}">${String(st||'pendiente').replace(/_/g,' ')}</span>`;
+}
+function dateStateV64(v){const e=estadoFecha(v);return e==='vigente'?'vigente':e;}
+function firstIdV64(list){return list?.[0]?.id||'';}
+function ensurePermisosMantV64(mantId){
+  if(!S.permisosTrabajo) S.permisosTrabajo=[];
+  PERMISOS_TRABAJO_V64.forEach(nombre=>{if(!S.permisosTrabajo.some(p=>p.mantId===mantId&&p.nombre===nombre)) S.permisosTrabajo.push({id:'pt_'+mantId+'_'+nombre.replace(/\W+/g,'_'),mantId,nombre,estado:'pendiente',vence:'',responsable:'',observacion:''});});
+  return S.permisosTrabajo.filter(p=>p.mantId===mantId);
+}
+const ensureV6CollectionsV64=ensureV6Collections;
+ensureV6Collections=function(){
+  ensureV6CollectionsV64();
+  ['vehiculos','subcontratos','turnos','credenciales','incidentes','protocolosSalud','permisosTrabajo','acreditacionesMandante'].forEach(k=>{if(!S[k]) S[k]=[];});
+};
+const snapshotStateV64=snapshotState;
+snapshotState=function(){ensureV6Collections();const snap=snapshotStateV64();['vehiculos','subcontratos','turnos','credenciales','incidentes','protocolosSalud','permisosTrabajo','acreditacionesMandante'].forEach(k=>snap[k]=S[k]);return JSON.parse(JSON.stringify(snap));};
+const applyStateV64=applyState;
+applyState=function(data){applyStateV64(data);['vehiculos','subcontratos','turnos','credenciales','incidentes','protocolosSalud','permisosTrabajo','acreditacionesMandante'].forEach(k=>{if(data?.[k]!==undefined) S[k]=data[k];});ensureV6Collections();};
+const emptyTenantDataV64=emptyTenantData;
+emptyTenantData=function(nombre,rut,email,tel){const data=emptyTenantDataV64(nombre,rut,email,tel);return Object.assign(data,{vehiculos:[],subcontratos:[],turnos:[],credenciales:[],incidentes:[],protocolosSalud:[],permisosTrabajo:[],acreditacionesMandante:[]});};
+
+function accreditationRecordV64(tipo,id,minaId){
+  ensureV6Collections();
+  let r=S.acreditacionesMandante.find(x=>x.tipo===tipo&&x.entityId===id&&x.minaId===minaId);
+  if(!r){r={id:'am_'+Date.now()+'_'+Math.random().toString(16).slice(2),tipo,entityId:id,minaId,estado:'pendiente',fecha:'',observacion:''};S.acreditacionesMandante.push(r);}
+  return r;
+}
+function setAcreditacionMandante(tipo,id,minaId,estado){
+  const r=accreditationRecordV64(tipo,id,minaId);r.estado=estado;r.fecha=hoy();persistTenant();toast('Estado de acreditación actualizado');renderAcreditacionMandante();updateBadges();
+}
+function accreditationRowsV64(){
+  const rows=[];
+  S.minas.forEach(m=>rows.push({tipo:'empresa',id:'empresa',minaId:m.id,nombre:S.empresa?.nombre||'Empresa contratista',detalle:'Empresa contratista'}));
+  S.trabajadores.forEach(t=>(t.mineras||[]).forEach(mid=>rows.push({tipo:'trabajador',id:t.id,minaId:mid,nombre:t.nombre,detalle:t.rut})));
+  S.vehiculos.forEach(v=>(v.minaIds||[]).forEach(mid=>rows.push({tipo:'vehiculo',id:v.id,minaId:mid,nombre:v.nombre||v.patente||v.serie,detalle:`${v.tipo||''} ${v.patente||v.serie||''}`})));
+  S.mantenciones.forEach(m=>rows.push({tipo:'proyecto',id:m.id,minaId:m.minaId,nombre:m.nombre,detalle:contratoNombre(m.contratoId)}));
+  return rows.filter(r=>r.minaId);
+}
+
+function addVehiculo(){
+  ensureV6Collections();
+  const tipo=prompt('Tipo de vehículo/equipo (camioneta, bus, grúa, manlift, herramienta crítica):','camioneta'); if(!tipo) return;
+  const nombre=prompt('Nombre o descripción:',tipo); if(!nombre) return;
+  const patente=prompt('Patente o identificación visible:', '');
+  const serie=prompt('Serie / código interno:', '');
+  const minaId=firstIdV64(S.minas);
+  S.vehiculos.push({id:'ve'+Date.now(),tipo,nombre,patente,serie,minaIds:minaId?[minaId]:[],operadorId:firstIdV64(S.trabajadores),permisoCirculacion:'',revisionTecnica:'',seguro:'',autorizacionMinera:'',certificacion:'',estado:'activo',mantencion:'',observacion:''});
+  persistTenant();renderVehiculos();toast('Vehículo/equipo agregado');
+}
+function vehAlertCountV64(v){return ['permisoCirculacion','revisionTecnica','seguro','autorizacionMinera','certificacion'].filter(k=>!v[k]||estadoFecha(v[k])!=='vigente').length;}
+function saveVehField(id,field,value){const v=S.vehiculos.find(x=>x.id===id);if(!v)return;v[field]=value;persistTenant();renderVehiculos();updateBadges();}
+function renderVehiculos(){
+  ensureV6Collections(); const txt=(document.getElementById('filt-veh-txt')?.value||'').toLowerCase(), mina=document.getElementById('filt-veh-mina')?.value||'', est=document.getElementById('filt-veh-est')?.value||'';
+  let list=S.vehiculos; if(txt) list=list.filter(v=>`${v.nombre} ${v.tipo} ${v.patente} ${v.serie}`.toLowerCase().includes(txt)); if(mina) list=list.filter(v=>(v.minaIds||[]).includes(mina)); if(est) list=list.filter(v=>{const n=vehAlertCountV64(v);return est==='ok'?n===0:est==='alerta'?n>0:n>0;});
+  document.getElementById('veh-sub').textContent=`${list.length} vehículos/equipos · ${list.filter(vehAlertCountV64).length} con vencimientos o faltantes`;
+  document.getElementById('veh-kpis').innerHTML=`<div class="kpi kpi-blue"><div class="kpi-value">${list.length}</div><div class="kpi-label">Equipos registrados</div></div><div class="kpi kpi-green"><div class="kpi-value">${list.filter(v=>vehAlertCountV64(v)===0).length}</div><div class="kpi-label">Vigentes</div></div><div class="kpi kpi-red"><div class="kpi-value">${list.filter(vehAlertCountV64).length}</div><div class="kpi-label">Con alertas</div></div><div class="kpi kpi-orange"><div class="kpi-value">${list.filter(v=>v.operadorId).length}</div><div class="kpi-label">Con operador</div></div>`;
+  document.getElementById('veh-table').innerHTML=`<thead><tr><th>Equipo</th><th>Minera</th><th>Operador</th><th>Permiso</th><th>Rev. técnica</th><th>Seguro</th><th>Autorización minera</th><th>Certificación</th><th>Estado</th></tr></thead><tbody>${list.map(v=>`<tr><td><b>${v.nombre}</b><div class="worker-rut">${v.tipo||''} · ${v.patente||'sin patente'} · ${v.serie||'sin serie'}</div></td><td>${(v.minaIds||[]).map(minaNombre).join('<br>')||'—'}</td><td>${trabNombre(v.operadorId)||'—'}</td>${['permisoCirculacion','revisionTecnica','seguro','autorizacionMinera','certificacion'].map(k=>`<td><input class="form-input" type="date" value="${v[k]||''}" onchange="saveVehField('${v.id}','${k}',this.value)" style="min-width:130px;"> ${v[k]?badgeEstado(v[k]):''}</td>`).join('')}<td>${vehAlertCountV64(v)?stateBadgeV64('observado'):stateBadgeV64('vigente')}</td></tr>`).join('')||'<tr><td colspan="9" style="text-align:center;color:var(--text-muted)">Sin vehículos/equipos registrados</td></tr>'}</tbody>`;
+}
+function exportVehiculos(){exportCSV([['Nombre','Tipo','Patente','Serie','Minas','Operador','Permiso circulación','Revisión técnica','Seguro','Autorización minera','Certificación','Alertas'],...S.vehiculos.map(v=>[v.nombre,v.tipo,v.patente,v.serie,(v.minaIds||[]).map(minaNombre).join(' / '),trabNombre(v.operadorId),v.permisoCirculacion,v.revisionTecnica,v.seguro,v.autorizacionMinera,v.certificacion,vehAlertCountV64(v)])],`vehiculos_equipos_${hoy()}.csv`);}
+
+function renderAcreditacionMandante(){
+  ensureV6Collections(); const mina=document.getElementById('filt-mand-mina')?.value||'', tipo=document.getElementById('filt-mand-tipo')?.value||'', estado=document.getElementById('filt-mand-estado')?.value||'';
+  let rows=accreditationRowsV64().map(r=>Object.assign(r,{rec:accreditationRecordV64(r.tipo,r.id,r.minaId)})); if(mina) rows=rows.filter(r=>r.minaId===mina); if(tipo) rows=rows.filter(r=>r.tipo===tipo); if(estado) rows=rows.filter(r=>r.rec.estado===estado);
+  document.getElementById('mand-sub').textContent=`${rows.length} registros de acreditación por mandante`;
+  document.getElementById('mand-kpis').innerHTML=ACC_STATES_V64.slice(0,5).map(st=>`<div class="kpi ${st==='rechazado'?'kpi-red':st==='aprobado'||st==='pase_emitido'?'kpi-green':'kpi-orange'}"><div class="kpi-value">${rows.filter(r=>r.rec.estado===st).length}</div><div class="kpi-label">${st.replace(/_/g,' ')}</div></div>`).join('');
+  document.getElementById('mand-table').innerHTML=`<thead><tr><th>Tipo</th><th>Nombre</th><th>Minera</th><th>Detalle</th><th>Estado mandante</th><th>Fecha</th><th>Observación</th></tr></thead><tbody>${rows.map(r=>`<tr><td><span class="badge badge-blue">${r.tipo}</span></td><td><b>${r.nombre}</b></td><td>${minaNombre(r.minaId)}</td><td>${r.detalle||'—'}</td><td><select class="form-select" onchange="setAcreditacionMandante('${r.tipo}','${r.id}','${r.minaId}',this.value)">${ACC_STATES_V64.map(st=>`<option value="${st}" ${r.rec.estado===st?'selected':''}>${st.replace(/_/g,' ')}</option>`).join('')}</select></td><td>${r.rec.fecha||'—'}</td><td><input class="form-input" value="${escV64(r.rec.observacion||'')}" onchange="const rr=accreditationRecordV64('${r.tipo}','${r.id}','${r.minaId}');rr.observacion=this.value;persistTenant();"></td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--text-muted)">Sin registros para estos filtros</td></tr>'}</tbody>`;
+}
+function exportAcreditacionMandante(){const rows=[['Tipo','Nombre','Minera','Estado','Fecha','Observación']];accreditationRowsV64().forEach(r=>{const rec=accreditationRecordV64(r.tipo,r.id,r.minaId);rows.push([r.tipo,r.nombre,minaNombre(r.minaId),rec.estado,rec.fecha||'',rec.observacion||'']);});exportCSV(rows,`acreditacion_mandante_${hoy()}.csv`);}
+
+function addSubcontrato(){const razon=prompt('Razón social subcontratista:');if(!razon)return;S.subcontratos.push({id:'sc'+Date.now(),razon,rut:prompt('RUT subcontratista:',''),contratoId:firstIdV64(S.contratos),responsable:prompt('Responsable:',''),estado:'vigente',f30:'',f301:'',cotizaciones:'',personal:0,observacion:''});persistTenant();renderSubcontratos();toast('Subcontratista agregado');}
+function subcAlertCountV64(s){return ['f30','f301','cotizaciones'].filter(k=>!s[k]||estadoFecha(s[k])!=='vigente').length;}
+function saveSubcField(id,field,value){const s=S.subcontratos.find(x=>x.id===id);if(!s)return;s[field]=value;persistTenant();renderSubcontratos();updateBadges();}
+function renderSubcontratos(){ensureV6Collections();const txt=(document.getElementById('filt-subc-txt')?.value||'').toLowerCase(), cont=document.getElementById('filt-subc-contrato')?.value||'', est=document.getElementById('filt-subc-est')?.value||'';let list=S.subcontratos;if(txt)list=list.filter(s=>`${s.razon} ${s.rut}`.toLowerCase().includes(txt));if(cont)list=list.filter(s=>s.contratoId===cont);if(est)list=list.filter(s=>s.estado===est);document.getElementById('subc-sub').textContent=`${list.length} subcontratistas · ${list.filter(subcAlertCountV64).length} con cumplimiento observado`;document.getElementById('subc-kpis').innerHTML=`<div class="kpi kpi-blue"><div class="kpi-value">${list.length}</div><div class="kpi-label">Subcontratistas</div></div><div class="kpi kpi-green"><div class="kpi-value">${list.filter(s=>s.estado==='vigente').length}</div><div class="kpi-label">Vigentes</div></div><div class="kpi kpi-red"><div class="kpi-value">${list.filter(subcAlertCountV64).length}</div><div class="kpi-label">Alertas laborales</div></div><div class="kpi kpi-orange"><div class="kpi-value">${list.reduce((a,s)=>a+(parseInt(s.personal)||0),0)}</div><div class="kpi-label">Personal asociado</div></div>`;document.getElementById('subc-table').innerHTML=`<thead><tr><th>Subcontratista</th><th>Contrato</th><th>Responsable</th><th>Personal</th><th>F30</th><th>F30-1</th><th>Cotizaciones</th><th>Estado</th></tr></thead><tbody>${list.map(s=>`<tr><td><b>${s.razon}</b><div class="worker-rut">${s.rut||'sin RUT'}</div></td><td>${contratoNombre(s.contratoId)}</td><td>${s.responsable||'—'}</td><td><input class="form-input" type="number" value="${s.personal||0}" onchange="saveSubcField('${s.id}','personal',this.value)" style="width:90px"></td>${['f30','f301','cotizaciones'].map(k=>`<td><input class="form-input" type="date" value="${s[k]||''}" onchange="saveSubcField('${s.id}','${k}',this.value)" style="min-width:130px;"> ${s[k]?badgeEstado(s[k]):''}</td>`).join('')}<td><select class="form-select" onchange="saveSubcField('${s.id}','estado',this.value)">${['vigente','observado','bloqueado'].map(st=>`<option value="${st}" ${s.estado===st?'selected':''}>${st}</option>`).join('')}</select></td></tr>`).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--text-muted)">Sin subcontratistas</td></tr>'}</tbody>`;}
+function exportSubcontratos(){exportCSV([['Razón social','RUT','Contrato','Responsable','Personal','F30','F30-1','Cotizaciones','Estado','Alertas'],...S.subcontratos.map(s=>[s.razon,s.rut,contratoNombre(s.contratoId),s.responsable,s.personal,s.f30,s.f301,s.cotizaciones,s.estado,subcAlertCountV64(s)])],`subcontratos_${hoy()}.csv`);}
+
+function addTurnoJornada(){const trabId=firstIdV64(S.trabajadores), mantId=firstIdV64(S.mantenciones);S.turnos.push({id:'tj'+Date.now(),trabId,mantId,fecha:hoy(),regimen:prompt('Régimen (7x7, 4x3, 5x2, turno_especial):','7x7')||'7x7',turno:prompt('Turno (día/noche):','día')||'día',ingreso:'08:00',salida:'20:00',hh:12,asistencia:'presente'});persistTenant();renderTurnos();toast('Jornada agregada');}
+function saveTurnoField(id,field,value){const t=S.turnos.find(x=>x.id===id);if(!t)return;t[field]=value;persistTenant();renderTurnos();}
+function renderTurnos(){ensureV6Collections();const mant=document.getElementById('filt-turno-mant')?.value||'', reg=document.getElementById('filt-turno-regimen')?.value||'', dia=document.getElementById('filt-turno-dia')?.value||'';let list=S.turnos;if(mant)list=list.filter(t=>t.mantId===mant);if(reg)list=list.filter(t=>t.regimen===reg);if(dia)list=list.filter(t=>t.turno===dia);const hh=list.reduce((a,t)=>a+(parseFloat(t.hh)||0),0);document.getElementById('turnos-sub').textContent=`${list.length} registros · ${hh} HH reales`;document.getElementById('turnos-kpis').innerHTML=`<div class="kpi kpi-blue"><div class="kpi-value">${list.length}</div><div class="kpi-label">Registros</div></div><div class="kpi kpi-green"><div class="kpi-value">${list.filter(t=>t.asistencia==='presente').length}</div><div class="kpi-label">Presentes</div></div><div class="kpi kpi-orange"><div class="kpi-value">${hh}</div><div class="kpi-label">HH reales</div></div><div class="kpi kpi-red"><div class="kpi-value">${list.filter(t=>t.asistencia!=='presente').length}</div><div class="kpi-label">Ausencias/observados</div></div>`;document.getElementById('turnos-table').innerHTML=`<thead><tr><th>Trabajador</th><th>Proyecto</th><th>Fecha</th><th>Régimen</th><th>Turno</th><th>Ingreso</th><th>Salida</th><th>HH</th><th>Asistencia</th></tr></thead><tbody>${list.map(t=>`<tr><td>${trabNombre(t.trabId)}</td><td>${mantNombre(t.mantId)}</td><td><input class="form-input" type="date" value="${t.fecha||''}" onchange="saveTurnoField('${t.id}','fecha',this.value)"></td><td>${t.regimen}</td><td>${t.turno}</td><td><input class="form-input" value="${t.ingreso||''}" onchange="saveTurnoField('${t.id}','ingreso',this.value)" style="width:80px"></td><td><input class="form-input" value="${t.salida||''}" onchange="saveTurnoField('${t.id}','salida',this.value)" style="width:80px"></td><td><input class="form-input" type="number" value="${t.hh||0}" onchange="saveTurnoField('${t.id}','hh',this.value)" style="width:80px"></td><td><select class="form-select" onchange="saveTurnoField('${t.id}','asistencia',this.value)">${['presente','ausente','licencia','permiso','observado'].map(st=>`<option value="${st}" ${t.asistencia===st?'selected':''}>${st}</option>`).join('')}</select></td></tr>`).join('')||'<tr><td colspan="9" style="text-align:center;color:var(--text-muted)">Sin jornadas registradas</td></tr>'}</tbody>`;}
+function exportTurnos(){exportCSV([['Trabajador','Proyecto','Fecha','Régimen','Turno','Ingreso','Salida','HH','Asistencia'],...S.turnos.map(t=>[trabNombre(t.trabId),mantNombre(t.mantId),t.fecha,t.regimen,t.turno,t.ingreso,t.salida,t.hh,t.asistencia])],`turnos_jornada_${hoy()}.csv`);}
+
+function addCredencial(){S.credenciales.push({id:'cr'+Date.now(),trabId:firstIdV64(S.trabajadores),minaId:firstIdV64(S.minas),tipo:prompt('Tipo pase (físico, digital, QR, temporal):','digital')||'digital',numero:prompt('Número de pase / QR:',''),emision:hoy(),vence:'',zona:'Portería, planta, casino',campamento:'no',estado:'pendiente'});persistTenant();renderCredenciales();toast('Credencial agregada');}
+function saveCredField(id,field,value){const c=S.credenciales.find(x=>x.id===id);if(!c)return;c[field]=value;persistTenant();renderCredenciales();updateBadges();}
+function renderCredenciales(){ensureV6Collections();const txt=(document.getElementById('filt-cred-txt')?.value||'').toLowerCase(), mina=document.getElementById('filt-cred-mina')?.value||'', est=document.getElementById('filt-cred-est')?.value||'';let list=S.credenciales;if(txt)list=list.filter(c=>`${trabNombre(c.trabId)} ${c.numero} ${c.zona}`.toLowerCase().includes(txt));if(mina)list=list.filter(c=>c.minaId===mina);if(est)list=list.filter(c=>dateStateV64(c.vence)===est);document.getElementById('cred-sub').textContent=`${list.length} credenciales · ${list.filter(c=>dateStateV64(c.vence)!=='vigente').length} con vencimiento`;document.getElementById('cred-kpis').innerHTML=`<div class="kpi kpi-blue"><div class="kpi-value">${list.length}</div><div class="kpi-label">Pases</div></div><div class="kpi kpi-green"><div class="kpi-value">${list.filter(c=>dateStateV64(c.vence)==='vigente').length}</div><div class="kpi-label">Vigentes</div></div><div class="kpi kpi-orange"><div class="kpi-value">${list.filter(c=>dateStateV64(c.vence)==='proximo'||dateStateV64(c.vence)==='critico').length}</div><div class="kpi-label">Por vencer</div></div><div class="kpi kpi-red"><div class="kpi-value">${list.filter(c=>dateStateV64(c.vence)==='vencido'||dateStateV64(c.vence)==='falta').length}</div><div class="kpi-label">Vencidos/faltantes</div></div>`;document.getElementById('cred-table').innerHTML=`<thead><tr><th>Trabajador</th><th>Minera</th><th>Tipo</th><th>N° / QR</th><th>Emisión</th><th>Vence</th><th>Zona autorizada</th><th>Campamento</th><th>Estado</th></tr></thead><tbody>${list.map(c=>`<tr><td><b>${trabNombre(c.trabId)}</b></td><td>${minaNombre(c.minaId)}</td><td>${c.tipo}</td><td><input class="form-input" value="${escV64(c.numero||'')}" onchange="saveCredField('${c.id}','numero',this.value)"></td><td><input class="form-input" type="date" value="${c.emision||''}" onchange="saveCredField('${c.id}','emision',this.value)"></td><td><input class="form-input" type="date" value="${c.vence||''}" onchange="saveCredField('${c.id}','vence',this.value)"> ${c.vence?badgeEstado(c.vence):''}</td><td><input class="form-input" value="${escV64(c.zona||'')}" onchange="saveCredField('${c.id}','zona',this.value)"></td><td><select class="form-select" onchange="saveCredField('${c.id}','campamento',this.value)"><option value="no" ${c.campamento==='no'?'selected':''}>No</option><option value="si" ${c.campamento==='si'?'selected':''}>Sí</option></select></td><td>${stateBadgeV64(dateStateV64(c.vence))}</td></tr>`).join('')||'<tr><td colspan="9" style="text-align:center;color:var(--text-muted)">Sin credenciales</td></tr>'}</tbody>`;}
+function exportCredenciales(){exportCSV([['Trabajador','Minera','Tipo','Número','Emisión','Vence','Zona','Campamento','Estado'],...S.credenciales.map(c=>[trabNombre(c.trabId),minaNombre(c.minaId),c.tipo,c.numero,c.emision,c.vence,c.zona,c.campamento,dateStateV64(c.vence)])],`credenciales_pase_mina_${hoy()}.csv`);}
+
+function addIncidente(){S.incidentes.push({id:'in'+Date.now(),tipo:prompt('Tipo (incidente, observacion, no_conformidad, hallazgo_auditoria):','observacion')||'observacion',mantId:firstIdV64(S.mantenciones),fecha:hoy(),descripcion:prompt('Descripción:',''),accion:prompt('Acción correctiva:',''),responsable:prompt('Responsable:',''),compromiso:'',estado:'abierto'});persistTenant();renderIncidentes();toast('Registro agregado');}
+function saveIncField(id,field,value){const x=S.incidentes.find(i=>i.id===id);if(!x)return;x[field]=value;persistTenant();renderIncidentes();updateBadges();}
+function renderIncidentes(){ensureV6Collections();const mant=document.getElementById('filt-inc-mant')?.value||'', tipo=document.getElementById('filt-inc-tipo')?.value||'', est=document.getElementById('filt-inc-est')?.value||'';let list=S.incidentes;if(mant)list=list.filter(i=>i.mantId===mant);if(tipo)list=list.filter(i=>i.tipo===tipo);if(est)list=list.filter(i=>i.estado===est);document.getElementById('inc-sub').textContent=`${list.length} registros · ${list.filter(i=>i.estado!=='cerrado').length} abiertos`;document.getElementById('inc-kpis').innerHTML=`<div class="kpi kpi-blue"><div class="kpi-value">${list.length}</div><div class="kpi-label">Registros</div></div><div class="kpi kpi-red"><div class="kpi-value">${list.filter(i=>i.estado==='abierto').length}</div><div class="kpi-label">Abiertos</div></div><div class="kpi kpi-orange"><div class="kpi-value">${list.filter(i=>i.estado==='en_cierre').length}</div><div class="kpi-label">En cierre</div></div><div class="kpi kpi-green"><div class="kpi-value">${list.filter(i=>i.estado==='cerrado').length}</div><div class="kpi-label">Cerrados</div></div>`;document.getElementById('inc-table').innerHTML=`<thead><tr><th>Tipo</th><th>Proyecto</th><th>Fecha</th><th>Descripción</th><th>Acción correctiva</th><th>Responsable</th><th>Compromiso</th><th>Estado</th></tr></thead><tbody>${list.map(i=>`<tr><td><span class="badge badge-orange">${i.tipo}</span></td><td>${mantNombre(i.mantId)}</td><td>${i.fecha}</td><td>${i.descripcion||'—'}</td><td><input class="form-input" value="${escV64(i.accion||'')}" onchange="saveIncField('${i.id}','accion',this.value)"></td><td><input class="form-input" value="${escV64(i.responsable||'')}" onchange="saveIncField('${i.id}','responsable',this.value)"></td><td><input class="form-input" type="date" value="${i.compromiso||''}" onchange="saveIncField('${i.id}','compromiso',this.value)"></td><td><select class="form-select" onchange="saveIncField('${i.id}','estado',this.value)">${['abierto','en_cierre','cerrado'].map(st=>`<option value="${st}" ${i.estado===st?'selected':''}>${st}</option>`).join('')}</select></td></tr>`).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--text-muted)">Sin incidentes u observaciones</td></tr>'}</tbody>`;}
+function exportIncidentes(){exportCSV([['Tipo','Proyecto','Fecha','Descripción','Acción','Responsable','Compromiso','Estado'],...S.incidentes.map(i=>[i.tipo,mantNombre(i.mantId),i.fecha,i.descripcion,i.accion,i.responsable,i.compromiso,i.estado])],`incidentes_no_conformidades_${hoy()}.csv`);}
+
+function addProtocoloSalud(){S.protocolosSalud.push({id:'pr'+Date.now(),tipo:prompt('Tipo protocolo (hipobaria, ruido, silice, uv, psicosocial, sustancias, altura_fisica, alcohol_drogas):','hipobaria')||'hipobaria',minaId:firstIdV64(S.minas),trabId:firstIdV64(S.trabajadores),examen:'',curso:'',vence:'',estado:'pendiente',observacion:''});persistTenant();renderProtocolos();toast('Protocolo agregado');}
+function saveProtField(id,field,value){const p=S.protocolosSalud.find(x=>x.id===id);if(!p)return;p[field]=value;persistTenant();renderProtocolos();updateBadges();}
+function renderProtocolos(){ensureV6Collections();const tipo=document.getElementById('filt-prot-tipo')?.value||'', mina=document.getElementById('filt-prot-mina')?.value||'', est=document.getElementById('filt-prot-est')?.value||'';let list=S.protocolosSalud;if(tipo)list=list.filter(p=>p.tipo===tipo);if(mina)list=list.filter(p=>p.minaId===mina);if(est)list=list.filter(p=>dateStateV64(p.vence)===est);document.getElementById('prot-sub').textContent=`${list.length} protocolos · ${list.filter(p=>dateStateV64(p.vence)!=='vigente').length} por revisar`;document.getElementById('prot-kpis').innerHTML=`<div class="kpi kpi-blue"><div class="kpi-value">${list.length}</div><div class="kpi-label">Protocolos</div></div><div class="kpi kpi-green"><div class="kpi-value">${list.filter(p=>dateStateV64(p.vence)==='vigente').length}</div><div class="kpi-label">Vigentes</div></div><div class="kpi kpi-orange"><div class="kpi-value">${list.filter(p=>['proximo','critico'].includes(dateStateV64(p.vence))).length}</div><div class="kpi-label">Por vencer</div></div><div class="kpi kpi-red"><div class="kpi-value">${list.filter(p=>['vencido','falta'].includes(dateStateV64(p.vence))).length}</div><div class="kpi-label">Vencidos/faltantes</div></div>`;document.getElementById('prot-table').innerHTML=`<thead><tr><th>Protocolo</th><th>Minera</th><th>Trabajador</th><th>Examen</th><th>Curso/Control</th><th>Vence</th><th>Estado</th><th>Observación</th></tr></thead><tbody>${list.map(p=>`<tr><td><span class="badge badge-blue">${PROTO_LABELS_V64[p.tipo]||p.tipo}</span></td><td>${minaNombre(p.minaId)}</td><td>${trabNombre(p.trabId)}</td><td><input class="form-input" value="${escV64(p.examen||'')}" onchange="saveProtField('${p.id}','examen',this.value)" placeholder="Examen/control"></td><td><input class="form-input" value="${escV64(p.curso||'')}" onchange="saveProtField('${p.id}','curso',this.value)" placeholder="Curso/protocolo"></td><td><input class="form-input" type="date" value="${p.vence||''}" onchange="saveProtField('${p.id}','vence',this.value)"> ${p.vence?badgeEstado(p.vence):''}</td><td>${stateBadgeV64(dateStateV64(p.vence))}</td><td><input class="form-input" value="${escV64(p.observacion||'')}" onchange="saveProtField('${p.id}','observacion',this.value)"></td></tr>`).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--text-muted)">Sin protocolos registrados</td></tr>'}</tbody>`;}
+function exportProtocolos(){exportCSV([['Protocolo','Minera','Trabajador','Examen','Curso/control','Vence','Estado','Observación'],...S.protocolosSalud.map(p=>[PROTO_LABELS_V64[p.tipo]||p.tipo,minaNombre(p.minaId),trabNombre(p.trabId),p.examen,p.curso,p.vence,dateStateV64(p.vence),p.observacion])],`protocolos_salud_${hoy()}.csv`);}
+
+function saveWorkerDocApproval(workerId,itemId,estado){const t=S.trabajadores.find(w=>w.id===workerId);const it=ensureWorkerItems(t||{}).find(x=>x.id===itemId);if(!it)return;it.estadoRevision=estado;it.estado=estado;persistTenant();toast('Flujo documental actualizado');refreshFicha();updateBadges();}
+const renderWorkerItemsV64=renderWorkerItems;
+renderWorkerItems=function(t){const rows=ensureWorkerItems(t).map(it=>`<tr><td><span class="badge badge-blue">${ITEM_TYPES[it.type]||it.type}</span></td><td><b>${it.name}</b><div style="font-size:11px;color:var(--text-muted)">${it.notes||''}</div></td><td>${it.vence||'—'}</td><td>${workerItemBadge(it)}</td><td><select class="form-select" onchange="saveWorkerDocApproval('${t.id}','${it.id}',this.value)">${DOC_FLOW_V64.map(st=>`<option value="${st}" ${(it.estadoRevision||it.estado||'cargado')===st?'selected':''}>${st}</option>`).join('')}</select></td><td>${it.fileName?`<button class="btn btn-ghost btn-sm" onclick="openWorkerItemFile('${t.id}','${it.id}')">📎 ${it.fileName}</button>`:'—'}</td><td><button class="btn btn-danger btn-sm" onclick="deleteWorkerItem('${t.id}','${it.id}')">Eliminar</button></td></tr>`).join('');return `<div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Nombre</th><th>Vence</th><th>Vigencia</th><th>Flujo aprobación</th><th>Archivo</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="7" style="text-align:center;color:var(--text-muted)">Sin documentos cargados todavía</td></tr>'}</tbody></table></div>`;};
+
+function filteredCompanyDocsV64(){let list=ensureCompanyDocsV63();const txt=(document.getElementById('filt-emp-doc-txt')?.value||'').toLowerCase(),area=document.getElementById('filt-emp-doc-area')?.value||'',est=document.getElementById('filt-emp-doc-est')?.value||'';if(txt)list=list.filter(d=>`${d.name} ${d.src} ${d.notes}`.toLowerCase().includes(txt));if(area)list=list.filter(d=>d.area===area);if(est)list=list.filter(d=>{const st=companyDocState(d);return est==='ok'?st==='ok':est==='faltante'?st==='faltante':st==='vencido'||st==='critico'||st==='proximo';});return list;}
+function saveCompanyDocApproval(id,estado){const d=ensureCompanyDocsV63().find(x=>x.id===id);if(!d)return;d.estadoRevision=estado;persistTenant();toast('Revisión mandante actualizada');renderAcreditacionEmpresa();updateBadges();}
+const renderAcreditacionEmpresaV64=renderAcreditacionEmpresa;
+renderAcreditacionEmpresa=function(){renderAcreditacionEmpresaV64();const list=filteredCompanyDocsV64();const head=document.querySelector('#empresa-acred-table thead tr');if(head)head.insertAdjacentHTML('beforeend','<th>Flujo aprobación</th>');document.querySelectorAll('#empresa-acred-table tbody tr').forEach((tr,i)=>{const d=list[i];if(d)tr.insertAdjacentHTML('beforeend',`<td><select class="form-select" onchange="saveCompanyDocApproval('${d.id}',this.value)">${DOC_FLOW_V64.map(st=>`<option value="${st}" ${(d.estadoRevision||'cargado')===st?'selected':''}>${st}</option>`).join('')}</select></td>`);});};
+
+function savePermisoTrabajo(id,field,value){const p=S.permisosTrabajo.find(x=>x.id===id);if(!p)return;p[field]=value;persistTenant();if(currentMantId)openMantDetalle(currentMantId);updateBadges();}
+const openMantDetalleV64=openMantDetalle;
+openMantDetalle=function(mantId){openMantDetalleV64(mantId);const panel=document.getElementById('mant-tab-docs');if(!panel)return;const permisos=ensurePermisosMantV64(mantId);panel.insertAdjacentHTML('afterbegin',`<div class="card" style="margin-bottom:14px"><div class="card-header"><div><div class="card-title">Permisos de trabajo operacional</div><div class="card-subtitle">AST, HCR, trabajo en caliente, izaje, altura, espacios confinados, LOTO y energías peligrosas.</div></div></div><div class="table-wrap"><table><thead><tr><th>Permiso</th><th>Estado</th><th>Vence</th><th>Responsable</th><th>Observación</th></tr></thead><tbody>${permisos.map(p=>`<tr><td><b>${p.nombre}</b></td><td><select class="form-select" onchange="savePermisoTrabajo('${p.id}','estado',this.value)">${['pendiente','enviado','observado','aprobado','rechazado'].map(st=>`<option value="${st}" ${p.estado===st?'selected':''}>${st}</option>`).join('')}</select></td><td><input class="form-input" type="date" value="${p.vence||''}" onchange="savePermisoTrabajo('${p.id}','vence',this.value)"></td><td><input class="form-input" value="${escV64(p.responsable||'')}" onchange="savePermisoTrabajo('${p.id}','responsable',this.value)"></td><td><input class="form-input" value="${escV64(p.observacion||'')}" onchange="savePermisoTrabajo('${p.id}','observacion',this.value)"></td></tr>`).join('')}</tbody></table></div></div>`);};
+
+const computeAlertasV64=computeAlertas;
+computeAlertas=function(){const alertas=computeAlertasV64();let n=alertas.length+1;ensureV6Collections();S.vehiculos.forEach(v=>['permisoCirculacion','revisionTecnica','seguro','autorizacionMinera','certificacion'].forEach(k=>{if(!v[k])alertas.push({id:'al_v_'+n++,tipo:'vehiculo',urgencia:'critico',msg:`${v.nombre}: falta ${k}`});else{const e=estadoFecha(v[k]);if(e!=='vigente')alertas.push({id:'al_v_'+n++,tipo:'vehiculo',urgencia:e,msg:`${v.nombre}: ${k} ${e}`});}}));S.subcontratos.forEach(s=>{if(s.estado!=='vigente')alertas.push({id:'al_sc_'+n++,tipo:'subcontrato',urgencia:s.estado==='bloqueado'?'vencido':'critico',msg:`Subcontrato ${s.razon}: ${s.estado}`});['f30','f301','cotizaciones'].forEach(k=>{if(!s[k]||estadoFecha(s[k])!=='vigente')alertas.push({id:'al_sc_'+n++,tipo:'subcontrato',urgencia:'critico',msg:`${s.razon}: falta/vencido ${k}`});});});S.credenciales.forEach(c=>{const e=estadoFecha(c.vence);if(e!=='vigente')alertas.push({id:'al_cr_'+n++,tipo:'credencial',urgencia:e,msg:`${trabNombre(c.trabId)}: credencial ${e}`});});S.incidentes.filter(i=>i.estado!=='cerrado').forEach(i=>alertas.push({id:'al_in_'+n++,tipo:'incidente',urgencia:i.estado==='abierto'?'critico':'proximo',mantId:i.mantId,msg:`${mantNombre(i.mantId)}: ${i.tipo} ${i.estado}`}));S.protocolosSalud.forEach(p=>{const e=estadoFecha(p.vence);if(e!=='vigente')alertas.push({id:'al_pr_'+n++,tipo:'protocolo',urgencia:e,msg:`${trabNombre(p.trabId)}: protocolo ${PROTO_LABELS_V64[p.tipo]||p.tipo} ${e}`});});S.permisosTrabajo.filter(p=>p.estado!=='aprobado').forEach(p=>alertas.push({id:'al_pt_'+n++,tipo:'mantencion',urgencia:p.estado==='rechazado'?'vencido':'critico',mantId:p.mantId,msg:`${mantNombre(p.mantId)}: permiso ${p.nombre} ${p.estado}`}));S.acreditacionesMandante.filter(a=>['observado','rechazado'].includes(a.estado)).forEach(a=>alertas.push({id:'al_am_'+n++,tipo:'acreditacion',urgencia:a.estado==='rechazado'?'vencido':'critico',minaId:a.minaId,msg:`${minaNombre(a.minaId)}: acreditación ${a.tipo} ${a.estado}`}));const ord={vencido:0,critico:1,falta:2,proximo:3};return alertas.sort((a,b)=>(ord[a.urgencia]??9)-(ord[b.urgencia]??9));};
+
+function exportResumenEjecutivo(){const rows=[['Item','Cantidad','Observación'],['Mineras',S.minas.length,'Mandantes/faenas'],['Contratos',S.contratos.length,'Contratos marco'],['Proyectos/mantenciones',S.mantenciones.length,'Solicitados/ofrecidos'],['Personal planta',S.trabajadores.filter(t=>t.tipo==='permanente').length,'Dotación fija'],['Personal spot',S.trabajadores.filter(t=>t.tipo==='esporadico').length,'Dotación por mantención'],['Vehículos/equipos',S.vehiculos.length,'Equipos críticos'],['Hoteles',S.hoteles.length,'Alojamiento'],['Costo hotelería estimado',S.hotelAsig.reduce((a,ha)=>a+(S.hoteles.find(h=>h.id===ha.hotelId)?.tarifa||0),0),'Suma tarifa/noche por asignación'],['Alertas',computeAlertas().length,'Alertas abiertas']];exportCSV(rows,`resumen_ejecutivo_${hoy()}.csv`);}
+
+['vehiculos','acreditacion-mandante','subcontratos','turnos','credenciales','incidentes','protocolos'].forEach(p=>{pageLabels[p]={vehiculos:'Vehículos y Equipos','acreditacion-mandante':'Acreditación Mandante',subcontratos:'Subcontratos',turnos:'Turnos y Jornada',credenciales:'Credenciales y Pase Mina',incidentes:'Incidentes y NC',protocolos:'Protocolos Salud'}[p];});
+Object.assign(pageSubs,{vehiculos:'Control documental y operacional de equipos', 'acreditacion-mandante':'Estado final de aprobación por minera', subcontratos:'Subcontratistas y cumplimiento laboral', turnos:'Asistencia, jornada y HH reales', credenciales:'Pases de ingreso a faena', incidentes:'Hallazgos, acciones correctivas y cierres', protocolos:'Protocolos de salud ocupacional'});
+const renderPageV64=renderPage;
+renderPage=function(page){
+  if(page==='vehiculos') renderVehiculos();
+  else if(page==='acreditacion-mandante') renderAcreditacionMandante();
+  else if(page==='subcontratos') renderSubcontratos();
+  else if(page==='turnos') renderTurnos();
+  else if(page==='credenciales') renderCredenciales();
+  else if(page==='incidentes') renderIncidentes();
+  else if(page==='protocolos') renderProtocolos();
+  else renderPageV64(page);
+};
+const initSelectsV64=initSelects;
+initSelects=function(){
+  initSelectsV64();
+  const minaIds=['filt-veh-mina','filt-mand-mina','filt-cred-mina','filt-prot-mina'];
+  minaIds.forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">Todas las mineras</option>'+S.minas.map(m=>`<option value="${m.id}">${m.nombre}</option>`).join('');});
+  const mantIds=['filt-turno-mant','filt-inc-mant'];
+  mantIds.forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">Todos los proyectos</option>'+S.mantenciones.map(m=>`<option value="${m.id}">${m.nombre} · ${minaNombre(m.minaId)}</option>`).join('');});
+  const subc=document.getElementById('filt-subc-contrato');
+  if(subc) subc.innerHTML='<option value="">Todos los contratos</option>'+S.contratos.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
 };
 
 // ===================== INIT SELECTS =====================
