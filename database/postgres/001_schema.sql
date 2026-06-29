@@ -72,6 +72,8 @@ CREATE TABLE IF NOT EXISTS workers (
   city TEXT,
   worker_type TEXT NOT NULL DEFAULT 'esporadico' CHECK (worker_type IN ('permanente','esporadico')),
   specialty TEXT,
+  cargo TEXT,
+  role_name TEXT,
   rating INTEGER DEFAULT 3 CHECK (rating BETWEEN 1 AND 7),
   availability TEXT DEFAULT 'disponible' CHECK (availability IN ('disponible','asignado','no_disponible','bloqueado')),
   afp TEXT,
@@ -250,6 +252,22 @@ CREATE TABLE IF NOT EXISTS audit_log (
   new_value JSONB,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+
+CREATE TABLE IF NOT EXISTS worker_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  worker_id UUID NOT NULL REFERENCES workers(id) ON DELETE CASCADE,
+  item_type TEXT NOT NULL CHECK (item_type IN ('documento','examen','curso','certificacion','contrato','cv')),
+  item_name TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'cargado' CHECK (status IN ('cargado','aprobado','rechazado','vencido')),
+  expiry_date DATE,
+  notes TEXT,
+  s3_key TEXT,
+  file_name TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_worker_items_expiry ON worker_items(tenant_id, worker_id, expiry_date);
 
 -- Useful indexes for scale and tenant isolation
 CREATE INDEX IF NOT EXISTS idx_workers_tenant ON workers(tenant_id);

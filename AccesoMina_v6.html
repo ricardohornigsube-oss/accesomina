@@ -649,11 +649,14 @@ body.private #main { display:block; }
         <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="nt-email" type="email" placeholder="correo@email.com"></div>
         <div class="form-group"><label class="form-label">Ciudad</label><input class="form-input" id="nt-ciudad" placeholder="Santiago"></div>
         <div class="form-group"><label class="form-label">Tipo Contrato</label>
-          <select class="form-select" id="nt-tipo"><option value="permanente">Permanente</option><option value="esporadico">Esporádico</option></select>
+          <select class="form-select" id="nt-tipo"><option value="permanente">Permanente / Planta</option><option value="esporadico">Esporádico por proyecto</option></select>
         </div>
+        <div class="form-group"><label class="form-label">Cargo</label><input class="form-input" id="nt-cargo" placeholder="Ej: Mecánico mantenedor"></div>
+        <div class="form-group"><label class="form-label">Rol operacional</label><input class="form-input" id="nt-rol" placeholder="Ej: Rigger / Supervisor / Maestro"></div>
         <div class="form-group"><label class="form-label">Especialidad</label>
           <select class="form-select" id="nt-esp"></select>
         </div>
+        <div class="form-group full"><label class="form-label">Asignar a proyecto / mantención inicial</label><select class="form-select" id="nt-mant"><option value="">Sin asignar por ahora</option></select></div>
         <div class="form-group"><label class="form-label">Calificación (1-7)</label>
           <select class="form-select" id="nt-cal">
             <option value="7">7 - A</option><option value="6">6 - B</option><option value="5">5 - B</option>
@@ -1304,8 +1307,8 @@ function estadoFecha(v) {
   if(!v) return 'falta';
   const d = diasHasta(v);
   if(d < 0) return 'vencido';
-  if(d <= 30) return 'critico';
-  if(d <= 60) return 'proximo';
+  if(d <= 7) return 'critico';
+  if(d <= 30) return 'proximo';
   return 'vigente';
 }
 function badgeEstado(v) {
@@ -2783,6 +2786,251 @@ function exportAllCSV() {
   else exportNomina();
 }
 
+
+// ===================== ENHANCED WORKFLOW: WORKER DOCUMENTS + RELATIONS =====================
+const ITEM_TYPES = {
+  documento:'Documento trabajador',
+  examen:'Examen médico',
+  curso:'Curso / capacitación',
+  certificacion:'Certificación técnica',
+  contrato:'Contrato / anexo',
+  cv:'Currículum / antecedentes'
+};
+const REQUIRED_ITEMS = [
+  {type:'documento', name:'Cédula de identidad'},
+  {type:'contrato', name:'Contrato de trabajo'},
+  {type:'contrato', name:'Anexo de faena'},
+  {type:'documento', name:'Certificado AFP'},
+  {type:'documento', name:'Certificado AFC'},
+  {type:'documento', name:'Certificado Fonasa/Isapre'},
+  {type:'examen', name:'Examen preocupacional'},
+  {type:'curso', name:'ODI / Derecho a Saber'},
+  {type:'curso', name:'Reglamento Interno'},
+  {type:'documento', name:'CV actualizado'}
+];
+const REQUIRED_BY_SPECIALTY = {
+  'Eléctrico': [{type:'curso',name:'Arc Flash'},{type:'certificacion',name:'Certificación eléctrica'}],
+  'Instrumentista': [{type:'curso',name:'LOTO / Bloqueo y Etiquetado'}],
+  'Mecánico Industrial': [{type:'curso',name:'LOTO / Bloqueo y Etiquetado'}],
+  'Mecánico Mantenedor': [{type:'curso',name:'LOTO / Bloqueo y Etiquetado'}],
+  'Soldador 3G': [{type:'curso',name:'Trabajos en caliente'},{type:'certificacion',name:'Calificación soldador'}],
+  'Soldador 6G': [{type:'curso',name:'Trabajos en caliente'},{type:'certificacion',name:'Calificación soldador 6G'}],
+  'Rigger': [{type:'certificacion',name:'Certificación Rigger'},{type:'curso',name:'Izaje de cargas'}],
+  'Maestro Andamios': [{type:'curso',name:'Trabajo en altura física'}],
+  'Operador Grúa Horquilla': [{type:'curso',name:'Manejo defensivo'},{type:'certificacion',name:'Licencia interna equipo'}],
+  'Operador Manlift': [{type:'curso',name:'Trabajo en altura física'},{type:'certificacion',name:'Licencia interna equipo'}]
+};
+function ensureWorkerItems(t) { if(!t.workerItems) t.workerItems = []; return t.workerItems; }
+function itemExpired(item) { if(!item.vence) return false; return diasHasta(item.vence) < 0; }
+function itemValid(item) { if(!item) return false; if(item.estado==='rechazado') return false; if(item.vence && diasHasta(item.vence) < 0) return false; return true; }
+function matchItem(item, req) { return item.type===req.type && item.name.toLowerCase().includes(req.name.toLowerCase().split('/')[0].trim()); }
+function getRequiredItemsForWorker(t) {
+  const mina = S.minas.find(m => t.mineras?.includes(m.id));
+  const altReq = mina && mina.altura >= 3000;
+  const extra = REQUIRED_BY_SPECIALTY[t.especialidad] || [];
+  const out = [...REQUIRED_ITEMS, ...extra];
+  if(altReq) out.push({type:'examen',name:'Examen altura geográfica'});
+  return out;
+}
+function hasReqItem(t, req) { return ensureWorkerItems(t).some(it=>matchItem(it, req) && itemValid(it)); }
+function legacyHasReq(t, req) {
+  const n=req.name.toLowerCase();
+  if(n.includes('cédula')) return itemValid(t.docCI);
+  if(n.includes('contrato de trabajo')) return itemValid(t.docContrato);
+  if(n.includes('afp')) return itemValid(t.docAFP);
+  if(n.includes('fonasa')||n.includes('isapre')) return itemValid(t.docSalud);
+  if(n.includes('preocupacional')) return itemValid(t.exPreocupacional);
+  if(n.includes('altura geográfica')) return itemValid(t.exAlturaGeo);
+  if(n.includes('odi')) return itemValid(t.curODI);
+  if(n.includes('reglamento')) return itemValid(t.curReglamento);
+  if(n.includes('loto')) return itemValid(t.curLOTO);
+  if(n.includes('altura física')) return itemValid(t.curAlturaFisica);
+  if(n.includes('trabajos en caliente')) return itemValid(t.curTrabajosCaliente);
+  if(n.includes('manejo defensivo')) return itemValid(t.curManejoDefensivo);
+  if(n.includes('arc flash')) return itemValid(t.curArcFlash);
+  return false;
+}
+function reqStatus(t, req) {
+  const item = ensureWorkerItems(t).find(it=>matchItem(it, req));
+  if(item) return itemValid(item) ? {ok:true, vence:item.vence, src:'cargado'} : {ok:false, vence:item.vence, src:'vencido/rechazado'};
+  if(legacyHasReq(t, req)) return {ok:true, vence:null, src:'base'};
+  return {ok:false, vence:null, src:'faltante'};
+}
+function acreditacion(t) {
+  const reqs = getRequiredItemsForWorker(t);
+  const ok = reqs.filter(r=>reqStatus(t,r).ok).length;
+  return reqs.length ? Math.round(ok / reqs.length * 100) : 0;
+}
+function computeAlertas() {
+  const alertas = [];
+  let n = 1;
+  S.trabajadores.forEach(t => {
+    getRequiredItemsForWorker(t).forEach(req=>{
+      const st=reqStatus(t,req);
+      if(!st.ok && st.src==='faltante') alertas.push({id:'al'+(n++),tipo:req.type,urgencia:'falta',trabId:t.id,trab:t,msg:`${t.nombre}: falta ${req.name}`});
+    });
+    ensureWorkerItems(t).forEach(item=>{
+      if(!item.vence) return;
+      const d=diasHasta(item.vence);
+      if(d < 0 || d <= 7) alertas.push({id:'al'+(n++),tipo:item.type,urgencia:d<0?'vencido':'critico',trabId:t.id,trab:t,msg:`${t.nombre}: ${item.name} ${d<0?'VENCIDO':d+'d para vencer'}`});
+      else if(d <= 30) alertas.push({id:'al'+(n++),tipo:item.type,urgencia:'proximo',trabId:t.id,trab:t,msg:`${t.nombre}: ${item.name} vence en ${d}d`});
+    });
+  });
+  S.firmas.forEach(f => {
+    if(f.estado==='pendiente'||f.estado==='enviado') {
+      const t = S.trabajadores.find(w => w.id===f.trabId);
+      alertas.push({id:'al'+(n++),tipo:'firma',urgencia:'critico',trabId:f.trabId,trab:t,msg:`${t?.nombre||'?'}: ${f.tipo} pendiente de firma`});
+    }
+  });
+  const ord = {vencido:0,critico:1,falta:2,proximo:3};
+  return alertas.sort((a,b)=>(ord[a.urgencia]??9)-(ord[b.urgencia]??9));
+}
+function workerItemBadge(item) {
+  if(item.estado==='rechazado') return '<span class="badge badge-err">Rechazado</span>';
+  if(!item.vence) return '<span class="badge badge-blue">Cargado</span>';
+  return badgeEstado(item.vence);
+}
+function renderWorkerItems(t) {
+  ensureWorkerItems(t);
+  const rows = t.workerItems.map(it=>`<tr>
+    <td><span class="badge badge-blue">${ITEM_TYPES[it.type]||it.type}</span></td>
+    <td><b>${it.name}</b><div style="font-size:11px;color:var(--text-muted);">${it.notes||''}</div></td>
+    <td>${it.vence||'—'}</td>
+    <td>${workerItemBadge(it)}</td>
+    <td>${it.fileName?`<span class="badge badge-orange">📎 ${it.fileName}</span>`:'—'}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="deleteWorkerItem('${t.id}','${it.id}')">Eliminar</button></td>
+  </tr>`).join('');
+  return `<div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Nombre</th><th>Vence</th><th>Estado</th><th>Archivo</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);">Sin documentos cargados todavía</td></tr>'}</tbody></table></div>`;
+}
+function renderRequiredChecklist(t) {
+  return `<div class="table-wrap"><table><thead><tr><th>Requisito</th><th>Tipo</th><th>Estado</th><th>Fuente</th></tr></thead><tbody>${getRequiredItemsForWorker(t).map(req=>{
+    const st=reqStatus(t,req);
+    return `<tr><td><b>${req.name}</b></td><td>${ITEM_TYPES[req.type]||req.type}</td><td>${st.ok?'<span class="badge badge-ok">Cumple</span>':'<span class="badge badge-err">Falta / vencido</span>'}</td><td style="font-size:12px;color:var(--text-muted);">${st.src}</td></tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+function refreshFicha() { if(currentFichaTrab) openFicha(currentFichaTrab.id); }
+function saveFichaDatos() {
+  const t=currentFichaTrab; if(!t) return;
+  t.cargo=document.getElementById('fd-cargo').value.trim();
+  t.rol=document.getElementById('fd-rol').value.trim();
+  t.especialidad=document.getElementById('fd-esp').value;
+  t.tipo=document.getElementById('fd-tipo').value;
+  t.disponibilidad=document.getElementById('fd-disp').value;
+  t.mineras=[...document.querySelectorAll('#fd-minas input:checked')].map(c=>c.value);
+  persistTenant(); toast('Ficha actualizada'); renderCurrentPageSoft(); refreshFicha();
+}
+function assignFichaToMant() {
+  const t=currentFichaTrab; if(!t) return;
+  const mantId=document.getElementById('fd-mant').value;
+  const turno=document.getElementById('fd-turno').value;
+  if(!mantId) { toast('Selecciona una mantención/proyecto','err'); return; }
+  if(S.asignaciones.some(a=>a.trabId===t.id && a.mantId===mantId)) { toast('Trabajador ya asignado a este proyecto','warn'); return; }
+  S.asignaciones.push({mantId,trabId:t.id,turno,estado:'preasignado'});
+  const mn=S.mantenciones.find(m=>m.id===mantId);
+  if(mn?.minaId && !t.mineras?.includes(mn.minaId)) t.mineras=[...(t.mineras||[]), mn.minaId];
+  t.disponibilidad='asignado';
+  persistTenant(); toast('Trabajador asignado al proyecto'); renderCurrentPageSoft(); refreshFicha();
+}
+function deleteAssignmentFromFicha(mantId) {
+  const t=currentFichaTrab; if(!t) return;
+  S.asignaciones=S.asignaciones.filter(a=>!(a.trabId===t.id && a.mantId===mantId));
+  if(!S.asignaciones.some(a=>a.trabId===t.id)) t.disponibilidad='disponible';
+  persistTenant(); toast('Asignación eliminada'); renderCurrentPageSoft(); refreshFicha();
+}
+function saveWorkerItem() {
+  const t=currentFichaTrab; if(!t) return;
+  const type=document.getElementById('wi-type').value;
+  const name=document.getElementById('wi-name').value.trim();
+  const vence=document.getElementById('wi-vence').value;
+  const notes=document.getElementById('wi-notes').value.trim();
+  const file=document.getElementById('wi-file').files[0];
+  if(!name) { toast('Indica nombre del documento/curso/examen','err'); return; }
+  const item={id:'wi'+Date.now(),type,name,vence,notes,estado:'cargado',fileName:file?.name||'',fileData:null,created:hoy()};
+  const finish=()=>{ ensureWorkerItems(t).push(item); persistTenant(); toast('Documento/curso cargado'); refreshFicha(); updateBadges(); };
+  if(file && file.size < 1500000) {
+    const reader=new FileReader();
+    reader.onload=()=>{ item.fileData=reader.result; finish(); };
+    reader.readAsDataURL(file);
+  } else finish();
+}
+function deleteWorkerItem(workerId,itemId) {
+  const t=S.trabajadores.find(w=>w.id===workerId); if(!t) return;
+  if(!confirm('¿Eliminar este documento/curso/examen de la ficha?')) return;
+  t.workerItems=ensureWorkerItems(t).filter(it=>it.id!==itemId);
+  persistTenant(); toast('Elemento eliminado'); refreshFicha(); updateBadges();
+}
+function openFicha(id) {
+  const t=S.trabajadores.find(w=>w.id===id); if(!t) return;
+  ensureWorkerItems(t); currentFichaTrab=t;
+  document.getElementById('ficha-title').textContent=t.nombre;
+  const pct=acreditacion(t); const col=avatarColor(t.id);
+  const minaChecks=S.minas.map(m=>`<label style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--bg3);border-radius:7px;"><input type="checkbox" value="${m.id}" ${(t.mineras||[]).includes(m.id)?'checked':''}> <span style="font-size:12px;color:${m.color};">${m.nombre}</span></label>`).join('');
+  const asigs=S.asignaciones.filter(a=>a.trabId===t.id);
+  document.getElementById('ficha-tab-datos').innerHTML=`
+    <div style="display:flex;align-items:center;gap:20px;margin-bottom:20px;padding:16px;background:var(--bg3);border-radius:10px;">
+      <div class="avatar" style="background:${col};width:56px;height:56px;font-size:20px;">${initials(t.nombre)}</div>
+      <div style="flex:1;"><div style="font-size:20px;font-weight:800;">${t.nombre}</div><div style="font-size:14px;color:var(--text-muted);">${t.rut} · ${t.cargo||t.especialidad||'Sin cargo'}</div><div style="display:flex;gap:8px;margin-top:8px;">${dispBadge(t.disponibilidad)}<span class="badge ${pct>=85?'badge-ok':pct>=60?'badge-warn':'badge-err'}">${pct}% acreditado</span></div></div>
+      <div style="text-align:right;"><div style="font-size:32px;font-weight:800;color:${pct>=85?'var(--green)':pct>=60?'var(--yellow)':'var(--red)'};">${pct}%</div><div style="font-size:11px;color:var(--text-muted);">Auditoría automática</div></div>
+    </div>
+    <div class="card" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Editar rol, cargo y relación operacional</div><div class="card-subtitle">Estos campos vinculan al trabajador con minas, proyectos y mantenciones.</div></div><button class="btn btn-primary btn-sm" onclick="saveFichaDatos()">Guardar cambios</button></div>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Cargo</label><input class="form-input" id="fd-cargo" value="${t.cargo||''}" placeholder="Cargo contractual u operacional"></div>
+        <div class="form-group"><label class="form-label">Rol</label><input class="form-input" id="fd-rol" value="${t.rol||''}" placeholder="Rol en faena"></div>
+        <div class="form-group"><label class="form-label">Especialidad</label><select class="form-select" id="fd-esp">${S.ESPECIALIDADES.map(e=>`<option value="${e}" ${t.especialidad===e?'selected':''}>${e}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Tipo personal</label><select class="form-select" id="fd-tipo"><option value="permanente" ${t.tipo==='permanente'?'selected':''}>Planta / permanente</option><option value="esporadico" ${t.tipo==='esporadico'?'selected':''}>Esporádico por proyecto</option></select></div>
+        <div class="form-group"><label class="form-label">Disponibilidad</label><select class="form-select" id="fd-disp">${['disponible','asignado','vacaciones','bloqueado'].map(d=>`<option value="${d}" ${t.disponibilidad===d?'selected':''}>${d}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Asignar a mantención/proyecto</label><select class="form-select" id="fd-mant"><option value="">Seleccionar...</option>${S.mantenciones.map(m=>`<option value="${m.id}">${m.nombre} · ${minaNombre(m.minaId)}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Turno</label><select class="form-select" id="fd-turno"><option value="día">Día</option><option value="noche">Noche</option><option value="ambos">Ambos</option></select></div>
+        <div class="form-group" style="align-self:end;"><button class="btn btn-blue" onclick="assignFichaToMant()">Asignar a proyecto</button></div>
+        <div class="form-group full"><label class="form-label">Minas habilitadas</label><div id="fd-minas" style="display:flex;gap:8px;flex-wrap:wrap;">${minaChecks||'<span style="color:var(--text-muted);font-size:12px;">Primero crea una minera.</span>'}</div></div>
+      </div>
+    </div>
+    <div class="grid-2"><div class="card"><div class="card-title">Datos personales</div><div class="divider"></div>${infoRow('Teléfono',t.tel||'—')}${infoRow('Email',t.email||'—')}${infoRow('Ciudad',t.ciudad||'—')}${infoRow('AFP',t.afp||'—')}${infoRow('Salud',t.salud||'—')}${infoRow('Mutual',t.mutual||'—')}</div>
+    <div class="card"><div class="card-title">Asignaciones activas</div><div class="divider"></div>${asigs.length?asigs.map(a=>{const mn=S.mantenciones.find(m=>m.id===a.mantId);return `<div style="display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--border);padding:8px 0;"><div><b>${mn?.nombre||a.mantId}</b><div style="font-size:11px;color:var(--text-muted);">${mn?minaNombre(mn.minaId):''} · ${a.turno}</div></div><button class="btn btn-danger btn-sm" onclick="deleteAssignmentFromFicha('${a.mantId}')">Quitar</button></div>`}).join(''):'<span style="color:var(--text-muted);font-size:12px;">Sin proyectos asignados</span>'}</div></div>`;
+  document.getElementById('ficha-tab-docs').innerHTML=`
+    <div class="card" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Cargar documento, examen, curso o certificación</div><div class="card-subtitle">La alerta crítica se activa cuando falten 7 días o esté vencido.</div></div><button class="btn btn-primary btn-sm" onclick="saveWorkerItem()">Guardar carga</button></div>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Tipo</label><select class="form-select" id="wi-type">${Object.entries(ITEM_TYPES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Nombre</label><input class="form-input" id="wi-name" list="wi-suggestions" placeholder="Ej: Examen preocupacional"><datalist id="wi-suggestions">${[...REQUIRED_ITEMS,...(REQUIRED_BY_SPECIALTY[t.especialidad]||[])].map(r=>`<option value="${r.name}">`).join('')}</datalist></div>
+        <div class="form-group"><label class="form-label">Fecha vencimiento</label><input class="form-input" id="wi-vence" type="date"></div>
+        <div class="form-group"><label class="form-label">Archivo</label><input class="form-input" id="wi-file" type="file"></div>
+        <div class="form-group full"><label class="form-label">Notas</label><input class="form-input" id="wi-notes" placeholder="Centro médico, OTEC, observación, folio, etc."></div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Checklist inteligente de ingreso</div><div class="card-subtitle">Depende de mina, altura geográfica, especialidad y rol.</div></div></div>${renderRequiredChecklist(t)}</div>
+    <div class="card"><div class="card-header"><div><div class="card-title">Documentos cargados</div><div class="card-subtitle">Puedes eliminar registros erróneos y volver a cargarlos.</div></div></div>${renderWorkerItems(t)}</div>`;
+  document.getElementById('ficha-tab-cur').innerHTML = document.getElementById('ficha-tab-docs').innerHTML;
+  document.getElementById('ficha-tab-hist').innerHTML = `<div class="card"><div class="card-title">Historial operativo</div><div class="divider"></div>${asigs.length?asigs.map(a=>{const mn=S.mantenciones.find(m=>m.id===a.mantId);return `<div style="padding:10px 0;border-bottom:1px solid var(--border);"><b>${mn?.nombre||a.mantId}</b><div style="font-size:12px;color:var(--text-muted);">${mn?.inicio||'?'} a ${mn?.termino||'?'} · ${mn?minaNombre(mn.minaId):''} · ${a.estado}</div></div>`}).join(''):'Sin historial de proyectos.'}</div>`;
+  const waBtn=document.getElementById('ficha-wa-btn');
+  waBtn.onclick=()=>{const tel=(t.tel||'').replace(/\D/g,''); window.open(`https://wa.me/${tel}?text=${encodeURIComponent(`Hola ${t.nombre.split(' ')[0]}, le contacta Domian SpA. ¿Disponible para coordinar?`)}`,'_blank');};
+  openModal('modal-ficha');
+}
+function renderAuditoria() {
+  const txt=document.getElementById('filt-aud-txt')?.value.toLowerCase()||'';
+  const minaF=document.getElementById('filt-aud-mina')?.value||'';
+  const estF=document.getElementById('filt-aud-est')?.value||'';
+  let workers=S.trabajadores.filter(t=>!t.bloqueado);
+  if(txt) workers=workers.filter(t=>t.nombre.toLowerCase().includes(txt)||t.rut.includes(txt));
+  if(minaF) workers=workers.filter(t=>t.mineras?.includes(minaF));
+  if(estF) workers=workers.filter(t=>{const pct=acreditacion(t); if(estF==='puede') return pct>=85; if(estF==='revisar') return pct>=60&&pct<85; return pct<60;});
+  const table=document.getElementById('aud-table');
+  table.innerHTML=`<thead><tr><th>Trabajador</th><th>Cargo/Rol</th><th>Minas</th><th>Requisitos</th><th>Faltantes</th><th>%</th><th>Estado</th><th></th></tr></thead><tbody>${workers.map(t=>{const pct=acreditacion(t); const reqs=getRequiredItemsForWorker(t); const falt=reqs.filter(r=>!reqStatus(t,r).ok); const est=pct>=85?'PUEDE':pct>=60?'REVISAR':'NO PUEDE'; return `<tr><td><b>${t.nombre}</b><div style="font-size:11px;color:var(--text-muted);">${t.rut}</div></td><td>${t.cargo||t.especialidad||'—'}<div style="font-size:11px;color:var(--text-muted);">${t.rol||''}</div></td><td style="font-size:12px;">${(t.mineras||[]).map(minaNombre).join('<br>')||'—'}</td><td>${reqs.length}</td><td>${falt.length?falt.slice(0,4).map(f=>`<span class="badge badge-err">${f.name}</span>`).join(' '):'<span class="badge badge-ok">Completo</span>'}</td><td><b style="color:${pct>=85?'var(--green)':pct>=60?'var(--yellow)':'var(--red)'};">${pct}%</b></td><td><span class="badge ${pct>=85?'badge-ok':pct>=60?'badge-warn':'badge-err'}">${est}</span></td><td><button class="btn btn-ghost btn-sm" onclick="openFicha('${t.id}')">Ficha</button></td></tr>`}).join('')}</tbody>`;
+}
+function saveNuevoTrab() {
+  const nombre=document.getElementById('nt-nombre').value.trim();
+  const rut=document.getElementById('nt-rut').value.trim();
+  if(!nombre||!rut){toast('Nombre y RUT son requeridos','err');return;}
+  const esp=document.getElementById('nt-esp').value;
+  const minasChecks=document.querySelectorAll('#nt-minas-checks input:checked');
+  const minaIds=[...minasChecks].map(c=>c.value);
+  const mantId=document.getElementById('nt-mant')?.value||'';
+  const newId='t'+(Date.now());
+  const worker={id:newId,nombre,rut,nacimiento:document.getElementById('nt-nacimiento').value,tel:document.getElementById('nt-tel').value,email:document.getElementById('nt-email').value,ciudad:document.getElementById('nt-ciudad').value,tipo:document.getElementById('nt-tipo').value,especialidad:esp,cargo:document.getElementById('nt-cargo')?.value||esp,rol:document.getElementById('nt-rol')?.value||'',calificacion:parseInt(document.getElementById('nt-cal').value)||3,disponibilidad:mantId?'asignado':'disponible',afp:document.getElementById('nt-afp').value,salud:document.getElementById('nt-salud').value,mutual:document.getElementById('nt-mutual').value,mineras:minaIds,bloqueado:false,workerItems:[]};
+  if(mantId){ const mn=S.mantenciones.find(m=>m.id===mantId); if(mn?.minaId && !worker.mineras.includes(mn.minaId)) worker.mineras.push(mn.minaId); S.asignaciones.push({mantId,trabId:newId,turno:'día',estado:'preasignado'}); }
+  S.trabajadores.push(worker);
+  closeModal('modal-nuevo-trab'); persistTenant(); toast(`${nombre} agregado al sistema`); renderTrabajadores(); updateBadges();
+}
+
 // ===================== INIT SELECTS =====================
 function initSelects() {
   // Especialidad filters
@@ -2808,7 +3056,7 @@ function initSelects() {
     el.innerHTML='<option value="">Seleccionar...</option>'+S.trabajadores.filter(t=>!t.bloqueado).map(t=>`<option value="${t.id}">${t.nombre}</option>`).join('');
   });
   // Mant selects
-  const mantSels = ['gc-mant','nf-mant','ha-mant','asig-mant','co-mant'];
+  const mantSels = ['gc-mant','nf-mant','ha-mant','asig-mant','co-mant','nt-mant'];
   mantSels.forEach(id=>{
     const el=document.getElementById(id);
     if(!el) return;
