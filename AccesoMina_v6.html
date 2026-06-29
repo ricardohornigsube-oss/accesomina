@@ -1,0 +1,2856 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AccesoMina v6 · Domian SpA</title>
+<style>
+:root {
+  --bg: #1c1c1e;
+  --bg2: #2a2a2e;
+  --bg3: #34343a;
+  --bg4: #121214;
+  --orange: #f07d36;
+  --orange-light: #f9a96d;
+  --orange-dark: #d4631e;
+  --blue: #4db8e8;
+  --blue-light: #82d0f5;
+  --text: #fff7ed;
+  --text-muted: #a09a94;
+  --text-dim: #6b6560;
+  --border: #3a3a40;
+  --border-light: #4a4a52;
+  --green: #34d399;
+  --red: #f87171;
+  --yellow: #fbbf24;
+  --sidebar-w: 260px;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+a { color:inherit; text-decoration:none; }
+#sidebar { position:fixed; left:0; top:0; bottom:0; width:var(--sidebar-w); background:var(--bg4); display:flex; flex-direction:column; z-index:200; overflow-y:auto; border-right:1px solid var(--border); }
+#main { margin-left:var(--sidebar-w); min-height:100vh; }
+#topbar { height:64px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:12px; position:sticky; top:0; z-index:100; }
+.page { display:none; padding:28px; }
+.page.active { display:block; }
+.sidebar-logo { padding:20px 20px 16px; border-bottom:1px solid var(--border); }
+.sidebar-logo-title { font-size:20px; font-weight:800; color:var(--orange); letter-spacing:-0.5px; }
+.sidebar-logo-sub { font-size:11px; color:var(--text-dim); margin-top:2px; }
+.nav-group-label { padding:16px 20px 6px; font-size:10px; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:.1em; }
+.nav-item { display:flex; align-items:center; gap:10px; padding:10px 20px; color:var(--text-muted); cursor:pointer; font-size:13.5px; transition:all .15s; border-left:3px solid transparent; }
+.nav-item:hover { background:var(--bg2); color:var(--text); border-left-color:var(--border-light); }
+.nav-item.active { background:rgba(240,125,54,.12); color:var(--orange); border-left-color:var(--orange); font-weight:600; }
+.nav-badge { margin-left:auto; background:var(--red); color:white; border-radius:20px; padding:2px 8px; font-size:11px; font-weight:700; }
+.nav-badge-orange { background:var(--orange); }
+.sidebar-bottom { margin-top:auto; padding:16px 20px; border-top:1px solid var(--border); font-size:11px; color:var(--text-dim); line-height:1.6; }
+.topbar-title { font-size:18px; font-weight:700; color:var(--text); }
+.topbar-subtitle { font-size:12px; color:var(--text-muted); margin-top:1px; }
+.topbar-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
+.btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:8px; border:none; cursor:pointer; font-size:13px; font-weight:600; transition:all .15s; }
+.btn-primary { background:var(--orange); color:white; }
+.btn-primary:hover { background:var(--orange-dark); }
+.btn-secondary { background:var(--bg3); color:var(--text); border:1px solid var(--border); }
+.btn-secondary:hover { background:var(--border); }
+.btn-ghost { background:transparent; color:var(--text-muted); border:1px solid var(--border); }
+.btn-ghost:hover { color:var(--text); border-color:var(--border-light); }
+.btn-sm { padding:5px 12px; font-size:12px; }
+.btn-danger { background:rgba(248,113,113,.15); color:var(--red); border:1px solid rgba(248,113,113,.3); }
+.btn-success { background:rgba(52,211,153,.15); color:var(--green); border:1px solid rgba(52,211,153,.3); }
+.btn-blue { background:rgba(77,184,232,.15); color:var(--blue); border:1px solid rgba(77,184,232,.3); }
+.card { background:var(--bg2); border-radius:12px; border:1px solid var(--border); padding:20px; }
+.card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.card-title { font-size:15px; font-weight:700; color:var(--text); }
+.card-subtitle { font-size:12px; color:var(--text-muted); margin-top:2px; }
+.kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:16px; margin-bottom:24px; }
+.kpi { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:18px; position:relative; overflow:hidden; }
+.kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+.kpi-orange::before { background:var(--orange); }
+.kpi-blue::before { background:var(--blue); }
+.kpi-green::before { background:var(--green); }
+.kpi-red::before { background:var(--red); }
+.kpi-yellow::before { background:var(--yellow); }
+.kpi-value { font-size:28px; font-weight:800; color:var(--text); }
+.kpi-label { font-size:12px; color:var(--text-muted); margin-top:4px; }
+.kpi-icon { position:absolute; right:16px; top:50%; transform:translateY(-50%); font-size:28px; opacity:.25; }
+.table-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { background:var(--bg3); color:var(--text-muted); padding:10px 14px; text-align:left; font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.05em; white-space:nowrap; }
+td { padding:10px 14px; border-bottom:1px solid var(--border); vertical-align:middle; color:var(--text); }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:var(--bg3); }
+.badge { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:20px; font-size:11px; font-weight:600; white-space:nowrap; }
+.badge-ok { background:rgba(52,211,153,.15); color:var(--green); }
+.badge-warn { background:rgba(251,191,36,.15); color:var(--yellow); }
+.badge-crit { background:rgba(251,191,36,.2); color:#f59e0b; }
+.badge-err { background:rgba(248,113,113,.15); color:var(--red); }
+.badge-na { background:var(--bg3); color:var(--text-dim); }
+.badge-blue { background:rgba(77,184,232,.15); color:var(--blue); }
+.badge-orange { background:rgba(240,125,54,.15); color:var(--orange); }
+.avatar { width:36px; height:36px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0; }
+.tab-bar { display:flex; gap:2px; border-bottom:1px solid var(--border); margin-bottom:20px; }
+.tab-btn { padding:9px 18px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:13px; font-weight:500; border-bottom:2px solid transparent; margin-bottom:-1px; transition:.15s; }
+.tab-btn.active { color:var(--orange); border-bottom-color:var(--orange); font-weight:700; }
+.tab-btn:hover:not(.active) { color:var(--text); }
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+.filters { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:20px; padding:16px; background:var(--bg2); border:1px solid var(--border); border-radius:10px; }
+.filter-input { background:var(--bg3); border:1px solid var(--border); color:var(--text); padding:7px 12px; border-radius:7px; font-size:13px; outline:none; }
+.filter-input:focus { border-color:var(--orange); }
+.filter-input::placeholder { color:var(--text-dim); }
+.filter-select { background:var(--bg3); border:1px solid var(--border); color:var(--text); padding:7px 12px; border-radius:7px; font-size:13px; outline:none; cursor:pointer; }
+.filter-select option { background:var(--bg2); }
+.alert-item { display:flex; align-items:flex-start; gap:12px; padding:12px 16px; border-radius:10px; margin-bottom:8px; border:1px solid; }
+.alert-vencido { background:rgba(248,113,113,.08); border-color:rgba(248,113,113,.25); }
+.alert-critico { background:rgba(251,191,36,.08); border-color:rgba(251,191,36,.25); }
+.alert-proximo { background:rgba(77,184,232,.08); border-color:rgba(77,184,232,.25); }
+.alert-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:5px; }
+.dot-vencido { background:var(--red); }
+.dot-critico { background:var(--yellow); }
+.dot-proximo { background:var(--blue); }
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:500; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); }
+.modal-overlay.open { display:flex; }
+.modal { background:var(--bg2); border:1px solid var(--border); border-radius:14px; width:100%; max-width:720px; max-height:88vh; overflow-y:auto; }
+.modal-wide { max-width:860px; }
+.modal-header { padding:20px 24px 0; display:flex; align-items:center; justify-content:space-between; }
+.modal-title { font-size:17px; font-weight:700; }
+.modal-close { background:var(--bg3); border:none; color:var(--text-muted); width:32px; height:32px; border-radius:8px; cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; }
+.modal-close:hover { color:var(--text); }
+.modal-body { padding:20px 24px; }
+.modal-footer { padding:0 24px 20px; display:flex; gap:10px; justify-content:flex-end; }
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.form-group { display:flex; flex-direction:column; gap:5px; }
+.form-group.full { grid-column:1/-1; }
+.form-label { font-size:12px; font-weight:600; color:var(--text-muted); }
+.form-input,.form-select,.form-textarea { background:var(--bg3); border:1px solid var(--border); color:var(--text); padding:9px 12px; border-radius:8px; font-size:13px; outline:none; width:100%; }
+.form-input:focus,.form-select:focus,.form-textarea:focus { border-color:var(--orange); }
+.form-input::placeholder { color:var(--text-dim); }
+.form-select option { background:var(--bg2); }
+.form-textarea { resize:vertical; min-height:80px; }
+.prog { height:6px; background:var(--bg3); border-radius:3px; overflow:hidden; }
+.prog-fill { height:100%; border-radius:3px; transition:width .4s; }
+.prog-green { background:var(--green); }
+.prog-yellow { background:var(--yellow); }
+.prog-red { background:var(--red); }
+.prog-blue { background:var(--blue); }
+.mina-card { background:var(--bg2); border:1px solid var(--border); border-radius:14px; overflow:hidden; transition:.2s; cursor:pointer; }
+.mina-card:hover { border-color:var(--border-light); transform:translateY(-2px); box-shadow:0 8px 30px rgba(0,0,0,.3); }
+.mina-card-top { height:6px; }
+.mina-card-body { padding:20px; }
+.mina-card-name { font-size:16px; font-weight:700; margin-bottom:4px; }
+.mina-card-mandante { font-size:12px; color:var(--text-muted); margin-bottom:14px; }
+.mina-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+.mina-stat { text-align:center; }
+.mina-stat-val { font-size:20px; font-weight:800; }
+.mina-stat-lbl { font-size:10px; color:var(--text-dim); margin-top:2px; }
+.mant-card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:18px; margin-bottom:12px; transition:.15s; }
+.mant-card:hover { border-color:var(--border-light); }
+.mant-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:12px; }
+.mant-nombre { font-size:15px; font-weight:700; }
+.mant-meta { font-size:12px; color:var(--text-muted); margin-top:3px; }
+.mant-tags { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+.tag { padding:3px 9px; border-radius:20px; font-size:11px; font-weight:600; }
+.tag-parada { background:rgba(248,113,113,.15); color:var(--red); }
+.tag-mantencion { background:rgba(77,184,232,.15); color:var(--blue); }
+.tag-shutdown { background:rgba(251,191,36,.15); color:var(--yellow); }
+.tag-emergencia { background:rgba(167,139,250,.15); color:#a78bfa; }
+.tag-planificada { background:rgba(240,125,54,.12); color:var(--orange); }
+.tag-en_curso { background:rgba(52,211,153,.12); color:var(--green); }
+.tag-cerrada { background:var(--bg3); color:var(--text-dim); }
+.tag-proceso { background:rgba(77,184,232,.12); color:var(--blue); }
+.tag-activo { background:rgba(52,211,153,.12); color:var(--green); }
+.toast { position:fixed; bottom:24px; right:24px; background:var(--bg3); border:1px solid var(--border); color:var(--text); padding:12px 18px; border-radius:10px; font-size:13px; z-index:9999; display:flex; align-items:center; gap:8px; box-shadow:0 4px 20px rgba(0,0,0,.4); transition:opacity .4s; }
+.section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+.section-title { font-size:22px; font-weight:800; }
+.section-sub { font-size:13px; color:var(--text-muted); margin-top:3px; }
+.section-actions { display:flex; gap:10px; align-items:center; }
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+.grid-4 { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; }
+.contract-doc { background:white; color:#1a1a1a; padding:40px; border-radius:8px; font-family:Georgia,serif; line-height:1.7; font-size:13px; }
+.contract-doc h2 { text-align:center; font-size:16px; margin-bottom:6px; }
+.contract-doc .contract-sub { text-align:center; color:#666; margin-bottom:24px; font-size:12px; }
+.contract-doc .contract-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:16px 0; }
+.contract-doc .cf { font-size:12px; }
+.contract-doc .cf b { color:#333; }
+.contract-doc .clause { margin:12px 0; font-size:12px; }
+.contract-doc .clause-title { font-weight:bold; }
+.contract-doc .sigs { display:grid; grid-template-columns:1fr 1fr; gap:40px; margin-top:40px; }
+.contract-doc .sig-line { border-top:1px solid #333; padding-top:6px; font-size:11px; text-align:center; }
+.worker-name { font-weight:600; }
+.worker-rut { font-size:11px; color:var(--text-muted); }
+.worker-esp { font-size:12px; color:var(--text-muted); }
+.wa-link { color:var(--green); font-size:18px; text-decoration:none; }
+.wa-link:hover { color:#6ee7b7; }
+.hotel-card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:20px; }
+.hotel-card-name { font-size:16px; font-weight:700; margin-bottom:4px; }
+.hotel-card-city { font-size:13px; color:var(--text-muted); margin-bottom:14px; }
+.report-card { background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:28px 24px; cursor:pointer; transition:.2s; text-align:center; }
+.report-card:hover { border-color:var(--orange); background:var(--bg3); transform:translateY(-2px); }
+.report-icon { font-size:36px; margin-bottom:12px; }
+.report-title { font-size:15px; font-weight:700; margin-bottom:6px; }
+.report-desc { font-size:12px; color:var(--text-muted); }
+.chip { display:inline-flex; align-items:center; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:600; margin:2px; }
+.divider { height:1px; background:var(--border); margin:16px 0; }
+.info-row { display:flex; gap:8px; margin-bottom:8px; font-size:13px; }
+.info-label { color:var(--text-muted); min-width:140px; flex-shrink:0; }
+.info-value { color:var(--text); font-weight:500; }
+.back-btn { display:inline-flex; align-items:center; gap:8px; color:var(--text-muted); cursor:pointer; font-size:14px; margin-bottom:20px; padding:8px 14px; border-radius:8px; border:1px solid var(--border); background:var(--bg2); transition:.15s; }
+.back-btn:hover { color:var(--text); border-color:var(--border-light); }
+.blocked-badge { background:rgba(248,113,113,.2); color:var(--red); border:1px solid rgba(248,113,113,.3); padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+@media(max-width:900px){:root{--sidebar-w:0px;}#sidebar{display:none;}#main{margin-left:0;}}
+@media print { #sidebar,#topbar,.btn,.modal-overlay:not(.open){display:none!important;} #main{margin-left:0;} }
+
+/* ===== DOMIAN PUBLIC + PRIVATE ACCESS ===== */
+body.public #sidebar, body.public #main { display:none; }
+body.public #public-site { display:block; }
+body.private #public-site { display:none; }
+body.private #sidebar { display:flex; }
+body.private #main { display:block; }
+.logo-mark { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg,var(--orange),var(--blue)); display:flex; align-items:center; justify-content:center; color:white; font-weight:900; letter-spacing:-.04em; box-shadow:0 12px 34px rgba(240,125,54,.22); }
+.public-shell { min-height:100vh; background:radial-gradient(circle at 20% 10%,rgba(240,125,54,.18),transparent 28%), radial-gradient(circle at 80% 15%,rgba(77,184,232,.16),transparent 26%), var(--bg); color:var(--text); }
+.public-nav { height:72px; display:flex; align-items:center; justify-content:space-between; padding:0 6vw; border-bottom:1px solid rgba(255,255,255,.08); background:rgba(18,18,20,.7); backdrop-filter:blur(16px); position:sticky; top:0; z-index:50; }
+.public-brand { display:flex; align-items:center; gap:12px; font-weight:900; font-size:18px; }
+.public-brand small { display:block; color:var(--text-muted); font-weight:500; font-size:11px; margin-top:1px; }
+.public-hero { min-height:calc(100vh - 72px); display:grid; grid-template-columns:1.15fr .85fr; gap:34px; padding:54px 6vw 42px; align-items:center; }
+.hero-kicker { color:var(--blue); font-weight:800; font-size:12px; text-transform:uppercase; letter-spacing:.16em; margin-bottom:14px; }
+.hero-title { font-size:clamp(36px,5vw,72px); line-height:.96; letter-spacing:0; font-weight:900; max-width:900px; }
+.hero-title span { color:var(--orange); }
+.hero-copy { color:var(--text-muted); font-size:18px; line-height:1.55; max-width:760px; margin-top:22px; }
+.hero-actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:28px; }
+.hero-points { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-top:34px; max-width:900px; }
+.hero-point { border:1px solid var(--border); background:rgba(42,42,46,.72); border-radius:12px; padding:14px; }
+.hero-point b { display:block; color:var(--text); font-size:14px; margin-bottom:4px; }
+.hero-point span { color:var(--text-muted); font-size:12px; line-height:1.35; }
+.access-panel { border:1px solid var(--border-light); background:rgba(42,42,46,.88); border-radius:18px; padding:22px; box-shadow:0 24px 80px rgba(0,0,0,.35); }
+.access-tabs { display:grid; grid-template-columns:1fr 1fr; gap:6px; background:var(--bg4); border-radius:10px; padding:4px; margin-bottom:18px; }
+.access-tab { border:0; background:transparent; color:var(--text-muted); border-radius:8px; padding:10px; cursor:pointer; font-weight:800; }
+.access-tab.active { background:var(--orange); color:white; }
+.access-view { display:none; }
+.access-view.active { display:block; }
+.private-client-pill { background:rgba(77,184,232,.12); color:var(--blue); border:1px solid rgba(77,184,232,.25); border-radius:999px; padding:6px 10px; font-size:12px; font-weight:800; }
+.cloud-note { border:1px solid rgba(77,184,232,.25); background:rgba(77,184,232,.08); border-radius:12px; padding:14px; color:var(--text-muted); line-height:1.45; }
+@media(max-width:980px){.public-hero{grid-template-columns:1fr;padding-top:34px}.hero-points{grid-template-columns:1fr}.public-nav{padding:0 20px}.access-panel{max-width:560px}}
+
+</style>
+</head>
+<body class="public">
+
+<!-- PUBLIC SITE / DOMIAN ACCESS -->
+<section id="public-site" class="public-shell">
+  <nav class="public-nav">
+    <div class="public-brand"><div class="logo-mark">D</div><div>Domian <small>Smart Business · AccesoMina</small></div></div>
+    <div style="display:flex;gap:10px;align-items:center;"><a class="btn btn-ghost btn-sm" href="mailto:contacto@domian.cl">contacto@domian.cl</a><button class="btn btn-primary btn-sm" onclick="scrollToAccess()">Acceso privado</button></div>
+  </nav>
+  <div class="public-hero">
+    <div>
+      <div class="hero-kicker">Domian · Tecnología para contratistas mineras</div>
+      <h1 class="hero-title">Acreditación minera, contratos y alertas en un solo <span>sitio privado</span>.</h1>
+      <p class="hero-copy">AccesoMina ordena trabajadores, proyectos, hoteles, mantenciones, exámenes, cursos, contratos y auditoría documental para empresas contratistas que necesitan ingresar personal a faenas mineras sin perder control de vencimientos ni respaldos.</p>
+      <div class="hero-actions"><button class="btn btn-primary" onclick="showAccessTab('login')">Entrar al sitio privado</button><button class="btn btn-secondary" onclick="showAccessTab('registro')">Registrar empresa nueva</button></div>
+      <div class="hero-points"><div class="hero-point"><b>Auditoría automática</b><span>Semáforo por trabajador, curso, examen y documento con alertas inteligentes de vencimiento.</span></div><div class="hero-point"><b>Datos separados</b><span>Cada cliente opera en su propio sitio privado local; la información no se mezcla entre empresas.</span></div><div class="hero-point"><b>Listo para cloud</b><span>Exportación de respaldo y estructura preparada para migrar a PHP, base de datos y URL pública segura.</span></div></div>
+    </div>
+    <div class="access-panel" id="access-panel">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;"><div class="logo-mark">D</div><div><div style="font-weight:900;font-size:20px;">AccesoMina Domian</div><div style="color:var(--text-muted);font-size:12px;">Sitio privado de gestión minera</div></div></div>
+      <div class="access-tabs"><button class="access-tab active" id="tab-login" onclick="showAccessTab('login')">Acceso</button><button class="access-tab" id="tab-registro" onclick="showAccessTab('registro')">Nuevo cliente</button></div>
+      <div class="access-view active" id="access-login"><div class="form-group" style="margin-bottom:12px;"><label class="form-label">Empresa / RUT</label><input class="form-input" id="login-rut" value="78.425.213-2" placeholder="78.425.213-2" onblur="this.value=formatRut(this.value)"></div><div class="form-group" style="margin-bottom:14px;"><label class="form-label">Correo</label><input class="form-input" id="login-email" type="email" value="contacto@domian.cl" placeholder="correo@empresa.cl"></div><button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="loginTenant()">Ingresar al sitio privado</button><div style="color:var(--text-dim);font-size:11px;line-height:1.45;margin-top:12px;">Acceso local para operación y pruebas. Para seguridad real en internet se debe publicar con backend, usuarios, permisos, base de datos y SSL.</div></div>
+      <div class="access-view" id="access-registro"><div class="form-group" style="margin-bottom:10px;"><label class="form-label">Nombre empresa</label><input class="form-input" id="reg-empresa" placeholder="Ej: Servicios Mineros Norte SpA"></div><div class="form-grid" style="grid-template-columns:1fr 1fr;margin-bottom:10px;"><div class="form-group"><label class="form-label">RUT empresa</label><input class="form-input" id="reg-rut" placeholder="76.123.456-7" onblur="this.value=formatRut(this.value)"></div><div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="reg-tel" placeholder="+56 9..."></div></div><div class="form-group" style="margin-bottom:14px;"><label class="form-label">Correo administrador</label><input class="form-input" id="reg-email" type="email" placeholder="admin@empresa.cl"></div><button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="registerTenant()">Crear sitio privado vacío</button><div style="color:var(--text-dim);font-size:11px;line-height:1.45;margin-top:12px;">La nueva empresa parte sin trabajadores, proyectos ni hoteles. Queda lista para cargar sus propios datos.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sidebar-logo">
+    <div style="display:flex;align-items:center;gap:10px;"><div class="logo-mark" style="width:34px;height:34px;border-radius:10px;">D</div><div><div class="sidebar-logo-title">AccesoMina</div><div class="sidebar-logo-sub">Domian · Sitio privado</div></div></div>
+  </div>
+  <div class="nav-group-label">Vista General</div>
+  <div class="nav-item active" onclick="nav('dashboard')">🏠 Dashboard</div>
+  <div class="nav-item" onclick="nav('mineras')">🏔️ Por Minera</div>
+  <div class="nav-item" onclick="nav('alertas')">🔔 Alertas <span class="nav-badge" id="badge-alertas">0</span></div>
+  <div class="nav-group-label">Personal</div>
+  <div class="nav-item" onclick="nav('trabajadores')">👷 Trabajadores</div>
+  <div class="nav-item" onclick="nav('bloqueados')">🚫 Bloqueados</div>
+  <div class="nav-item" onclick="nav('auditoria')">📋 Auditoría</div>
+  <div class="nav-group-label">Operaciones</div>
+  <div class="nav-item" onclick="nav('mantenciones')">🔧 Mantenciones</div>
+  <div class="nav-item" onclick="nav('contratos')">📝 Contratos y Firmas <span class="nav-badge nav-badge-orange" id="badge-firmas">0</span></div>
+  <div class="nav-item" onclick="nav('hoteleria')">🛏️ Hotelería</div>
+  <div class="nav-item" onclick="nav('llamados')">📲 Llamados WA</div>
+  <div class="nav-item" onclick="nav('examenes')">🧪 Exámenes</div>
+  <div class="nav-item" onclick="nav('cursos')">📚 Cursos</div>
+  <div class="nav-item" onclick="nav('reportes')">📊 Reportes</div>
+  <div class="nav-group-label" id="nav-admin-label" style="display:none;">Administración Domian</div>
+  <div class="nav-item" id="nav-clientes" style="display:none;" onclick="nav('clientes')">🏢 Clientes</div>
+  <div class="sidebar-bottom">
+    <div style="font-weight:700;color:var(--text-muted);margin-bottom:4px;">Domian Servicios Industriales SpA</div>
+    <div>RUT: 78.425.213-2</div>
+    <div>contacto@domian.cl</div>
+    <div>+56 9 7649 0489</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="topbar">
+    <div>
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-subtitle" id="topbar-sub">Resumen operativo · Domian SpA</div>
+    </div>
+    <div class="topbar-right">
+      <span class="private-client-pill" id="tenant-pill">Domian</span>
+      <button class="btn btn-secondary btn-sm" onclick="exportTenantBackup()">Respaldo</button>
+      <button class="btn btn-secondary btn-sm" onclick="showCloudGuide()">Cloud</button>
+      <button class="btn btn-secondary btn-sm" onclick="exportAllCSV()">⬇ Exportar</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal('modal-nuevo-trab')">+ Trabajador</button>
+      <button class="btn btn-ghost btn-sm" onclick="logoutTenant()">Salir</button>
+    </div>
+  </div>
+
+  <!-- PAGE: DASHBOARD -->
+  <div id="page-dashboard" class="page active">
+    <div class="kpi-grid" id="kpi-dash"></div>
+    <div class="grid-2" style="margin-bottom:20px;">
+      <div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header"><div class="card-title">🔧 Mantenciones Próximas</div></div>
+          <div id="dash-mants"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">👷 Por Especialidad</div></div>
+          <div class="table-wrap"><table id="dash-esp-table"></table></div>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header"><div class="card-title">🔔 Alertas Críticas</div></div>
+          <div id="dash-alertas"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">📲 Llamados Recientes</div></div>
+          <div id="dash-callouts"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">📊 Distribución por Calificación</div></div>
+      <div id="dash-cal"></div>
+    </div>
+  </div>
+
+  <!-- PAGE: MINERAS -->
+  <div id="page-mineras" class="page">
+    <div id="mineras-grid-view">
+      <div class="section-header">
+        <div><div class="section-title">🏔️ Por Minera</div><div class="section-sub">Vista consolidada por mandante</div></div>
+      </div>
+      <div class="grid-3" id="minas-cards" style="gap:20px;"></div>
+    </div>
+    <div id="mina-detalle-view" style="display:none;">
+      <div class="back-btn" onclick="closeMinaDetalle()">← Volver a Por Minera</div>
+      <div id="mina-detalle-content"></div>
+    </div>
+  </div>
+
+  <!-- PAGE: ALERTAS -->
+  <div id="page-alertas" class="page">
+    <div class="section-header">
+      <div><div class="section-title">🔔 Alertas</div><div class="section-sub" id="alertas-sub"></div></div>
+    </div>
+    <div class="filters">
+      <input class="filter-input" placeholder="🔍 Buscar trabajador..." id="filt-alerta-txt" oninput="renderAlertas()">
+      <select class="filter-select" id="filt-alerta-tipo" onchange="renderAlertas()">
+        <option value="">Todos los tipos</option>
+        <option value="examen">Examen</option>
+        <option value="curso">Curso</option>
+        <option value="doc">Documento</option>
+        <option value="firma">Firma</option>
+      </select>
+      <select class="filter-select" id="filt-alerta-urg" onchange="renderAlertas()">
+        <option value="">Todas las urgencias</option>
+        <option value="vencido">Vencido</option>
+        <option value="critico">Crítico</option>
+        <option value="proximo">Próximo</option>
+      </select>
+    </div>
+    <div id="alertas-list"></div>
+  </div>
+
+  <!-- PAGE: TRABAJADORES -->
+  <div id="page-trabajadores" class="page">
+    <div class="section-header">
+      <div><div class="section-title">👷 Trabajadores</div><div class="section-sub" id="trab-sub"></div></div>
+      <div class="section-actions">
+        <button class="btn btn-primary" onclick="openModal('modal-nuevo-trab')">+ Trabajador</button>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTrabTab('planta',this)">🏭 Personal Planta</button>
+      <button class="tab-btn" onclick="switchTrabTab('esporadico',this)">⚡ Pool Esporádico</button>
+      <button class="tab-btn" onclick="switchTrabTab('bloqueado',this)">🚫 Bloqueados</button>
+    </div>
+    <div class="filters">
+      <input class="filter-input" placeholder="🔍 Nombre o RUT..." id="filt-trab-txt" oninput="renderTrabajadores()" style="width:200px;">
+      <select class="filter-select" id="filt-trab-esp" onchange="renderTrabajadores()">
+        <option value="">Especialidad</option>
+      </select>
+      <select class="filter-select" id="filt-trab-disp" onchange="renderTrabajadores()">
+        <option value="">Disponibilidad</option>
+        <option value="disponible">Disponible</option>
+        <option value="asignado">Asignado</option>
+        <option value="vacaciones">Vacaciones</option>
+        <option value="bloqueado">Bloqueado</option>
+      </select>
+      <select class="filter-select" id="filt-trab-cal" onchange="renderTrabajadores()">
+        <option value="">Calificación</option>
+        <option value="7">A (7)</option>
+        <option value="5">B+ (5-6)</option>
+        <option value="3">C (3-4)</option>
+        <option value="1">D (1-2)</option>
+      </select>
+      <select class="filter-select" id="filt-trab-mina" onchange="renderTrabajadores()">
+        <option value="">Minera</option>
+      </select>
+    </div>
+    <div class="card">
+      <div class="table-wrap"><table id="trab-table"><thead></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- PAGE: BLOQUEADOS (redirect to trabajadores tab) -->
+  <div id="page-bloqueados" class="page">
+    <div class="section-header">
+      <div><div class="section-title">🚫 Trabajadores Bloqueados</div></div>
+    </div>
+    <div class="card">
+      <div class="table-wrap"><table id="bloq-table"><thead></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- PAGE: AUDITORIA -->
+  <div id="page-auditoria" class="page">
+    <div class="section-header">
+      <div><div class="section-title">📋 Auditoría Documental</div></div>
+      <button class="btn btn-secondary" onclick="exportAuditoria()">⬇ Exportar CSV</button>
+    </div>
+    <div class="filters">
+      <input class="filter-input" placeholder="🔍 Nombre..." id="filt-aud-txt" oninput="renderAuditoria()" style="width:200px;">
+      <select class="filter-select" id="filt-aud-mina" onchange="renderAuditoria()">
+        <option value="">Todas las minas</option>
+      </select>
+      <select class="filter-select" id="filt-aud-est" onchange="renderAuditoria()">
+        <option value="">Todos los estados</option>
+        <option value="puede">✅ Puede operar</option>
+        <option value="revisar">⚠️ Revisar</option>
+        <option value="no_puede">❌ No puede operar</option>
+      </select>
+    </div>
+    <div class="card"><div class="table-wrap"><table id="aud-table"></table></div></div>
+  </div>
+
+  <!-- PAGE: MANTENCIONES -->
+  <div id="page-mantenciones" class="page">
+    <div class="section-header">
+      <div><div class="section-title">🔧 Mantenciones</div><div class="section-sub" id="mant-sub"></div></div>
+      <button class="btn btn-secondary" onclick="openModal('modal-nueva-mina')">+ Minera</button>
+        <button class="btn btn-primary" onclick="openModal('modal-nueva-mant')">+ Mantención</button>
+    </div>
+    <div class="filters">
+      <input class="filter-input" placeholder="🔍 Buscar..." id="filt-mant-txt" oninput="renderMantenciones()" style="width:180px;">
+      <select class="filter-select" id="filt-mant-mina" onchange="renderMantenciones()">
+        <option value="">Todas las minas</option>
+      </select>
+      <select class="filter-select" id="filt-mant-est" onchange="renderMantenciones()">
+        <option value="">Todos los estados</option>
+        <option value="planificada">Planificada</option>
+        <option value="en_curso">En Curso</option>
+        <option value="cerrada">Cerrada</option>
+      </select>
+      <select class="filter-select" id="filt-mant-tipo" onchange="renderMantenciones()">
+        <option value="">Todos los tipos</option>
+        <option value="parada_planta">Parada Planta</option>
+        <option value="mantencion_mayor">Mant. Mayor</option>
+        <option value="shutdown">Shutdown</option>
+        <option value="emergencia">Emergencia</option>
+      </select>
+    </div>
+    <div id="mant-list"></div>
+  </div>
+
+  <!-- PAGE: CONTRATOS -->
+  <div id="page-contratos" class="page">
+    <div class="section-header">
+      <div><div class="section-title">📝 Contratos y Firmas</div></div>
+      <div class="section-actions">
+        <button class="btn btn-secondary" onclick="openModal('modal-nueva-firma')">+ Enviar a Firma</button>
+        <button class="btn btn-primary" onclick="openModal('modal-generar-contrato')">+ Generar Contrato</button>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchContTab('marcos',this)">📋 Contratos Marco</button>
+      <button class="tab-btn" onclick="switchContTab('firmas',this)">✍️ Firma Digital</button>
+    </div>
+    <div id="contratos-marcos-view">
+      <div class="card"><div class="table-wrap"><table id="contratos-table"></table></div></div>
+    </div>
+    <div id="contratos-firmas-view" style="display:none;">
+      <div class="card"><div class="table-wrap"><table id="firmas-table"></table></div></div>
+    </div>
+  </div>
+
+  <!-- PAGE: HOTELERIA -->
+  <div id="page-hoteleria" class="page">
+    <div class="section-header">
+      <div><div class="section-title">🛏️ Hotelería</div></div>
+      <button class="btn btn-primary" onclick="openModal('modal-hotel-asignar')">+ Asignar Alojamiento</button>
+    </div>
+    <div class="grid-4" id="hotel-cards" style="margin-bottom:24px;"></div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Asignaciones de Alojamiento</div></div>
+      <div class="table-wrap"><table id="hotel-table"></table></div>
+    </div>
+  </div>
+
+  <!-- PAGE: LLAMADOS WA -->
+  <div id="page-llamados" class="page">
+    <div class="section-header">
+      <div><div class="section-title">📲 Llamados WhatsApp</div></div>
+      <button class="btn btn-primary" onclick="openModal('modal-callout')">+ Nuevo Llamado</button>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Historial de Llamados</div></div>
+      <div class="table-wrap"><table id="callout-table"></table></div>
+    </div>
+  </div>
+
+  <!-- PAGE: EXAMENES -->
+  <div id="page-examenes" class="page">
+    <div class="section-header">
+      <div><div class="section-title">🧪 Exámenes Médicos</div></div>
+      <button class="btn btn-secondary" onclick="exportExamenes()">⬇ Exportar CSV</button>
+    </div>
+    <div class="filters">
+      <input class="filter-input" placeholder="🔍 Nombre..." id="filt-ex-txt" oninput="renderExamenes()" style="width:180px;">
+      <select class="filter-select" id="filt-ex-tipo" onchange="renderExamenes()">
+        <option value="">Todos los tipos</option>
+        <option value="exPreocupacional">Preocupacional</option>
+        <option value="exAlturaGeo">Altura Geográfica</option>
+        <option value="exPsicosens">Psicosensotécnico</option>
+        <option value="exAudiometria">Audiometría</option>
+        <option value="exVisual">Visual</option>
+        <option value="exAlcohol">Alcohol/Drogas</option>
+      </select>
+      <select class="filter-select" id="filt-ex-est" onchange="renderExamenes()">
+        <option value="">Todos los estados</option>
+        <option value="vigente">Vigente</option>
+        <option value="proximo">Próximo</option>
+        <option value="critico">Crítico</option>
+        <option value="vencido">Vencido</option>
+      </select>
+      <select class="filter-select" id="filt-ex-mina" onchange="renderExamenes()">
+        <option value="">Todas las minas</option>
+      </select>
+    </div>
+    <div class="card"><div class="table-wrap"><table id="ex-table"></table></div></div>
+  </div>
+
+  <!-- PAGE: CURSOS -->
+  <div id="page-cursos" class="page">
+    <div class="section-header">
+      <div><div class="section-title">📚 Cursos y Certificaciones</div></div>
+      <button class="btn btn-secondary" onclick="exportCursos()">⬇ Exportar CSV</button>
+    </div>
+    <div class="filters">
+      <input class="filter-input" placeholder="🔍 Nombre..." id="filt-cur-txt" oninput="renderCursos()" style="width:180px;">
+      <select class="filter-select" id="filt-cur-tipo" onchange="renderCursos()">
+        <option value="">Todos los cursos</option>
+        <option value="curODI">ODI</option>
+        <option value="curReglamento">Reglamento Interno</option>
+        <option value="curLOTO">LOTO</option>
+        <option value="curAlturaFisica">Altura Física</option>
+        <option value="curEspaciosConfinados">Espacios Confinados</option>
+        <option value="curTrabajosCaliente">Trabajos en Caliente</option>
+        <option value="curManejoDefensivo">Manejo Defensivo</option>
+        <option value="curArcFlash">Arc Flash</option>
+      </select>
+      <select class="filter-select" id="filt-cur-est" onchange="renderCursos()">
+        <option value="">Todos los estados</option>
+        <option value="vigente">Vigente</option>
+        <option value="proximo">Próximo</option>
+        <option value="critico">Crítico</option>
+        <option value="vencido">Vencido</option>
+      </select>
+    </div>
+    <div class="card"><div class="table-wrap"><table id="cur-table"></table></div></div>
+  </div>
+
+  <!-- PAGE: REPORTES -->
+  <div id="page-reportes" class="page">
+    <div class="section-header">
+      <div><div class="section-title">📊 Reportes</div><div class="section-sub">Exporta datos reales en CSV</div></div>
+    </div>
+    <div class="grid-3" style="gap:20px;">
+      <div class="report-card" onclick="exportNomina()"><div class="report-icon">📋</div><div class="report-title">Nómina Completa</div><div class="report-desc">Todos los trabajadores con datos básicos y estado</div></div>
+      <div class="report-card" onclick="exportReporteMant()"><div class="report-icon">🔧</div><div class="report-title">Reporte por Mantención</div><div class="report-desc">Personal asignado y estado por mantención</div></div>
+      <div class="report-card" onclick="exportAlertasCSV()"><div class="report-icon">🚨</div><div class="report-title">Alertas Vencimiento</div><div class="report-desc">Todos los vencimientos críticos y próximos</div></div>
+      <div class="report-card" onclick="exportContratos()"><div class="report-icon">📝</div><div class="report-title">Estado Contratos y Firmas</div><div class="report-desc">Marco de contratos y estado de firmas digitales</div></div>
+      <div class="report-card" onclick="exportHoteles()"><div class="report-icon">🛏</div><div class="report-title">Alojamiento</div><div class="report-desc">Asignaciones de hotelería por mantención</div></div>
+      <div class="report-card" onclick="exportAuditoria()"><div class="report-icon">🔍</div><div class="report-title">Auditoría Acreditación</div><div class="report-desc">Porcentaje de acreditación por trabajador</div></div>
+    </div>
+  </div>
+
+  <!-- PAGE: CLIENTES DOMIAN -->
+  <div id="page-clientes" class="page">
+    <div class="section-header">
+      <div><div class="section-title">🏢 Clientes Domian</div><div class="section-sub" id="clientes-sub">Administración de sitios privados creados</div></div>
+      <div class="section-actions"><button class="btn btn-secondary" onclick="exportClientsRegistry()">Exportar clientes</button></div>
+    </div>
+    <div class="card">
+      <div class="table-wrap"><table id="clientes-table"></table></div>
+    </div>
+  </div>
+</div>
+<!-- MODALS -->
+<!-- Modal: Ficha Trabajador -->
+<div class="modal-overlay" id="modal-ficha">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <div class="modal-title" id="ficha-title">Ficha Trabajador</div>
+      <button class="modal-close" onclick="closeModal('modal-ficha')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchFichaTab('datos',this)">👤 Datos Personales</button>
+        <button class="tab-btn" onclick="switchFichaTab('docs',this)">📄 Docs y Exámenes</button>
+        <button class="tab-btn" onclick="switchFichaTab('cur',this)">📚 Cursos</button>
+        <button class="tab-btn" onclick="switchFichaTab('hist',this)">📅 Historial</button>
+      </div>
+      <div id="ficha-tab-datos" class="tab-content active"></div>
+      <div id="ficha-tab-docs" class="tab-content"></div>
+      <div id="ficha-tab-cur" class="tab-content"></div>
+      <div id="ficha-tab-hist" class="tab-content"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-ficha')">Cerrar</button>
+      <button class="btn btn-blue btn-sm" id="ficha-wa-btn">📲 WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nuevo Trabajador -->
+<div class="modal-overlay" id="modal-nuevo-trab">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">+ Nuevo Trabajador</div><button class="modal-close" onclick="closeModal('modal-nuevo-trab')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label class="form-label">Nombre Completo</label><input class="form-input" id="nt-nombre" placeholder="Nombre Apellido Apellido"></div>
+        <div class="form-group"><label class="form-label">RUT</label><input class="form-input" id="nt-rut" placeholder="12.345.678-9"></div>
+        <div class="form-group"><label class="form-label">Fecha Nacimiento</label><input class="form-input" type="date" id="nt-nacimiento"></div>
+        <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="nt-tel" placeholder="+56 9 XXXX XXXX"></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="nt-email" type="email" placeholder="correo@email.com"></div>
+        <div class="form-group"><label class="form-label">Ciudad</label><input class="form-input" id="nt-ciudad" placeholder="Santiago"></div>
+        <div class="form-group"><label class="form-label">Tipo Contrato</label>
+          <select class="form-select" id="nt-tipo"><option value="permanente">Permanente</option><option value="esporadico">Esporádico</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Especialidad</label>
+          <select class="form-select" id="nt-esp"></select>
+        </div>
+        <div class="form-group"><label class="form-label">Calificación (1-7)</label>
+          <select class="form-select" id="nt-cal">
+            <option value="7">7 - A</option><option value="6">6 - B</option><option value="5">5 - B</option>
+            <option value="4">4 - C</option><option value="3">3 - C</option><option value="2">2 - D</option><option value="1">1 - D</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">AFP</label><input class="form-input" id="nt-afp" placeholder="AFP Habitat"></div>
+        <div class="form-group"><label class="form-label">Salud</label><input class="form-input" id="nt-salud" placeholder="Fonasa / Isapre"></div>
+        <div class="form-group"><label class="form-label">Mutual de Seguridad</label><input class="form-input" id="nt-mutual" placeholder="Mutual / ACHS / IST"></div>
+        <div class="form-group full"><label class="form-label">Mineras Habilitadas</label>
+          <div id="nt-minas-checks" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-nuevo-trab')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveNuevoTrab()">✅ Guardar Trabajador</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nueva Mantención -->
+<div class="modal-overlay" id="modal-nueva-mant">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">+ Nueva Mantención</div><button class="modal-close" onclick="closeModal('modal-nueva-mant')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label class="form-label">Nombre de la Mantención</label><input class="form-input" id="nm-nombre" placeholder="Nombre descriptivo"></div>
+        <div class="form-group"><label class="form-label">Minera</label><select class="form-select" id="nm-mina"></select></div>
+        <div class="form-group"><label class="form-label">Contrato Marco</label><select class="form-select" id="nm-contrato"></select></div>
+        <div class="form-group"><label class="form-label">Tipo</label>
+          <select class="form-select" id="nm-tipo">
+            <option value="parada_planta">Parada de Planta</option>
+            <option value="mantencion_mayor">Mantención Mayor</option>
+            <option value="shutdown">Shutdown</option>
+            <option value="emergencia">Emergencia</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Área / Sector</label><input class="form-input" id="nm-area" placeholder="Área/Sector en faena"></div>
+        <div class="form-group"><label class="form-label">Fecha Inicio</label><input class="form-input" type="date" id="nm-inicio"></div>
+        <div class="form-group"><label class="form-label">Fecha Término</label><input class="form-input" type="date" id="nm-termino"></div>
+        <div class="form-group"><label class="form-label">HH Proyectadas</label><input class="form-input" type="number" id="nm-hh" placeholder="0"></div>
+        <div class="form-group"><label class="form-label">Personal Requerido</label><input class="form-input" type="number" id="nm-req" placeholder="0"></div>
+        <div class="form-group"><label class="form-label">Admin Responsable</label><input class="form-input" id="nm-admin" placeholder="Nombre del admin"></div>
+        <div class="form-group"><label class="form-label">Contraparte Minera</label><input class="form-input" id="nm-contraparte" placeholder="Contacto en minera"></div>
+        <div class="form-group full">
+          <label class="form-label">Especialidades Requeridas</label>
+          <div id="nm-esps-list" style="margin:8px 0;display:flex;gap:6px;flex-wrap:wrap;"></div>
+          <div style="display:flex;gap:8px;">
+            <select class="form-select" id="nm-esp-sel" style="flex:1;"></select>
+            <button class="btn btn-secondary btn-sm" onclick="addEspToMant()">+ Agregar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-nueva-mant')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveNuevaMant()">✅ Guardar Mantención</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Detalle Mantención -->
+<div class="modal-overlay" id="modal-mant-detalle">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <div class="modal-title" id="mant-det-title">Detalle Mantención</div>
+      <button class="modal-close" onclick="closeModal('modal-mant-detalle')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchMantTab('personal',this)">👷 Personal</button>
+        <button class="tab-btn" onclick="switchMantTab('hotel',this)">🛏️ Hotelería</button>
+        <button class="tab-btn" onclick="switchMantTab('docs',this)">📄 Documentos</button>
+        <button class="tab-btn" onclick="switchMantTab('timeline',this)">📅 Timeline</button>
+      </div>
+      <div id="mant-tab-personal" class="tab-content active"></div>
+      <div id="mant-tab-hotel" class="tab-content"></div>
+      <div id="mant-tab-docs" class="tab-content"></div>
+      <div id="mant-tab-timeline" class="tab-content"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-mant-detalle')">Cerrar</button>
+      <button class="btn btn-blue" onclick="openCalloutFromMant()">📲 Llamado WA</button>
+      <button class="btn btn-primary" onclick="openAsignarPersonal()">👷 Asignar Personal</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Asignar Personal -->
+<div class="modal-overlay" id="modal-asignar">
+  <div class="modal modal-wide">
+    <div class="modal-header"><div class="modal-title">👷 Asignar Personal</div><button class="modal-close" onclick="closeModal('modal-asignar')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label">Mantención</label>
+        <select class="form-select" id="asig-mant" onchange="loadAsignarWorkers()"></select>
+      </div>
+      <div class="filters" style="margin-bottom:14px;">
+        <input class="filter-input" placeholder="🔍 Filtrar trabajadores..." id="filt-asig-txt" oninput="filterAsignarWorkers()" style="width:200px;">
+        <select class="filter-select" id="filt-asig-esp" onchange="filterAsignarWorkers()"><option value="">Especialidad</option></select>
+      </div>
+      <div id="asignar-workers-list" style="max-height:340px;overflow-y:auto;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-asignar')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveAsignaciones()">✅ Guardar Asignaciones</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Generar Contrato -->
+<div class="modal-overlay" id="modal-generar-contrato">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">📝 Generar Contrato</div><button class="modal-close" onclick="closeModal('modal-generar-contrato')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label class="form-label">Trabajador</label><select class="form-select" id="gc-trab"></select></div>
+        <div class="form-group full"><label class="form-label">Mantención</label><select class="form-select" id="gc-mant" onchange="autoFillContrato()"></select></div>
+        <div class="form-group"><label class="form-label">Fecha Inicio</label><input class="form-input" type="date" id="gc-inicio"></div>
+        <div class="form-group"><label class="form-label">Fecha Término</label><input class="form-input" type="date" id="gc-termino"></div>
+        <div class="form-group"><label class="form-label">Turno</label>
+          <select class="form-select" id="gc-turno"><option value="día">Día</option><option value="noche">Noche</option><option value="ambos">Turnos</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Remuneración Bruta ($)</label><input class="form-input" type="number" id="gc-rem" placeholder="1500000"></div>
+        <div class="form-group full"><label class="form-label">Canal de Envío</label>
+          <select class="form-select" id="gc-canal"><option value="whatsapp">WhatsApp</option><option value="email">Email</option><option value="ambos">Ambos</option></select>
+        </div>
+        <div class="form-group full"><label class="form-label">Tipo de Documento</label>
+          <select class="form-select" id="gc-tipo">
+            <option value="Contrato por obra/faena">Contrato por Obra/Faena</option>
+            <option value="Anexo de movilización">Anexo de Movilización</option>
+            <option value="ODI – Obligación de Informar">ODI – Obligación de Informar</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-generar-contrato')">Cancelar</button>
+      <button class="btn btn-primary" onclick="generarContrato()">📄 Generar y Vista Previa</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Vista Previa Contrato -->
+<div class="modal-overlay" id="modal-contrato-preview">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <div class="modal-title">Vista Previa — Documento</div>
+      <button class="modal-close" onclick="closeModal('modal-contrato-preview')">✕</button>
+    </div>
+    <div class="modal-body" id="contrato-preview-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-contrato-preview')">Cerrar</button>
+      <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nueva Firma -->
+<div class="modal-overlay" id="modal-nueva-firma">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">✍️ Enviar a Firma</div><button class="modal-close" onclick="closeModal('modal-nueva-firma')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label class="form-label">Trabajador</label><select class="form-select" id="nf-trab"></select></div>
+        <div class="form-group full"><label class="form-label">Tipo de Documento</label>
+          <select class="form-select" id="nf-tipo">
+            <option value="Contrato por obra/faena">Contrato por Obra/Faena</option>
+            <option value="Anexo de movilización">Anexo de Movilización</option>
+            <option value="ODI – Obligación de Informar">ODI – Obligación de Informar</option>
+            <option value="Reglamento Interno">Reglamento Interno</option>
+            <option value="Anexo específico">Anexo Específico</option>
+          </select>
+        </div>
+        <div class="form-group full"><label class="form-label">Mantención Relacionada</label><select class="form-select" id="nf-mant"></select></div>
+        <div class="form-group"><label class="form-label">Canal</label>
+          <select class="form-select" id="nf-canal"><option value="whatsapp">WhatsApp</option><option value="email">Email</option><option value="ambos">Ambos</option></select>
+        </div>
+        <div class="form-group full"><label class="form-label">Mensaje</label>
+          <textarea class="form-textarea" id="nf-msg" placeholder="Estimado trabajador, le enviamos para su firma..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-nueva-firma')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveNuevaFirma()">📤 Enviar a Firma</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Asignar Hotel -->
+<div class="modal-overlay" id="modal-hotel-asignar">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">🛏️ Asignar Alojamiento</div><button class="modal-close" onclick="closeModal('modal-hotel-asignar')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label class="form-label">Trabajador</label><select class="form-select" id="ha-trab"></select></div>
+        <div class="form-group full"><label class="form-label">Mantención</label><select class="form-select" id="ha-mant" onchange="filterHotelesByMant()"></select></div>
+        <div class="form-group full"><label class="form-label">Hotel</label><select class="form-select" id="ha-hotel"></select></div>
+        <div class="form-group"><label class="form-label">N° Pieza / Habitación</label><input class="form-input" id="ha-pieza" placeholder="101"></div>
+        <div class="form-group"><label class="form-label">Tipo Habitación</label>
+          <select class="form-select" id="ha-tipo"><option value="simple">Simple</option><option value="doble">Doble</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Turno</label>
+          <select class="form-select" id="ha-turno"><option value="día">Día</option><option value="noche">Noche</option><option value="ambos">Ambos</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Check-in</label><input class="form-input" type="date" id="ha-checkin"></div>
+        <div class="form-group"><label class="form-label">Check-out</label><input class="form-input" type="date" id="ha-checkout"></div>
+        <div class="form-group full"><label class="form-label">Comparte con (opcional)</label><input class="form-input" id="ha-comparte" placeholder="Nombre del compañero de habitación"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-hotel-asignar')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveHotelAsig()">✅ Asignar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Callout WA -->
+<div class="modal-overlay" id="modal-callout">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">📲 Nuevo Llamado WhatsApp</div><button class="modal-close" onclick="closeModal('modal-callout')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label class="form-label">Mantención</label><select class="form-select" id="co-mant" onchange="loadCalloutEsps()"></select></div>
+        <div class="form-group full">
+          <label class="form-label">Especialidades a Convocar</label>
+          <div id="co-esps-checks" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Turno</label>
+          <select class="form-select" id="co-turno"><option value="día">Día</option><option value="noche">Noche</option><option value="ambos">Ambos</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Cupos Disponibles</label><input class="form-input" type="number" id="co-cupos" placeholder="10"></div>
+        <div class="form-group full">
+          <label class="form-label">Plantilla de Mensaje</label>
+          <select class="form-select" id="co-template" onchange="loadCalloutTemplate()">
+            <option value="1">📢 Convocatoria Estándar</option>
+            <option value="2">⚡ Urgente — Emergencia</option>
+            <option value="3">🔄 Recordatorio</option>
+            <option value="4">✅ Confirmación Final</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Mensaje <span id="co-elegibles" style="color:var(--blue);font-size:11px;"></span></label>
+          <textarea class="form-textarea" id="co-mensaje" style="min-height:120px;"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-callout')">Cancelar</button>
+      <button class="btn btn-primary" onclick="sendCallout()">📲 Enviar Llamado</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal: Nueva Minera -->
+<div class="modal-overlay" id="modal-nueva-mina"><div class="modal"><div class="modal-header"><div class="modal-title">+ Nueva Minera / Mandante</div><button class="modal-close" onclick="closeModal('modal-nueva-mina')">✕</button></div><div class="modal-body"><div class="form-grid"><div class="form-group full"><label class="form-label">Nombre minera/faena</label><input class="form-input" id="min-nombre" placeholder="Minera..."></div><div class="form-group"><label class="form-label">Mandante</label><input class="form-input" id="min-mandante"></div><div class="form-group"><label class="form-label">Región</label><input class="form-input" id="min-region"></div><div class="form-group"><label class="form-label">Altura msnm</label><input class="form-input" type="number" id="min-altura"></div><div class="form-group"><label class="form-label">Sistema acceso</label><input class="form-input" id="min-sistema" placeholder="SIGA / Minpass / Propio"></div><div class="form-group"><label class="form-label">Contacto mandante</label><input class="form-input" id="min-contacto"></div><div class="form-group"><label class="form-label">Color</label><input class="form-input" type="color" id="min-color" value="#f07d36"></div></div></div><div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-nueva-mina')">Cancelar</button><button class="btn btn-primary" onclick="saveNuevaMina()">Guardar</button></div></div></div>
+<!-- Modal: Nuevo Hotel -->
+<div class="modal-overlay" id="modal-nuevo-hotel"><div class="modal"><div class="modal-header"><div class="modal-title">+ Nuevo Hotel</div><button class="modal-close" onclick="closeModal('modal-nuevo-hotel')">✕</button></div><div class="modal-body"><div class="form-grid"><div class="form-group full"><label class="form-label">Nombre hotel</label><input class="form-input" id="hot-nombre"></div><div class="form-group"><label class="form-label">Ciudad</label><input class="form-input" id="hot-ciudad"></div><div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="hot-tel"></div><div class="form-group"><label class="form-label">Habitaciones simples</label><input class="form-input" type="number" id="hot-simples" value="0"></div><div class="form-group"><label class="form-label">Habitaciones dobles</label><input class="form-input" type="number" id="hot-dobles" value="0"></div><div class="form-group"><label class="form-label">Tarifa noche</label><input class="form-input" type="number" id="hot-tarifa" value="0"></div><div class="form-group full"><label class="form-label">Minas asociadas</label><div id="hot-minas-checks" style="display:flex;gap:8px;flex-wrap:wrap;"></div></div></div></div><div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-nuevo-hotel')">Cancelar</button><button class="btn btn-primary" onclick="saveNuevoHotel()">Guardar</button></div></div></div>
+<!-- Modal: Cloud -->
+<div class="modal-overlay" id="modal-cloud"><div class="modal modal-wide"><div class="modal-header"><div class="modal-title">Publicar en cloud / URL pública</div><button class="modal-close" onclick="closeModal('modal-cloud')">✕</button></div><div class="modal-body"><div class="cloud-note"><b>Estado actual:</b> esta versión funciona como app HTML local con datos separados por cliente en este computador. Para publicarla en internet de forma segura, Domian debe activar backend PHP o Node, base de datos, login con contraseñas, almacenamiento privado de archivos, SSL y backups.</div><div class="grid-2" style="margin-top:16px;"><div class="card"><div class="card-title">Opción recomendada</div><div style="color:var(--text-muted);font-size:13px;line-height:1.5;margin-top:8px;">Migrar a Laravel/PHP + MySQL/PostgreSQL. Cada cliente queda con un <b>tenant_id</b> propio, usuarios por empresa, permisos y archivos separados.</div></div><div class="card"><div class="card-title">Respaldo portable</div><div style="color:var(--text-muted);font-size:13px;line-height:1.5;margin-top:8px;">Usa el botón <b>Respaldo</b> para descargar toda la data del cliente actual en JSON y cargarla luego en un servidor.</div></div></div><div style="margin-top:16px;"><button class="btn btn-primary" onclick="exportTenantBackup()">Descargar respaldo del cliente actual</button></div></div></div></div>
+
+<script>
+// ===================== STATE =====================
+const S = {
+  empresa: { nombre:'Domian Servicios Industriales SpA', rut:'78.425.213-2', representante:'Ricardo Hornig', email:'contacto@domian.cl', tel:'+56 9 7649 0489' },
+  minas: [
+    { id:'mi1', nombre:'Minera Los Pelambres', mandante:'Antofagasta Minerals', region:'Coquimbo', altura:3200, sistema:'SIGA', contacto:'Patricio Reyes', color:'#f07d36' },
+    { id:'mi2', nombre:'Minera Escondida', mandante:'BHP', region:'Antofagasta', altura:3100, sistema:'Minpass', contacto:'Sofía Castro', color:'#4db8e8' },
+    { id:'mi3', nombre:'Codelco El Teniente', mandante:'Codelco', region:"O'Higgins", altura:2500, sistema:'Propio', contacto:'Hernán Vidal', color:'#34d399' },
+    { id:'mi4', nombre:'Collahuasi', mandante:'Anglo American', region:'Tarapacá', altura:4400, sistema:'SIGA', contacto:'María Pizarro', color:'#fbbf24' },
+    { id:'mi5', nombre:'Spence', mandante:'BHP', region:'Antofagasta', altura:1700, sistema:'Minpass', contacto:'Diego Olivares', color:'#a78bfa' }
+  ],
+  contratos: [
+    { id:'c1', nombre:'Mantención Mecánica Marco 2025-2027', numero:'CTR-2025-001', minaId:'mi1', tipo:'permanente', inicio:'2025-01-01', termino:'2027-12-31', montoUF:48000, estado:'activo' },
+    { id:'c2', nombre:'Paradas de Planta — Esporádico', numero:'CTR-2025-014', minaId:'mi1', tipo:'esporadico', inicio:'2025-03-01', termino:'2026-12-31', montoUF:15000, estado:'activo' },
+    { id:'c3', nombre:'Mantención Eléctrica Permanente', numero:'CTR-2024-077', minaId:'mi2', tipo:'permanente', inicio:'2024-06-01', termino:'2027-06-01', montoUF:32000, estado:'activo' },
+    { id:'c4', nombre:'Soldadura Especializada Esporádica', numero:'CTR-2025-022', minaId:'mi3', tipo:'esporadico', inicio:'2025-02-01', termino:'2026-12-31', montoUF:9800, estado:'activo' },
+    { id:'c5', nombre:'Servicio Integral Mantención Mecánica', numero:'CTR-2024-103', minaId:'mi4', tipo:'permanente', inicio:'2024-09-01', termino:'2027-09-01', montoUF:62000, estado:'activo' },
+    { id:'c6', nombre:'Apoyo Paradas Spence 2026', numero:'CTR-2026-003', minaId:'mi5', tipo:'esporadico', inicio:'2026-01-01', termino:'2026-12-31', montoUF:12000, estado:'proceso' }
+  ],
+  mantenciones: [
+    { id:'mn1', nombre:'Parada Pebbles & Grinding Q3', minaId:'mi1', contratoId:'c2', tipo:'parada_planta', area:'Pebbles y Molienda SAG', inicio:'2026-07-01', termino:'2026-07-15', hh:3500, personalReq:42, estado:'planificada', admin:'Marco López', contraparte:'Patricio Reyes', especialidades:['Mecánico Industrial','Soldador 6G','Rigger','Maestro Andamios','Lubricador'], zonas:['Pebbles','Grevilla','Área Chancado'] },
+    { id:'mn2', nombre:'Mantención Mayor Chancador Primario', minaId:'mi2', contratoId:'c3', tipo:'mantencion_mayor', area:'Chancado Primario', inicio:'2026-07-10', termino:'2026-07-20', hh:2100, personalReq:28, estado:'planificada', admin:'Sofía Castro', contraparte:'Marisol Pino', especialidades:['Mecánico Mantenedor','Eléctrico','Instrumentista','Soldador 3G'], zonas:['Chancador Norte','Chancador Sur'] },
+    { id:'mn3', nombre:'Shutdown Eléctrico Subestación Norte', minaId:'mi3', contratoId:'c4', tipo:'shutdown', area:'Subestación Norte 110kV', inicio:'2026-08-10', termino:'2026-08-12', hh:680, personalReq:14, estado:'planificada', admin:'Hernán Vidal', contraparte:'Cristina Aros', especialidades:['Eléctrico','Instrumentista','Prevencionista'], zonas:['Subestación Norte'] },
+    { id:'mn4', nombre:'Emergencia Falla Correa CV-201', minaId:'mi4', contratoId:'c5', tipo:'emergencia', area:'Transporte CV-201', inicio:'2026-03-01', termino:'2026-03-02', hh:520, personalReq:12, estado:'cerrada', admin:'Pablo Méndez', contraparte:'María Pizarro', especialidades:['Mecánico Industrial','Soldador 6G','Caldererero'], zonas:['Transporte'] },
+    { id:'mn5', nombre:'Parada Programada Molino Bolas L2', minaId:'mi5', contratoId:'c6', tipo:'parada_planta', area:'Molienda Línea 2', inicio:'2026-09-15', termino:'2026-09-25', hh:4200, personalReq:55, estado:'planificada', admin:'Diego Olivares', contraparte:'Andrea Salas', especialidades:['Mecánico Industrial','Soldador 6G','Rigger','Eléctrico','Instrumentista','Maestro Andamios'], zonas:['Molienda L2','Clasificación'] }
+  ],
+  hoteles: [
+    { id:'h1', nombre:'Hotel Sol Andino', ciudad:'Los Vilos', tel:'+56 53 211 000', simples:10, dobles:22, tarifa:52000, minaIds:['mi1'] },
+    { id:'h2', nombre:'Hotel Antofagasta Park', ciudad:'Antofagasta', tel:'+56 55 222 1100', simples:20, dobles:50, tarifa:62000, minaIds:['mi2','mi5'] },
+    { id:'h3', nombre:'Hotel Diego de Almagro', ciudad:'Calama', tel:'+56 55 234 5000', simples:18, dobles:35, tarifa:58000, minaIds:['mi4'] },
+    { id:'h4', nombre:'Hostal El Minero', ciudad:'Los Vilos', tel:'+56 53 212 500', simples:8, dobles:7, tarifa:42000, minaIds:['mi1'] }
+  ],
+  ESPECIALIDADES: ['Mecánico Industrial','Mecánico Mantenedor','Soldador 3G','Soldador 6G','Eléctrico','Instrumentista','Rigger','Maestro Andamios','Operador Grúa Horquilla','Operador Manlift','Tornero / Fresador','Caldererero','Pailero','Lubricador','Prevencionista'],
+  firmas: [
+    {id:'fi1',trabId:'t1',tipo:'Anexo de movilización',mantId:'mn1',estado:'pendiente',enviado:'2026-06-20',firmado:null,canal:'whatsapp'},
+    {id:'fi2',trabId:'t5',tipo:'Contrato por obra/faena',mantId:'mn1',estado:'firmado',enviado:'2026-06-18',firmado:'2026-06-19',canal:'email'},
+    {id:'fi3',trabId:'t6',tipo:'Anexo de movilización',mantId:'mn2',estado:'enviado',enviado:'2026-06-21',firmado:null,canal:'whatsapp'},
+    {id:'fi4',trabId:'t11',tipo:'ODI – Obligación de Informar',mantId:'mn5',estado:'enviado',enviado:'2026-06-22',firmado:null,canal:'ambos'},
+    {id:'fi5',trabId:'t12',tipo:'Contrato por obra/faena',mantId:'mn5',estado:'borrador',enviado:null,firmado:null,canal:'whatsapp'}
+  ],
+  callouts: [
+    {id:'co1',fecha:'2026-06-20 09:15',mantId:'mn1',especialidades:['Soldador 6G','Rigger'],turno:'ambos',cupos:20,enviados:42,respondieron:23,asignados:12},
+    {id:'co2',fecha:'2026-05-10 14:22',mantId:'mn2',especialidades:['Eléctrico','Instrumentista'],turno:'noche',cupos:15,enviados:28,respondieron:18,asignados:8},
+    {id:'co3',fecha:'2026-06-01 08:00',mantId:'mn5',especialidades:['Mecánico Industrial','Soldador 6G','Rigger'],turno:'ambos',cupos:30,enviados:65,respondieron:31,asignados:20}
+  ],
+  trabajadores: [],
+  asignaciones: [],
+  hotelAsig: []
+};
+
+
+let currentTenantId = 'domian';
+let bootSeedSnapshot = null;
+const ADMIN_TENANT_ID = '784252132';
+const CLIENT_REGISTRY_KEY = 'accesomina_v6_client_registry';
+function domianEmpresa() { return { nombre:'Domian Servicios Industriales SpA', rut:'78.425.213-2', representante:'Ricardo Hornig', email:'contacto@domian.cl', tel:'+56 9 7649 0489' }; }
+function tenantKey(id) { return `accesomina_v6_tenant_${id}`; }
+function normalizeTenantId(rut) { return (rut||'domian').toLowerCase().replace(/[^0-9k]/g,'') || 'domian'; }
+function cleanRut(rut) { return String(rut||'').toLowerCase().replace(/[^0-9k]/g,''); }
+function formatRut(rut) {
+  const clean = cleanRut(rut);
+  if(clean.length < 2) return String(rut||'').trim();
+  const body = clean.slice(0,-1);
+  const dv = clean.slice(-1).toUpperCase();
+  return body.replace(/\B(?=(\d{3})+(?!\d))/g,'.') + '-' + dv;
+}
+function isValidRut(rut) {
+  const clean = cleanRut(rut);
+  if(!/^\d{7,8}[0-9k]$/.test(clean)) return false;
+  const body = clean.slice(0,-1);
+  const dv = clean.slice(-1);
+  let sum = 0, mul = 2;
+  for(let i=body.length-1;i>=0;i--) {
+    sum += parseInt(body[i],10) * mul;
+    mul = mul === 7 ? 2 : mul + 1;
+  }
+  const res = 11 - (sum % 11);
+  const expected = res === 11 ? '0' : res === 10 ? 'k' : String(res);
+  return dv === expected;
+}
+function isValidEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(String(email||'').trim()); }
+function isValidPhoneCL(tel) {
+  const raw = String(tel||'').trim();
+  if(!raw) return true;
+  const n = raw.replace(/\D/g,'');
+  return /^(56)?9\d{8}$/.test(n) || /^(56)?2\d{8}$/.test(n) || /^\d{8,12}$/.test(n);
+}
+function isAdminTenant() { return currentTenantId === ADMIN_TENANT_ID; }
+function snapshotState() { return JSON.parse(JSON.stringify({empresa:S.empresa,minas:S.minas,contratos:S.contratos,mantenciones:S.mantenciones,hoteles:S.hoteles,firmas:S.firmas,callouts:S.callouts,trabajadores:S.trabajadores,asignaciones:S.asignaciones,hotelAsig:S.hotelAsig,ESPECIALIDADES:S.ESPECIALIDADES})); }
+function applyState(data) { if(!data) return; ['empresa','minas','contratos','mantenciones','hoteles','firmas','callouts','trabajadores','asignaciones','hotelAsig','ESPECIALIDADES'].forEach(k=>{ if(data[k]!==undefined) S[k]=data[k]; }); }
+function emptyTenantData(nombre,rut,email,tel) { return { empresa:{nombre:nombre||'Empresa Contratista',rut:rut||'',representante:'Administrador',email:email||'',tel:tel||''}, minas:[], contratos:[], mantenciones:[], hoteles:[], firmas:[], callouts:[], trabajadores:[], asignaciones:[], hotelAsig:[], ESPECIALIDADES:[...S.ESPECIALIDADES] }; }
+function loadClientRegistry() {
+  let list = [];
+  try { list = JSON.parse(localStorage.getItem(CLIENT_REGISTRY_KEY)||'[]'); } catch(e) { list = []; }
+  const hasDomian = list.some(c=>c.id===ADMIN_TENANT_ID);
+  if(!hasDomian) {
+    list.unshift({ id:ADMIN_TENANT_ID, nombre:'Domian Servicios Industriales SpA', rut:'78.425.213-2', email:'contacto@domian.cl', tel:'+56 9 7649 0489', creado:hoy(), admin:true });
+    saveClientRegistry(list);
+  }
+  return list;
+}
+function saveClientRegistry(list) { localStorage.setItem(CLIENT_REGISTRY_KEY, JSON.stringify(list)); }
+function upsertClientMeta(meta) {
+  const list = loadClientRegistry().filter(c=>c.id!==meta.id);
+  list.push(Object.assign({creado:hoy(),admin:false}, meta));
+  saveClientRegistry(list.sort((a,b)=>(b.admin?1:0)-(a.admin?1:0)||a.nombre.localeCompare(b.nombre)));
+}
+function persistTenant() {
+  try {
+    localStorage.setItem(tenantKey(currentTenantId), JSON.stringify(snapshotState()));
+    upsertClientMeta({ id:currentTenantId, nombre:S.empresa?.nombre||'Cliente', rut:S.empresa?.rut||'', email:S.empresa?.email||'', tel:S.empresa?.tel||'', actualizado:hoy(), admin:isAdminTenant() });
+  } catch(e) { console.warn(e); }
+}
+function setAdminVisibility() {
+  const show = isAdminTenant();
+  ['nav-clientes','nav-admin-label'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display = show ? '' : 'none'; });
+  if(!show && currentPage==='clientes') nav('dashboard');
+}
+function renderCurrentPageSoft() {
+  initSelects(); updateBadges(); setAdminVisibility(); renderPage(currentPage||'dashboard');
+  const pill=document.getElementById('tenant-pill'); if(pill) pill.textContent = S.empresa?.nombre || 'Cliente';
+  const sub=document.getElementById('topbar-sub'); if(sub) sub.textContent = `Sitio privado · ${S.empresa?.nombre||'Cliente'}`;
+}
+function enterPrivate() { document.body.classList.remove('public'); document.body.classList.add('private'); renderCurrentPageSoft(); }
+function showPublic() { document.body.classList.remove('private'); document.body.classList.add('public'); }
+function scrollToAccess() { document.getElementById('access-panel')?.scrollIntoView({behavior:'smooth',block:'center'}); }
+function showAccessTab(tab) { document.querySelectorAll('.access-tab').forEach(b=>b.classList.remove('active')); document.querySelectorAll('.access-view').forEach(v=>v.classList.remove('active')); document.getElementById(`tab-${tab}`)?.classList.add('active'); document.getElementById(`access-${tab}`)?.classList.add('active'); scrollToAccess(); }
+function loginTenant() {
+  const rutRaw=document.getElementById('login-rut').value.trim();
+  const email=document.getElementById('login-email').value.trim().toLowerCase();
+  if(!rutRaw) { alert('Ingresa el RUT de la empresa.'); return; }
+  if(!isValidRut(rutRaw)) { alert('RUT inválido. Revisa número y dígito verificador.'); return; }
+  if(!email || !isValidEmail(email)) { alert('Ingresa un correo válido para acceder.'); return; }
+  const rut=formatRut(rutRaw);
+  document.getElementById('login-rut').value = rut;
+  currentTenantId = normalizeTenantId(rut);
+  const saved = localStorage.getItem(tenantKey(currentTenantId));
+  const client = loadClientRegistry().find(c=>c.id===currentTenantId);
+  if(saved) {
+    if(client?.email && client.email.toLowerCase() !== email && currentTenantId !== ADMIN_TENANT_ID) {
+      alert('El correo no corresponde al cliente registrado.');
+      return;
+    }
+    applyState(JSON.parse(saved));
+  }
+  else if(currentTenantId===ADMIN_TENANT_ID) { applyState(bootSeedSnapshot); S.empresa = domianEmpresa(); persistTenant(); }
+  else { alert('Cliente no encontrado. Primero debe registrarse como cliente nuevo.'); showAccessTab('registro'); return; }
+  sessionStorage.setItem('accesomina_current_tenant', currentTenantId);
+  enterPrivate();
+  toast(`Bienvenido a ${S.empresa.nombre}`);
+}
+function registerTenant() {
+  const nombre=document.getElementById('reg-empresa').value.trim().replace(/\s+/g,' ');
+  const rutRaw=document.getElementById('reg-rut').value.trim();
+  const email=document.getElementById('reg-email').value.trim().toLowerCase();
+  const tel=document.getElementById('reg-tel').value.trim();
+  if(!nombre||!rutRaw||!email) { alert('Nombre de empresa, RUT y correo son obligatorios.'); return; }
+  if(nombre.length < 3) { alert('El nombre de empresa debe tener al menos 3 caracteres.'); return; }
+  if(!isValidRut(rutRaw)) { alert('RUT inválido. Revisa número y dígito verificador.'); return; }
+  if(!isValidEmail(email)) { alert('Correo inválido. Usa formato nombre@empresa.cl'); return; }
+  if(!isValidPhoneCL(tel)) { alert('Teléfono inválido. Usa formato chileno, por ejemplo +56 9 7649 0489.'); return; }
+  const rut = formatRut(rutRaw);
+  const newTenantId = normalizeTenantId(rut);
+  if(newTenantId===ADMIN_TENANT_ID) { alert('El RUT de Domian corresponde a la cuenta administradora. Usa Acceso.'); showAccessTab('login'); return; }
+  if(localStorage.getItem(tenantKey(newTenantId)) && !confirm('Este cliente ya existe. ¿Deseas actualizar sus datos de contacto?')) return;
+  const data = emptyTenantData(nombre,rut,email,tel);
+  localStorage.setItem(tenantKey(newTenantId), JSON.stringify(data));
+  upsertClientMeta({id:newTenantId,nombre,rut,email,tel,actualizado:hoy(),admin:false});
+  document.getElementById('login-rut').value = rut;
+  document.getElementById('login-email').value = email;
+  document.getElementById('reg-empresa').value = '';
+  document.getElementById('reg-rut').value = '';
+  document.getElementById('reg-email').value = '';
+  document.getElementById('reg-tel').value = '';
+  showAccessTab('login');
+  alert(`Cliente creado: ${nombre}. Ahora puede ingresar desde Acceso con el RUT ${rut}.`);
+}
+function logoutTenant() { persistTenant(); sessionStorage.removeItem('accesomina_current_tenant'); showPublic(); }
+function exportTenantBackup() { const data = JSON.stringify(snapshotState(), null, 2); const blob = new Blob([data], {type:'application/json;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`respaldo_${currentTenantId}_${hoy()}.json`; a.click(); URL.revokeObjectURL(a.href); }
+function showCloudGuide() { openModal('modal-cloud'); }
+function confirmDelete(label) { return confirm(`¿Eliminar ${label}? Esta acción solo afecta al sitio privado actual.`); }
+function removeById(collection,id,label) { if(!confirmDelete(label)) return; S[collection]=S[collection].filter(x=>x.id!==id); persistTenant(); renderCurrentPageSoft(); toast(`${label} eliminado`); }
+function deleteTrabajador(id) { removeById('trabajadores',id,'trabajador'); }
+function deleteMantencion(id) { S.asignaciones=S.asignaciones.filter(a=>a.mantId!==id); S.hotelAsig=S.hotelAsig.filter(a=>a.mantId!==id); removeById('mantenciones',id,'mantención'); }
+function deleteMina(id) { if(S.mantenciones.some(m=>m.minaId===id)||S.trabajadores.some(t=>t.mineras?.includes(id))) { toast('No se puede borrar: hay trabajadores o proyectos asociados','err'); return; } removeById('minas',id,'minera'); }
+function deleteContrato(id) { removeById('contratos',id,'contrato'); }
+function deleteHotel(id) { S.hotelAsig=S.hotelAsig.filter(a=>a.hotelId!==id); removeById('hoteles',id,'hotel'); }
+function saveNuevaMina() { const nombre=document.getElementById('min-nombre').value.trim(); if(!nombre){toast('Nombre requerido','err');return;} S.minas.push({id:'mi'+Date.now(),nombre,mandante:document.getElementById('min-mandante').value,region:document.getElementById('min-region').value,altura:parseInt(document.getElementById('min-altura').value)||0,sistema:document.getElementById('min-sistema').value||'Propio',contacto:document.getElementById('min-contacto').value,color:document.getElementById('min-color').value||'#f07d36'}); closeModal('modal-nueva-mina'); persistTenant(); renderCurrentPageSoft(); toast('Minera agregada'); }
+function saveNuevoHotel() { const nombre=document.getElementById('hot-nombre').value.trim(); if(!nombre){toast('Nombre requerido','err');return;} const checks=[...document.querySelectorAll('#hot-minas-checks input:checked')].map(c=>c.value); S.hoteles.push({id:'h'+Date.now(),nombre,ciudad:document.getElementById('hot-ciudad').value,tel:document.getElementById('hot-tel').value,simples:parseInt(document.getElementById('hot-simples').value)||0,dobles:parseInt(document.getElementById('hot-dobles').value)||0,tarifa:parseInt(document.getElementById('hot-tarifa').value)||0,minaIds:checks}); closeModal('modal-nuevo-hotel'); persistTenant(); renderCurrentPageSoft(); toast('Hotel agregado'); }
+function renderClientes() {
+  if(!isAdminTenant()) { nav('dashboard'); return; }
+  const list = loadClientRegistry();
+  const table = document.getElementById('clientes-table');
+  document.getElementById('clientes-sub').textContent = `${list.filter(c=>!c.admin).length} clientes creados · solo Domian puede eliminar clientes`;
+  table.innerHTML = `<thead><tr><th>Empresa</th><th>RUT</th><th>Contacto</th><th>Creado</th><th>Actualizado</th><th>Estado</th><th></th></tr></thead><tbody>${list.map(c=>`
+    <tr>
+      <td><div style="font-weight:700;">${c.nombre}</div><div style="font-size:11px;color:var(--text-muted);">ID: ${c.id}</div></td>
+      <td>${c.rut||'—'}</td>
+      <td style="font-size:12px;color:var(--text-muted);">${c.email||'—'}<br>${c.tel||'—'}</td>
+      <td>${c.creado||'—'}</td>
+      <td>${c.actualizado||'—'}</td>
+      <td><span class="badge ${c.admin?'badge-orange':'badge-blue'}">${c.admin?'Administrador Domian':'Cliente'}</span></td>
+      <td>${c.admin?'—':`<button class="btn btn-danger btn-sm" onclick="deleteClientTenant('${c.id}')">Eliminar cliente</button>`}</td>
+    </tr>`).join('')}</tbody>`;
+}
+function deleteClientTenant(id) {
+  if(!isAdminTenant()) { alert('Solo Domian puede eliminar clientes.'); return; }
+  const list = loadClientRegistry();
+  const c = list.find(x=>x.id===id);
+  if(!c || c.admin) return;
+  if(!confirm(`¿Eliminar completamente el cliente ${c.nombre}? Se borrará su sitio privado local y sus datos.`)) return;
+  localStorage.removeItem(tenantKey(id));
+  saveClientRegistry(list.filter(x=>x.id!==id));
+  renderClientes();
+  toast('Cliente eliminado');
+}
+function exportClientsRegistry() { exportCSV([['Empresa','RUT','Email','Teléfono','Creado','Actualizado'], ...loadClientRegistry().map(c=>[c.nombre,c.rut,c.email,c.tel,c.creado,c.actualizado])], `clientes_domian_${hoy()}.csv`); }
+
+// ===================== SEED TRABAJADORES =====================
+function seed() {
+  const trabRicos = [
+    { id:'t1', nombre:'Carlos Fuentes Mora', rut:'14.567.890-1', nacimiento:'1985-03-15', tel:'+56 9 7777 8888', email:'c.fuentes@email.com', ciudad:'Santiago', tipo:'esporadico', especialidad:'Mecánico Industrial', calificacion:7, disponibilidad:'disponible', afp:'AFP Habitat', salud:'Fonasa', mutual:'Mutual de Seguridad', mineras:['mi1','mi4'], contratoId:'c1', bloqueado:false,
+      docCI:{vence:'2028-12-01'}, docContrato:{vence:'2026-07-15',estado:'pendiente'}, docAFP:{vence:'2026-06-30'}, docSalud:{vence:'2026-12-01'}, docLicencia:{tipo:'B',vence:'2027-10-01'},
+      exPreocupacional:{vence:'2027-01-15',centro:'Mutual'}, exAlturaGeo:{vence:'2027-02-10',centro:'ACHS'}, exPsicosens:{vence:'2026-09-15'}, exAudiometria:{vence:'2026-11-01'}, exVisual:{vence:'2026-11-01'}, exAlcohol:{fecha:'2026-06-01',resultado:'aprobado'},
+      curODI:{vence:'2027-01-15'}, curReglamento:{fecha:'2026-06-01'}, curLOTO:{vence:'2027-03-01',otec:'OTEC Capacita'}, curAlturaFisica:{vence:'2026-06-30'}, curInduccion:[{mina:'Pelambres',fecha:'2026-06-01'}]
+    },
+    { id:'t2', nombre:'Ana García López', rut:'9.876.543-2', nacimiento:'1990-07-22', tel:'+56 9 3333 4444', email:'a.garcia@email.com', ciudad:'Valparaíso', tipo:'permanente', especialidad:'Eléctrico', calificacion:5, disponibilidad:'asignado', afp:'AFP PlanVital', salud:'Isapre Colmena', mutual:'ACHS', mineras:['mi2','mi4'], contratoId:'c3', bloqueado:false,
+      docCI:{vence:'2027-05-01'}, docContrato:{vence:'2026-07-15',estado:'firmado'}, docAFP:{vence:'2026-06-30'}, docSalud:{vence:'2026-06-30'},
+      exPreocupacional:{vence:'2026-06-01',centro:'Mutual'}, exAlturaGeo:{vence:'2026-07-12',centro:'IST'}, exPsicosens:{vence:'2026-08-01'}, exAudiometria:{vence:'2026-09-01'}, exVisual:{vence:'2026-09-01'}, exAlcohol:{fecha:'2026-04-01',resultado:'aprobado'},
+      curODI:{vence:'2026-12-01'}, curArcFlash:{vence:'2026-12-01',otec:'OTEC ElectroCap'}
+    },
+    { id:'t3', nombre:'Roberto Muñoz Carrasco', rut:'11.222.333-4', nacimiento:'1978-11-05', tel:'+56 9 5555 6666', email:'r.munoz@email.com', ciudad:'Rancagua', tipo:'permanente', especialidad:'Instrumentista', calificacion:3, disponibilidad:'disponible', afp:'AFP Capital', salud:'Fonasa', mutual:'IST', mineras:['mi3'], contratoId:'c4', bloqueado:false,
+      docCI:{vence:'2026-03-01'}, docAFP:{vence:'2025-12-01'}, docSalud:{vence:'2026-02-01'}, docLicencia:{tipo:'B',vence:'2024-08-01'},
+      exPreocupacional:{vence:'2026-03-05',centro:'Mutual'}, exAlturaGeo:{vence:'2026-02-01',centro:'IST'}
+    },
+    { id:'t4', nombre:'Jorge Rivas Maturana', rut:'15.678.901-2', nacimiento:'1982-04-18', tel:'+56 9 9999 1111', email:'j.rivas@email.com', ciudad:'Santiago', tipo:'esporadico', especialidad:'Rigger', calificacion:1, disponibilidad:'disponible', afp:'AFP Uno', salud:'Fonasa', mutual:'Mutual', mineras:['mi1','mi2'], contratoId:'c2', bloqueado:false,
+      docCI:{vence:'2025-08-01'}, docAFP:{vence:'2025-06-01'}, docSalud:{vence:'2025-09-01'},
+      exPreocupacional:{vence:'2025-07-01',centro:'Mutual'}, exAlturaGeo:{vence:'2025-08-01',centro:'IST'}
+    },
+    { id:'t5', nombre:'Patricia Soto Vidal', rut:'16.789.012-3', nacimiento:'1988-09-30', tel:'+56 9 9999 0000', email:'p.soto@email.com', ciudad:'Santiago', tipo:'esporadico', especialidad:'Soldador 6G', calificacion:7, disponibilidad:'disponible', afp:'AFP Modelo', salud:'Fonasa', mutual:'Mutual', mineras:['mi1'], contratoId:'c2', bloqueado:false,
+      docCI:{vence:'2028-05-01'}, docContrato:{vence:'2027-12-31',estado:'firmado'}, docAFP:{vence:'2027-06-30'}, docSalud:{vence:'2027-12-01'}, docLicencia:{tipo:'B',vence:'2029-01-01'},
+      exPreocupacional:{vence:'2027-01-10',centro:'Mutual'}, exAlturaGeo:{vence:'2027-01-15',centro:'IST'}, exPsicosens:{vence:'2026-08-01'}, exAudiometria:{vence:'2027-04-01'}, exVisual:{vence:'2027-04-01'},
+      curODI:{vence:'2027-06-15'}, curTrabajosCaliente:{vence:'2026-06-30',otec:'OTEC Seguridad Total'}, curLOTO:{vence:'2027-01-01'},
+      curInduccion:[{mina:'Pelambres',fecha:'2026-06-15'}]
+    },
+    { id:'t6', nombre:'Miguel Araya Rojas', rut:'13.456.789-0', nacimiento:'1992-06-14', tel:'+56 9 1234 5678', email:'m.araya@email.com', ciudad:'Santiago', tipo:'esporadico', especialidad:'Mecánico Mantenedor', calificacion:5, disponibilidad:'asignado', afp:'AFP Habitat', salud:'Fonasa', mutual:'IST', mineras:['mi1','mi4'], contratoId:'c1', bloqueado:false,
+      docCI:{vence:'2027-11-01'}, docContrato:{vence:'2026-12-31',estado:'enviado'}, docAFP:{vence:'2027-06-30'}, docSalud:{vence:'2027-06-01'}, docLicencia:{tipo:'B',vence:'2025-10-01'},
+      exPreocupacional:{vence:'2027-01-10',centro:'Mutual'}, exAlturaGeo:{vence:'2027-03-01',centro:'ACHS'}, exPsicosens:{vence:'2026-05-01'}, exAudiometria:{vence:'2027-01-01'}, exVisual:{vence:'2027-01-01'},
+      curODI:{vence:'2027-02-01'}, curManejoDefensivo:{vence:'2026-05-01',otec:'OTEC DriveChile'}
+    },
+    { id:'t7', nombre:'Juan Pérez Morales', rut:'12.111.222-3', nacimiento:'1983-07-10', tel:'+56 9 2222 3333', email:'j.perez@email.com', ciudad:'Santiago', tipo:'permanente', especialidad:'Mecánico Industrial', calificacion:6, disponibilidad:'disponible', afp:'AFP Capital', salud:'Fonasa', mutual:'Mutual', mineras:['mi1'], contratoId:'c1', bloqueado:false,
+      docCI:{vence:'2027-08-01'}, docContrato:{vence:'2027-12-31',estado:'firmado'}, docAFP:{vence:'2027-06-30'}, docSalud:{vence:'2027-06-01'},
+      exPreocupacional:{vence:'2026-01-10',centro:'Mutual'}, exAlturaGeo:{vence:'2027-03-01',centro:'IST'}, exPsicosens:{vence:'2027-01-01'}, exAudiometria:{vence:'2027-06-01'}, exVisual:{vence:'2027-06-01'},
+      curODI:{vence:'2027-06-01'}, curLOTO:{vence:'2027-01-01',otec:'OTEC Capacita'}
+    },
+    { id:'t8', nombre:'María González Soto', rut:'17.888.999-5', nacimiento:'1991-12-25', tel:'+56 9 4444 5555', email:'m.gonzalez@email.com', ciudad:'Valparaíso', tipo:'permanente', especialidad:'Mecánico Mantenedor', calificacion:7, disponibilidad:'disponible', afp:'AFP PlanVital', salud:'Isapre Colmena', mutual:'ACHS', mineras:['mi1','mi2'], contratoId:'c1', bloqueado:false,
+      docCI:{vence:'2028-10-01'}, docContrato:{vence:'2027-12-31',estado:'firmado'}, docAFP:{vence:'2027-06-30'}, docSalud:{vence:'2027-06-01'}, docLicencia:{tipo:'B',vence:'2028-05-01'},
+      exPreocupacional:{vence:'2027-05-01',centro:'ACHS'}, exAlturaGeo:{vence:'2027-06-01',centro:'ACHS'}, exPsicosens:{vence:'2027-03-01'}, exAudiometria:{vence:'2027-08-01'}, exVisual:{vence:'2027-08-01'},
+      curODI:{vence:'2027-08-01'}, curLOTO:{vence:'2027-04-01',otec:'OTEC Capacita'}, curAlturaFisica:{vence:'2027-03-01'}
+    },
+    { id:'t9', nombre:'Carlos Soto Riquelme', rut:'18.333.444-6', nacimiento:'1980-05-18', tel:'+56 9 6666 7777', email:'c.soto@email.com', ciudad:'Copiapó', tipo:'permanente', especialidad:'Soldador 3G', calificacion:5, disponibilidad:'disponible', afp:'AFP Habitat', salud:'Fonasa', mutual:'IST', mineras:['mi3'], contratoId:'c4', bloqueado:false,
+      docCI:{vence:'2027-03-01'}, docContrato:{vence:'2026-12-31',estado:'firmado'}, docAFP:{vence:'2027-06-30'}, docSalud:{vence:'2027-01-01'},
+      exPreocupacional:{vence:'2027-04-01',centro:'Mutual'}, exAlturaGeo:{vence:'2026-11-01',centro:'IST'}, exPsicosens:{vence:'2026-10-01'}, exAudiometria:{vence:'2026-12-01'}, exVisual:{vence:'2026-12-01'},
+      curODI:{vence:'2027-01-01'}, curTrabajosCaliente:{vence:'2026-08-01',otec:'OTEC SoldaTech'}
+    },
+    { id:'t10', nombre:'Roberto Muñoz Espinoza', rut:'19.555.666-7', nacimiento:'1979-08-22', tel:'+56 9 8888 9999', email:'r.munoz2@email.com', ciudad:'Antofagasta', tipo:'permanente', especialidad:'Soldador 6G', calificacion:7, disponibilidad:'asignado', afp:'AFP Capital', salud:'Fonasa', mutual:'Mutual', mineras:['mi2'], contratoId:'c3', bloqueado:false,
+      docCI:{vence:'2028-06-01'}, docContrato:{vence:'2027-06-01',estado:'firmado'}, docAFP:{vence:'2027-06-30'}, docSalud:{vence:'2027-06-01'},
+      exPreocupacional:{vence:'2027-09-01',centro:'Mutual'}, exAlturaGeo:{vence:'2027-08-01',centro:'IST'}, exPsicosens:{vence:'2027-04-01'}, exAudiometria:{vence:'2027-10-01'}, exVisual:{vence:'2027-10-01'},
+      curODI:{vence:'2027-10-01'}, curTrabajosCaliente:{vence:'2027-05-01',otec:'OTEC SoldaTech'}
+    },
+    { id:'t11', nombre:'Luis Rojas Herrera', rut:'20.111.222-8', nacimiento:'1985-01-14', tel:'+56 9 1111 2222', email:'l.rojas@email.com', ciudad:'Antofagasta', tipo:'permanente', especialidad:'Eléctrico', calificacion:7, disponibilidad:'disponible', afp:'AFP Uno', salud:'Isapre Vida Tres', mutual:'ACHS', mineras:['mi2','mi4'], contratoId:'c3', bloqueado:false,
+      docCI:{vence:'2028-11-01'}, docContrato:{vence:'2027-06-01',estado:'firmado'}, docAFP:{vence:'2027-06-30'}, docSalud:{vence:'2027-06-01'}, docLicencia:{tipo:'B',vence:'2028-08-01'},
+      exPreocupacional:{vence:'2027-11-01',centro:'ACHS'}, exAlturaGeo:{vence:'2027-10-01',centro:'ACHS'}, exPsicosens:{vence:'2027-06-01'}, exAudiometria:{vence:'2027-12-01'}, exVisual:{vence:'2027-12-01'},
+      curODI:{vence:'2027-12-01'}, curArcFlash:{vence:'2027-08-01',otec:'OTEC ElectroCap'}, curLOTO:{vence:'2027-06-01',otec:'OTEC Capacita'}
+    },
+    { id:'t12', nombre:'Patricia Silva Mora', rut:'21.333.444-9', nacimiento:'1987-04-30', tel:'+56 9 3333 5555', email:'p.silva@email.com', ciudad:'Calama', tipo:'permanente', especialidad:'Instrumentista', calificacion:6, disponibilidad:'disponible', afp:'AFP Habitat', salud:'Isapre Colmena', mutual:'IST', mineras:['mi4'], contratoId:'c5', bloqueado:false,
+      docCI:{vence:'2028-02-01'}, docContrato:{vence:'2027-09-01',estado:'firmado'}, docAFP:{vence:'2027-06-30'}, docSalud:{vence:'2027-06-01'},
+      exPreocupacional:{vence:'2027-07-01',centro:'IST'}, exAlturaGeo:{vence:'2027-06-01',centro:'IST'}, exPsicosens:{vence:'2027-04-01'}, exAudiometria:{vence:'2027-09-01'}, exVisual:{vence:'2027-09-01'},
+      curODI:{vence:'2027-09-01'}, curLOTO:{vence:'2027-07-01',otec:'OTEC Capacita'}
+    }
+  ];
+  S.trabajadores = trabRicos;
+
+  const nombres13 = ['Andrés Castillo','Felipe Vargas','Cristian Núñez','Daniela Torres','Pedro Salinas','Marcelo Riquelme','José Hernández','Rodrigo Vega','Eduardo Fuentes','Pablo Sandoval','Jorge Espinoza','Manuel Quintana','Víctor Tapia','Ricardo Cortés','Sergio Bravo','Iván Henríquez','Hernán Alarcón','Cristóbal Rivera','Gonzalo Carrasco','Alejandro Moya','Mauricio León','Fernando Pinto','Hugo Saavedra','Nelson Cifuentes','Esteban Garrido','Camilo Cáceres','Matías Pérez','Diego Arenas'];
+  const ciudades = ['Antofagasta','Calama','Copiapó','Santiago','Rancagua','La Serena','Iquique'];
+  const disps = ['disponible','disponible','disponible','asignado','vacaciones'];
+  const afps = ['AFP Habitat','AFP Capital','AFP PlanVital','AFP Uno','AFP Modelo'];
+  const saluds = ['Fonasa','Fonasa','Fonasa','Isapre Colmena','Isapre Vida Tres'];
+  const mutuales = ['Mutual de Seguridad','ACHS','IST'];
+
+  nombres13.forEach((nombre, i) => {
+    const idx = i + 13;
+    const esp = S.ESPECIALIDADES[idx % S.ESPECIALIDADES.length];
+    const minaId = S.minas[idx % 5].id;
+    const contrId = S.contratos[idx % 6].id;
+    const bloq = nombre === 'Manuel Quintana' ? {bloqueado:true,motivoBloq:'Falta de respeto a supervisor en faena'} :
+                 nombre === 'Hugo Saavedra' ? {bloqueado:true,motivoBloq:'Incumplimiento reiterado de EPP'} :
+                 {bloqueado:false};
+    const disp = bloq.bloqueado ? 'bloqueado' : disps[idx % 5];
+    const cal = 3 + (idx % 5);
+    const baseYear = 2026;
+    const meses = ['01','03','04','05','06','07','08','09','10','11','12'];
+    const vBase = `${baseYear}-${meses[idx%11]}-15`;
+    const vNext = `2027-${meses[(idx+3)%11]}-15`;
+    const esConf = nombre === 'Marcelo Riquelme' ? {curEspaciosConfinados:{vence:'2025-10-01',otec:'OTEC MinSeguro'}} : {};
+    const rut = `${10+idx}.${100+idx*7}.${200+idx*3}-${idx%10}`;
+
+    S.trabajadores.push({
+      id: `t${idx}`,
+      nombre,
+      rut,
+      nacimiento: `${1975+idx%20}-${meses[idx%11]}-${10+idx%18}`,
+      tel: `+56 9 ${5000+idx} ${4000+idx}`,
+      email: `${nombre.split(' ')[0].toLowerCase()}.${nombre.split(' ')[1].toLowerCase()}@email.com`,
+      ciudad: ciudades[idx % 7],
+      tipo: 'esporadico',
+      especialidad: esp,
+      calificacion: cal,
+      disponibilidad: disp,
+      afp: afps[idx % 5],
+      salud: saluds[idx % 5],
+      mutual: mutuales[idx % 3],
+      mineras: [minaId],
+      contratoId: contrId,
+      ...bloq,
+      docCI:{vence: vNext},
+      docAFP:{vence: vNext},
+      docSalud:{vence: vNext},
+      exPreocupacional:{vence: vBase, centro: mutuales[idx%3]},
+      exAlturaGeo:{vence: vNext, centro: mutuales[(idx+1)%3]},
+      exPsicosens:{vence: vNext},
+      exAudiometria:{vence: vNext},
+      curODI:{vence: vNext},
+      curLOTO:{vence: vNext, otec:'OTEC Capacita'},
+      ...esConf
+    });
+  });
+
+  // Build asignaciones
+  S.asignaciones = [];
+  const turnos = ['día','noche','ambos'];
+  S.mantenciones.forEach(mn => {
+    const trabsMina = S.trabajadores.filter(t => t.mineras && t.mineras.includes(mn.minaId) && !t.bloqueado);
+    trabsMina.forEach((t, i) => {
+      if(i < mn.personalReq) {
+        S.asignaciones.push({
+          id: `asig_${mn.id}_${t.id}`,
+          mantId: mn.id,
+          trabId: t.id,
+          turno: turnos[i % 3],
+          estado: mn.estado === 'cerrada' ? 'completado' : 'confirmado'
+        });
+      }
+    });
+  });
+
+  // Build hotelAsig
+  S.hotelAsig = [];
+  let hId = 1;
+  S.asignaciones.slice(0, 20).forEach((asig, i) => {
+    const mn = S.mantenciones.find(m => m.id === asig.mantId);
+    if(!mn) return;
+    const hoteles = S.hoteles.filter(h => h.minaIds.includes(mn.minaId));
+    if(!hoteles.length) return;
+    const hotel = hoteles[i % hoteles.length];
+    S.hotelAsig.push({
+      id: `ha${hId++}`,
+      trabId: asig.trabId,
+      mantId: asig.mantId,
+      hotelId: hotel.id,
+      pieza: 100 + (i % 30),
+      tipo: i % 3 === 0 ? 'doble' : 'simple',
+      turno: asig.turno,
+      checkin: mn.inicio,
+      checkout: mn.termino,
+      comparte: i % 3 === 0 ? (S.trabajadores[i+1]?.nombre || '') : ''
+    });
+  });
+}
+// ===================== UTILITY FUNCTIONS =====================
+function hoy() { return new Date().toISOString().slice(0,10); }
+function diasHasta(v) { if(!v) return null; return Math.floor((new Date(v)-new Date())/86400000); }
+function estadoFecha(v) {
+  if(!v) return 'falta';
+  const d = diasHasta(v);
+  if(d < 0) return 'vencido';
+  if(d <= 30) return 'critico';
+  if(d <= 60) return 'proximo';
+  return 'vigente';
+}
+function badgeEstado(v) {
+  const e = estadoFecha(v);
+  const map = {vigente:['✅','badge-ok'],proximo:['🔶','badge-warn'],critico:['⚠️','badge-crit'],vencido:['❌','badge-err'],falta:['—','badge-na']};
+  const [icon,cls] = map[e]||['—','badge-na'];
+  const d = diasHasta(v);
+  const label = e==='vigente'?`${d}d`:e==='falta'?'Sin datos':`${Math.abs(d)}d ${e==='vencido'?'vencido':'para vencer'}`;
+  return `<span class="badge ${cls}" title="${v||''}">${icon} ${label}</span>`;
+}
+function calLetra(cal) { return ['','D','D','C','C','B','B','A'][Math.min(cal,7)]||'D'; }
+function calColor(cal) { return cal>=7?'var(--green)':cal>=5?'var(--blue)':cal>=3?'var(--yellow)':'var(--red)'; }
+function dispBadge(d) {
+  const m = {disponible:'badge-ok',asignado:'badge-blue',vacaciones:'badge-warn',bloqueado:'badge-err'};
+  return `<span class="badge ${m[d]||'badge-na'}">${d}</span>`;
+}
+function acreditacion(t) {
+  const mina = S.minas.find(m => t.mineras && t.mineras[0] === m.id);
+  const altReq = mina && mina.altura >= 3000;
+  const checks = [
+    t.docCI?.vence, t.docContrato?.vence, t.docAFP?.vence, t.docSalud?.vence,
+    t.exPreocupacional?.vence, t.curODI?.vence, t.curReglamento?.fecha,
+    ...(altReq ? [t.exAlturaGeo?.vence] : [])
+  ].filter(Boolean);
+  const validos = checks.filter(v => diasHasta(v) >= 0);
+  const total = altReq ? 8 : 7;
+  return Math.round((validos.length / total) * 100);
+}
+function progColor(pct) { return pct>=85?'prog-green':pct>=60?'prog-yellow':'prog-red'; }
+function computeAlertas() {
+  const alertas = [];
+  let n = 1;
+  S.trabajadores.forEach(t => {
+    const exs = [{f:'exPreocupacional',l:'Ex. Preocupacional'},{f:'exAlturaGeo',l:'Altura Geográfica'},{f:'exPsicosens',l:'Psicosensotécnico'},{f:'exAudiometria',l:'Audiometría'},{f:'exVisual',l:'Visual'}];
+    exs.forEach(({f,l}) => {
+      const v = t[f]?.vence; if(!v) return;
+      const e = estadoFecha(v);
+      if(e!=='vigente') alertas.push({id:'al'+(n++),tipo:'examen',urgencia:e,trabId:t.id,trab:t,msg:`${t.nombre}: ${l} ${e==='vencido'?'VENCIDO':diasHasta(v)+'d para vencer'}`});
+    });
+    const curs = [{f:'curODI',l:'ODI'},{f:'curLOTO',l:'LOTO'},{f:'curAlturaFisica',l:'Altura Física'},{f:'curEspaciosConfinados',l:'Espacios Confinados'},{f:'curTrabajosCaliente',l:'Trab. Caliente'},{f:'curManejoDefensivo',l:'Manejo Defensivo'},{f:'curArcFlash',l:'Arc Flash'}];
+    curs.forEach(({f,l}) => {
+      const v = t[f]?.vence; if(!v) return;
+      const e = estadoFecha(v);
+      if(e!=='vigente') alertas.push({id:'al'+(n++),tipo:'curso',urgencia:e,trabId:t.id,trab:t,msg:`${t.nombre}: ${l} ${e==='vencido'?'VENCIDO':diasHasta(v)+'d para vencer'}`});
+    });
+    if(t.docCI?.vence && estadoFecha(t.docCI.vence)!=='vigente')
+      alertas.push({id:'al'+(n++),tipo:'doc',urgencia:estadoFecha(t.docCI.vence),trabId:t.id,trab:t,msg:`${t.nombre}: Cédula ${estadoFecha(t.docCI.vence)}`});
+  });
+  S.firmas.forEach(f => {
+    if(f.estado==='pendiente'||f.estado==='enviado') {
+      const t = S.trabajadores.find(w => w.id===f.trabId);
+      alertas.push({id:'al'+(n++),tipo:'firma',urgencia:'critico',trabId:f.trabId,trab:t,msg:`${t?.nombre||'?'}: ${f.tipo} pendiente de firma`});
+    }
+  });
+  const ord = {vencido:0,critico:1,proximo:2,falta:3};
+  return alertas.sort((a,b) => (ord[a.urgencia]??9)-(ord[b.urgencia]??9));
+}
+function toast(msg, tipo='ok') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${tipo}`;
+  t.innerHTML = `<span>${tipo==='ok'?'✅':tipo==='err'?'❌':'⚠️'}</span> ${msg}`;
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),400)},3000);
+}
+function exportCSV(rows, filename) {
+  const csv = rows.map(r=>r.map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download = filename; a.click();
+}
+function initials(n) { return n.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
+function avatarColor(id) {
+  const colors = ['#f07d36','#4db8e8','#34d399','#fbbf24','#a78bfa','#f87171','#60a5fa'];
+  const h = [...(id||'')].reduce((a,c)=>a+c.charCodeAt(0),0);
+  return colors[h%colors.length];
+}
+function minaNombre(id) { return S.minas.find(m=>m.id===id)?.nombre || id; }
+function mantNombre(id) { return S.mantenciones.find(m=>m.id===id)?.nombre || id; }
+function hotelNombre(id) { return S.hoteles.find(h=>h.id===id)?.nombre || id; }
+function trabNombre(id) { return S.trabajadores.find(t=>t.id===id)?.nombre || id; }
+function tipoTag(tipo) {
+  const m = {parada_planta:'tag-parada',mantencion_mayor:'tag-mantencion',shutdown:'tag-shutdown',emergencia:'tag-emergencia'};
+  const l = {parada_planta:'Parada Planta',mantencion_mayor:'Mant. Mayor',shutdown:'Shutdown',emergencia:'Emergencia'};
+  return `<span class="tag ${m[tipo]||'tag-mantencion'}">${l[tipo]||tipo}</span>`;
+}
+function estadoTag(est) {
+  const m = {planificada:'tag-planificada',en_curso:'tag-en_curso',cerrada:'tag-cerrada',proceso:'tag-proceso',activo:'tag-activo'};
+  return `<span class="tag ${m[est]||'tag-cerrada'}">${est}</span>`;
+}
+function nextVence(t) {
+  const dates = [t.docCI?.vence,t.docContrato?.vence,t.docAFP?.vence,t.docSalud?.vence,t.exPreocupacional?.vence,t.exAlturaGeo?.vence,t.exPsicosens?.vence,t.curODI?.vence,t.curLOTO?.vence].filter(Boolean).filter(v=>diasHasta(v)>=0);
+  if(!dates.length) return null;
+  return dates.sort()[0];
+}
+function updateBadges() {
+  document.getElementById('badge-alertas').textContent = computeAlertas().length;
+  document.getElementById('badge-firmas').textContent = S.firmas.filter(f=>f.estado==='pendiente'||f.estado==='enviado').length;
+}
+
+// ===================== NAVIGATION =====================
+let currentPage = 'dashboard';
+const pageLabels = {
+  dashboard:'Dashboard','mineras':'Por Minera',alertas:'Alertas',trabajadores:'Trabajadores',
+  bloqueados:'Bloqueados',auditoria:'Auditoría Documental',mantenciones:'Mantenciones',
+  contratos:'Contratos y Firmas',hoteleria:'Hotelería',llamados:'Llamados WA',
+  examenes:'Exámenes Médicos',cursos:'Cursos',reportes:'Reportes',clientes:'Clientes Domian'
+};
+const pageSubs = {
+  dashboard:'Resumen operativo · Domian SpA',
+  mineras:'Vista consolidada por mandante',
+  alertas:'Documentos y certificaciones próximos a vencer',
+  trabajadores:'Gestión de personal y acreditación',
+  bloqueados:'Trabajadores inhabilitados',
+  auditoria:'Estado de documentación por trabajador',
+  mantenciones:'Paradas, shutdowns y mantenciones mayores',
+  contratos:'Marco contractual y firmas digitales',
+  hoteleria:'Gestión de alojamiento en terreno',
+  llamados:'Convocatorias vía WhatsApp',
+  examenes:'Control de exámenes médicos ocupacionales',
+  cursos:'Certificaciones y cursos de seguridad',
+  reportes:'Exportación de datos y reportería',
+  clientes:'Administración interna de clientes y sitios privados'
+};
+
+function nav(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const el = document.getElementById(`page-${page}`);
+  if(el) el.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if(n.getAttribute('onclick')===`nav('${page}')`) n.classList.add('active');
+  });
+  document.getElementById('topbar-title').textContent = pageLabels[page]||page;
+  document.getElementById('topbar-sub').textContent = pageSubs[page]||'';
+  currentPage = page;
+  renderPage(page);
+}
+
+function renderPage(page) {
+  if(page==='dashboard') renderDashboard();
+  else if(page==='mineras') renderMineras();
+  else if(page==='alertas') renderAlertas();
+  else if(page==='trabajadores') renderTrabajadores();
+  else if(page==='bloqueados') renderBloqueados();
+  else if(page==='auditoria') renderAuditoria();
+  else if(page==='mantenciones') renderMantenciones();
+  else if(page==='contratos') renderContratos();
+  else if(page==='hoteleria') renderHoteleria();
+  else if(page==='llamados') renderLlamados();
+  else if(page==='examenes') renderExamenes();
+  else if(page==='cursos') renderCursos();
+  else if(page==='reportes') {}
+  else if(page==='clientes') renderClientes();
+}
+
+// ===================== DASHBOARD =====================
+function renderDashboard() {
+  const alertas = computeAlertas();
+  const acreds = S.trabajadores.filter(t=>!t.bloqueado);
+  const pct100 = acreds.filter(t=>acreditacion(t)===100).length;
+  const conVenc = acreds.filter(t=>alertas.some(a=>a.trabId===t.id)).length;
+  const mantsActivas = S.mantenciones.filter(m=>m.estado!=='cerrada').length;
+  const contPend = S.firmas.filter(f=>f.estado==='pendiente'||f.estado==='enviado').length;
+  const critCount = alertas.filter(a=>a.urgencia==='vencido'||a.urgencia==='critico').length;
+
+  document.getElementById('kpi-dash').innerHTML = `
+    <div class="kpi kpi-orange"><div class="kpi-value">${S.trabajadores.filter(t=>!t.bloqueado).length}</div><div class="kpi-label">Total Trabajadores</div><div class="kpi-icon">👷</div></div>
+    <div class="kpi kpi-green"><div class="kpi-value">${pct100}</div><div class="kpi-label">Acreditados 100%</div><div class="kpi-icon">✅</div></div>
+    <div class="kpi kpi-red"><div class="kpi-value">${conVenc}</div><div class="kpi-label">Con vencimientos</div><div class="kpi-icon">⚠️</div></div>
+    <div class="kpi kpi-blue"><div class="kpi-value">${mantsActivas}</div><div class="kpi-label">Mantenciones activas</div><div class="kpi-icon">🔧</div></div>
+    <div class="kpi kpi-yellow"><div class="kpi-value">${contPend}</div><div class="kpi-label">Contratos pendientes</div><div class="kpi-icon">📝</div></div>
+    <div class="kpi kpi-red"><div class="kpi-value">${critCount}</div><div class="kpi-label">Alertas críticas</div><div class="kpi-icon">🔔</div></div>
+  `;
+
+  // Mantenciones próximas
+  const mants = S.mantenciones.filter(m=>m.estado!=='cerrada').slice(0,4);
+  document.getElementById('dash-mants').innerHTML = mants.map(mn=>{
+    const mina = S.minas.find(m=>m.id===mn.minaId);
+    const asig = S.asignaciones.filter(a=>a.mantId===mn.id).length;
+    const pct = Math.round((asig/mn.personalReq)*100);
+    return `<div style="padding:12px 0;border-bottom:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+        <div>
+          <div style="font-weight:700;font-size:14px;">${mn.nombre}</div>
+          <div style="font-size:11px;color:var(--text-muted);">${mina?.nombre||''} · ${mn.inicio} → ${mn.termino}</div>
+        </div>
+        <div style="display:flex;gap:6px;">${tipoTag(mn.tipo)}${estadoTag(mn.estado)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="prog" style="flex:1;"><div class="prog-fill ${pct>=80?'prog-green':pct>=50?'prog-yellow':'prog-red'}" style="width:${pct}%;"></div></div>
+        <span style="font-size:12px;color:var(--text-muted);">${asig}/${mn.personalReq}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Especialidades
+  const espCount = {};
+  S.trabajadores.filter(t=>!t.bloqueado).forEach(t=>{ espCount[t.especialidad]=(espCount[t.especialidad]||0)+1; });
+  const espRows = Object.entries(espCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  document.getElementById('dash-esp-table').innerHTML = `<thead><tr><th>Especialidad</th><th>N°</th></tr></thead><tbody>` +
+    espRows.map(([e,n])=>`<tr><td>${e}</td><td><b style="color:var(--orange);">${n}</b></td></tr>`).join('') + '</tbody>';
+
+  // Alertas críticas
+  document.getElementById('dash-alertas').innerHTML = alertas.filter(a=>a.urgencia==='vencido'||a.urgencia==='critico').slice(0,8).map(a=>`
+    <div class="alert-item alert-${a.urgencia}" style="cursor:pointer;" onclick="openFicha('${a.trabId}')">
+      <div class="alert-dot dot-${a.urgencia}"></div>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:600;">${a.msg}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${a.tipo} · ${a.urgencia}</div>
+      </div>
+    </div>`).join('') || '<div style="color:var(--text-muted);font-size:13px;">Sin alertas críticas</div>';
+
+  // Callouts
+  document.getElementById('dash-callouts').innerHTML = S.callouts.slice(0,3).map(co=>{
+    const mn = S.mantenciones.find(m=>m.id===co.mantId);
+    const mina = S.minas.find(m=>m.id===mn?.minaId);
+    return `<div style="padding:12px 0;border-bottom:1px solid var(--border);">
+      <div style="font-weight:600;font-size:13px;">${mn?.nombre||'?'}</div>
+      <div style="font-size:11px;color:var(--text-muted);">${mina?.nombre||''} · ${co.fecha}</div>
+      <div style="display:flex;gap:16px;margin-top:6px;font-size:12px;">
+        <span>📤 Env: <b>${co.enviados}</b></span>
+        <span>💬 Resp: <b>${co.respondieron}</b></span>
+        <span style="color:var(--green);">✅ Asig: <b>${co.asignados}</b></span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Calificaciones
+  const cals = {A:0,B:0,C:0,D:0};
+  S.trabajadores.filter(t=>!t.bloqueado).forEach(t=>{
+    const l = calLetra(t.calificacion);
+    if(cals[l]!==undefined) cals[l]++;
+  });
+  const total = Object.values(cals).reduce((a,b)=>a+b,0);
+  document.getElementById('dash-cal').innerHTML = `<div style="display:flex;gap:20px;flex-wrap:wrap;">` +
+    Object.entries(cals).map(([l,n])=>{
+      const pct = total?Math.round((n/total)*100):0;
+      const colors = {A:'var(--green)',B:'var(--blue)',C:'var(--yellow)',D:'var(--red)'};
+      return `<div style="flex:1;min-width:150px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span style="font-weight:700;color:${colors[l]};font-size:16px;">CAL ${l}</span>
+          <span style="font-size:13px;color:var(--text-muted);">${n} trabajadores (${pct}%)</span>
+        </div>
+        <div class="prog"><div class="prog-fill" style="width:${pct}%;background:${colors[l]};"></div></div>
+      </div>`;
+    }).join('') + '</div>';
+}
+
+// ===================== MINERAS =====================
+function renderMineras() {
+  const grid = document.getElementById('minas-cards');
+  grid.innerHTML = S.minas.map(mina => {
+    const trabs = S.trabajadores.filter(t => t.mineras?.includes(mina.id) && !t.bloqueado);
+    const mants = S.mantenciones.filter(m => m.minaId === mina.id && m.estado !== 'cerrada');
+    const avgAcred = trabs.length ? Math.round(trabs.reduce((a,t)=>a+acreditacion(t),0)/trabs.length) : 0;
+    return `<div class="mina-card" onclick="openMinaDetalle('${mina.id}')">
+      <div class="mina-card-top" style="background:${mina.color};"></div>
+      <div class="mina-card-body">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;"><div class="mina-card-name">${mina.nombre}</div><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteMina('${mina.id}')">Eliminar</button></div>
+        <div class="mina-card-mandante">${mina.mandante} · ${mina.region}</div>
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+          <span class="badge badge-orange">${mina.altura.toLocaleString()} msnm</span>
+          <span class="badge badge-blue">${mina.sistema}</span>
+        </div>
+        <div class="mina-stats">
+          <div class="mina-stat"><div class="mina-stat-val" style="color:${mina.color};">${trabs.length}</div><div class="mina-stat-lbl">Trabajadores</div></div>
+          <div class="mina-stat"><div class="mina-stat-val" style="color:var(--orange);">${mants.length}</div><div class="mina-stat-lbl">Mantenciones</div></div>
+          <div class="mina-stat"><div class="mina-stat-val" style="color:${avgAcred>=85?'var(--green)':avgAcred>=60?'var(--yellow)':'var(--red)'};">${avgAcred}%</div><div class="mina-stat-lbl">Acreditación</div></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('mineras-grid-view').style.display = '';
+  document.getElementById('mina-detalle-view').style.display = 'none';
+}
+
+function openMinaDetalle(minaId) {
+  const mina = S.minas.find(m => m.id === minaId);
+  if(!mina) return;
+  document.getElementById('mineras-grid-view').style.display = 'none';
+  const det = document.getElementById('mina-detalle-view');
+  det.style.display = '';
+  const trabs = S.trabajadores.filter(t => t.mineras?.includes(minaId) && !t.bloqueado);
+  const mants = S.mantenciones.filter(m => m.minaId === minaId);
+  const conts = S.contratos.filter(c => c.minaId === minaId);
+  const avgAcred = trabs.length ? Math.round(trabs.reduce((a,t)=>a+acreditacion(t),0)/trabs.length) : 0;
+  const alertas = computeAlertas().filter(a => trabs.some(t=>t.id===a.trabId)).length;
+
+  det.querySelector('#mina-detalle-content').innerHTML = `
+    <div style="border-left:5px solid ${mina.color};padding-left:16px;margin-bottom:24px;">
+      <div style="font-size:24px;font-weight:800;">${mina.nombre}</div>
+      <div style="color:var(--text-muted);">${mina.mandante} · ${mina.region} · ${mina.altura.toLocaleString()} msnm · ${mina.sistema}</div>
+    </div>
+    <div class="tab-bar" id="mina-det-tabs">
+      <button class="tab-btn active" onclick="switchMinaTab('resumen',this,'${minaId}')">📊 Resumen</button>
+      <button class="tab-btn" onclick="switchMinaTab('trabajadores',this,'${minaId}')">👷 Trabajadores</button>
+      <button class="tab-btn" onclick="switchMinaTab('proyectos',this,'${minaId}')">🔧 Proyectos</button>
+      <button class="tab-btn" onclick="switchMinaTab('contratos',this,'${minaId}')">📝 Contratos</button>
+    </div>
+    <div id="mina-tab-resumen" class="tab-content active">
+      <div class="kpi-grid">
+        <div class="kpi kpi-orange"><div class="kpi-value">${trabs.length}</div><div class="kpi-label">Trabajadores</div><div class="kpi-icon">👷</div></div>
+        <div class="kpi kpi-blue"><div class="kpi-value">${mants.filter(m=>m.estado!=='cerrada').length}</div><div class="kpi-label">Mantenciones activas</div><div class="kpi-icon">🔧</div></div>
+        <div class="kpi kpi-green"><div class="kpi-value">${avgAcred}%</div><div class="kpi-label">Acreditación promedio</div><div class="kpi-icon">✅</div></div>
+        <div class="kpi kpi-red"><div class="kpi-value">${alertas}</div><div class="kpi-label">Alertas pendientes</div><div class="kpi-icon">🔔</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><div class="card-header"><div class="card-title">Contacto Minera</div></div>
+          <div class="info-row"><span class="info-label">Contraparte:</span><span class="info-value">${mina.contacto}</span></div>
+          <div class="info-row"><span class="info-label">Sistema acceso:</span><span class="info-value">${mina.sistema}</span></div>
+          <div class="info-row"><span class="info-label">Altura:</span><span class="info-value">${mina.altura.toLocaleString()} msnm ${mina.altura>=3000?'<span class="badge badge-warn">Requiere Alt. Geo.</span>':''}</span></div>
+        </div>
+        <div class="card"><div class="card-header"><div class="card-title">Contratos Marco</div></div>
+          ${conts.map(c=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);"><div style="font-weight:600;font-size:13px;">${c.nombre}</div><div style="font-size:11px;color:var(--text-muted);">${c.numero} · ${c.inicio} → ${c.termino}</div></div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div id="mina-tab-trabajadores" class="tab-content">
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>Trabajador</th><th>Especialidad</th><th>Disponibilidad</th><th>Acreditación</th><th>Próx. Vence</th><th></th></tr></thead>
+        <tbody>${trabs.map(t=>{
+          const pct=acreditacion(t); const nv=nextVence(t);
+          return `<tr>
+            <td><div class="worker-name">${t.nombre}</div><div class="worker-rut">${t.rut}</div></td>
+            <td>${t.especialidad}</td>
+            <td>${dispBadge(t.disponibilidad)}</td>
+            <td><div style="display:flex;align-items:center;gap:8px;"><div class="prog" style="width:80px;"><div class="prog-fill ${progColor(pct)}" style="width:${pct}%;"></div></div><span style="font-size:12px;">${pct}%</span></div></td>
+            <td>${nv?badgeEstado(nv):'<span class="badge badge-na">—</span>'}</td>
+            <td><button class="btn btn-ghost btn-sm" onclick="openFicha('${t.id}')">Ficha</button></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div></div>
+    </div>
+    <div id="mina-tab-proyectos" class="tab-content">
+      ${mants.map(mn=>{
+        const asig=S.asignaciones.filter(a=>a.mantId===mn.id).length;
+        const pct=Math.round((asig/mn.personalReq)*100);
+        return `<div class="mant-card">
+          <div class="mant-top"><div><div class="mant-nombre">${mn.nombre}</div><div class="mant-meta">${mn.area} · ${mn.inicio} → ${mn.termino}</div></div>
+          <div style="display:flex;gap:6px;">${tipoTag(mn.tipo)}${estadoTag(mn.estado)}</div></div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="prog" style="flex:1;"><div class="prog-fill ${progColor(pct)}" style="width:${pct}%;"></div></div>
+            <span style="font-size:12px;color:var(--text-muted);">${asig}/${mn.personalReq} personal</span>
+          </div>
+        </div>`;
+      }).join('') || '<div style="color:var(--text-muted);">Sin mantenciones</div>'}
+    </div>
+    <div id="mina-tab-contratos" class="tab-content">
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>Contrato</th><th>Número</th><th>Tipo</th><th>Vigencia</th><th>Monto UF</th><th>Estado</th></tr></thead>
+        <tbody>${conts.map(c=>`<tr>
+          <td>${c.nombre}</td><td style="font-size:12px;color:var(--text-muted);">${c.numero}</td>
+          <td><span class="badge ${c.tipo==='permanente'?'badge-blue':'badge-orange'}">${c.tipo}</span></td>
+          <td style="font-size:12px;">${c.inicio} → ${c.termino}</td>
+          <td style="font-weight:700;">${c.montoUF.toLocaleString()} UF</td>
+          <td>${estadoTag(c.estado)}</td>
+        </tr>`).join('')}</tbody>
+      </table></div></div>
+    </div>
+  `;
+}
+
+function closeMinaDetalle() {
+  document.getElementById('mineras-grid-view').style.display = '';
+  document.getElementById('mina-detalle-view').style.display = 'none';
+}
+
+function switchMinaTab(tab, btn, minaId) {
+  document.querySelectorAll('#mina-det-tabs .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['resumen','trabajadores','proyectos','contratos'].forEach(t=>{
+    const el=document.getElementById(`mina-tab-${t}`);
+    if(el) el.classList.toggle('active',t===tab);
+  });
+}
+// ===================== ALERTAS =====================
+function renderAlertas() {
+  const alertas = computeAlertas();
+  const txt = document.getElementById('filt-alerta-txt')?.value.toLowerCase()||'';
+  const tipo = document.getElementById('filt-alerta-tipo')?.value||'';
+  const urg = document.getElementById('filt-alerta-urg')?.value||'';
+  const filtered = alertas.filter(a=>{
+    if(txt && !a.msg.toLowerCase().includes(txt)) return false;
+    if(tipo && a.tipo!==tipo) return false;
+    if(urg && a.urgencia!==urg) return false;
+    return true;
+  });
+  document.getElementById('alertas-sub').textContent = `${filtered.length} alertas${alertas.length!==filtered.length?' (filtradas)':''} · ${alertas.filter(a=>a.urgencia==='vencido').length} vencidas, ${alertas.filter(a=>a.urgencia==='critico').length} críticas`;
+  const tipoBadge = {examen:'badge-blue',curso:'badge-orange',doc:'badge-warn',firma:'badge-err'};
+  document.getElementById('alertas-list').innerHTML = filtered.map(a=>`
+    <div class="alert-item alert-${a.urgencia}">
+      <div class="alert-dot dot-${a.urgencia}"></div>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:600;">${a.msg}</div>
+        <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">
+          <span class="badge ${tipoBadge[a.tipo]||'badge-na'}">${a.tipo}</span>
+          <span class="badge ${a.urgencia==='vencido'?'badge-err':a.urgencia==='critico'?'badge-crit':'badge-warn'}">${a.urgencia}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-ghost btn-sm" onclick="openFicha('${a.trabId}')">Ficha</button>
+        <button class="btn btn-success btn-sm" onclick="notifWA('${a.trabId}','${a.msg.replace(/['"<>]/g,'')}')" ">📲 WA</button>
+      </div>
+    </div>`).join('') || '<div style="color:var(--text-muted);padding:20px;text-align:center;">Sin alertas con los filtros seleccionados</div>';
+}
+function notifWA(trabId, msg) {
+  const t = S.trabajadores.find(w=>w.id===trabId);
+  if(!t) return;
+  const tel = t.tel.replace(/\D/g,'');
+  const texto = encodeURIComponent(`Estimado ${t.nombre}, le informamos que tiene documentación pendiente: ${msg}. Por favor contáctenos para regularizar. Domian SpA.`);
+  window.open(`https://wa.me/${tel}?text=${texto}`,'_blank');
+  toast(`Abriendo WhatsApp para ${t.nombre}`);
+}
+
+// ===================== TRABAJADORES =====================
+let currentTrabTab = 'planta';
+function switchTrabTab(tab, btn) {
+  currentTrabTab = tab;
+  document.querySelectorAll('#page-trabajadores .tab-bar .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTrabajadores();
+}
+function renderTrabajadores() {
+  const txt = document.getElementById('filt-trab-txt')?.value.toLowerCase()||'';
+  const esp = document.getElementById('filt-trab-esp')?.value||'';
+  const disp = document.getElementById('filt-trab-disp')?.value||'';
+  const cal = document.getElementById('filt-trab-cal')?.value||'';
+  const mina = document.getElementById('filt-trab-mina')?.value||'';
+  let workers = S.trabajadores;
+  if(currentTrabTab==='planta') workers = workers.filter(t=>t.tipo==='permanente'&&!t.bloqueado);
+  else if(currentTrabTab==='esporadico') workers = workers.filter(t=>t.tipo==='esporadico'&&!t.bloqueado);
+  else if(currentTrabTab==='bloqueado') workers = workers.filter(t=>t.bloqueado);
+  if(txt) workers = workers.filter(t=>t.nombre.toLowerCase().includes(txt)||t.rut.includes(txt));
+  if(esp) workers = workers.filter(t=>t.especialidad===esp);
+  if(disp) workers = workers.filter(t=>t.disponibilidad===disp);
+  if(cal) {
+    const n=parseInt(cal);
+    if(n===7) workers=workers.filter(t=>t.calificacion===7);
+    else if(n===5) workers=workers.filter(t=>t.calificacion>=5&&t.calificacion<7);
+    else if(n===3) workers=workers.filter(t=>t.calificacion>=3&&t.calificacion<5);
+    else workers=workers.filter(t=>t.calificacion<3);
+  }
+  if(mina) workers = workers.filter(t=>t.mineras?.includes(mina));
+  document.getElementById('trab-sub').textContent = `${workers.length} trabajadores`;
+  const thead = document.querySelector('#trab-table thead');
+  const tbody = document.querySelector('#trab-table tbody');
+  thead.innerHTML = '<tr><th>Trabajador</th><th>Ciudad</th><th>Especialidad</th><th>Tipo</th><th>Minera(s)</th><th>Disponibilidad</th><th>Cal.</th><th>Acred.</th><th>Próx. Vence</th><th></th></tr>';
+  tbody.innerHTML = workers.map(t=>{
+    const pct=acreditacion(t);
+    const nv=nextVence(t);
+    const col=avatarColor(t.id);
+    const minas=(t.mineras||[]).map(id=>{const m=S.minas.find(x=>x.id===id);return m?`<span style="color:${m.color};font-size:11px;">${m.nombre.replace('Minera ','').replace('Codelco ','')}</span>`:''}).join('<br>');
+    return `<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="avatar" style="background:${col};">${initials(t.nombre)}</div>
+          <div><div class="worker-name">${t.nombre}</div><div class="worker-rut">${t.rut}</div></div>
+        </div>
+      </td>
+      <td style="font-size:12px;">${t.ciudad||'—'}</td>
+      <td class="worker-esp">${t.especialidad}</td>
+      <td><span class="badge ${t.tipo==='permanente'?'badge-blue':'badge-orange'}">${t.tipo}</span></td>
+      <td>${minas}</td>
+      <td>${dispBadge(t.disponibilidad)}</td>
+      <td><b style="color:${calColor(t.calificacion)};">${calLetra(t.calificacion)}</b></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="prog" style="width:60px;"><div class="prog-fill ${progColor(pct)}" style="width:${pct}%;"></div></div>
+          <span style="font-size:11px;">${pct}%</span>
+        </div>
+      </td>
+      <td>${nv?badgeEstado(nv):'<span class="badge badge-na">—</span>'}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-ghost btn-sm" onclick="openFicha('${t.id}')">Ficha</button>
+        <a class="wa-link" href="https://wa.me/${(t.tel||'').replace(/\D/g,'')}" target="_blank" title="WhatsApp ${t.nombre}">💬</a>
+        <button class="btn btn-danger btn-sm" onclick="deleteTrabajador('${t.id}')">Eliminar</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ===================== BLOQUEADOS =====================
+function renderBloqueados() {
+  const bloq = S.trabajadores.filter(t=>t.bloqueado);
+  const thead = document.querySelector('#bloq-table thead');
+  const tbody = document.querySelector('#bloq-table tbody');
+  thead.innerHTML = '<tr><th>Trabajador</th><th>RUT</th><th>Especialidad</th><th>Motivo Bloqueo</th><th>Acciones</th></tr>';
+  tbody.innerHTML = bloq.map(t=>`<tr>
+    <td><div style="display:flex;align-items:center;gap:10px;">
+      <div class="avatar" style="background:var(--red);opacity:.7;">${initials(t.nombre)}</div>
+      <div><div class="worker-name">${t.nombre}</div><div class="worker-rut">${t.rut}</div></div>
+    </div></td>
+    <td>${t.rut}</td>
+    <td>${t.especialidad}</td>
+    <td><span class="blocked-badge">🚫 ${t.motivoBloq||'Sin motivo registrado'}</span></td>
+    <td><button class="btn btn-success btn-sm" onclick="desbloquear('${t.id}')">✅ Desbloquear</button></td>
+  </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">Sin trabajadores bloqueados</td></tr>';
+}
+function desbloquear(id) {
+  const t = S.trabajadores.find(w=>w.id===id);
+  if(!t) return;
+  t.bloqueado = false;
+  t.disponibilidad = 'disponible';
+  delete t.motivoBloq;
+  persistTenant();
+  renderBloqueados();
+  updateBadges();
+  toast(`${t.nombre} desbloqueado correctamente`);
+}
+
+// ===================== AUDITORÍA =====================
+function renderAuditoria() {
+  const txt = document.getElementById('filt-aud-txt')?.value.toLowerCase()||'';
+  const minaF = document.getElementById('filt-aud-mina')?.value||'';
+  const estF = document.getElementById('filt-aud-est')?.value||'';
+  let workers = S.trabajadores.filter(t=>!t.bloqueado);
+  if(txt) workers=workers.filter(t=>t.nombre.toLowerCase().includes(txt)||t.rut.includes(txt));
+  if(minaF) workers=workers.filter(t=>t.mineras?.includes(minaF));
+  if(estF) {
+    workers=workers.filter(t=>{
+      const pct=acreditacion(t);
+      if(estF==='puede') return pct>=85;
+      if(estF==='revisar') return pct>=60&&pct<=85;
+      return pct<60;
+    });
+  }
+  const table = document.getElementById('aud-table');
+  table.innerHTML = `<thead><tr>
+    <th>Trabajador</th><th>CI</th><th>Contrato</th><th>AFP</th><th>Salud</th>
+    <th>Ex.Preoc.</th><th>Alt.Geo.</th><th>Psicosens.</th><th>Audiom.</th><th>Visual</th>
+    <th>ODI</th><th>LOTO</th><th>Alt.Física</th><th>%</th><th>Estado</th>
+  </tr></thead><tbody>${workers.map(t=>{
+    const pct=acreditacion(t);
+    const est=pct>=85?'✅ PUEDE':pct>=60?'⚠️ REVISAR':'❌ NO PUEDE';
+    const estClass=pct>=85?'badge-ok':pct>=60?'badge-warn':'badge-err';
+    return `<tr>
+      <td><div style="font-weight:600;font-size:13px;">${t.nombre}</div><div style="font-size:11px;color:var(--text-muted);">${t.rut}</div></td>
+      <td>${badgeEstado(t.docCI?.vence)}</td>
+      <td>${badgeEstado(t.docContrato?.vence)}</td>
+      <td>${badgeEstado(t.docAFP?.vence)}</td>
+      <td>${badgeEstado(t.docSalud?.vence)}</td>
+      <td>${badgeEstado(t.exPreocupacional?.vence)}</td>
+      <td>${badgeEstado(t.exAlturaGeo?.vence)}</td>
+      <td>${badgeEstado(t.exPsicosens?.vence)}</td>
+      <td>${badgeEstado(t.exAudiometria?.vence)}</td>
+      <td>${badgeEstado(t.exVisual?.vence)}</td>
+      <td>${badgeEstado(t.curODI?.vence)}</td>
+      <td>${badgeEstado(t.curLOTO?.vence)}</td>
+      <td>${badgeEstado(t.curAlturaFisica?.vence)}</td>
+      <td><b style="color:${pct>=85?'var(--green)':pct>=60?'var(--yellow)':'var(--red)'};">${pct}%</b></td>
+      <td><span class="badge ${estClass}">${est}</span></td>
+    </tr>`;
+  }).join('')}</tbody>`;
+}
+
+// ===================== MANTENCIONES =====================
+function renderMantenciones() {
+  const txt = document.getElementById('filt-mant-txt')?.value.toLowerCase()||'';
+  const minaF = document.getElementById('filt-mant-mina')?.value||'';
+  const estF = document.getElementById('filt-mant-est')?.value||'';
+  const tipoF = document.getElementById('filt-mant-tipo')?.value||'';
+  let mants = S.mantenciones;
+  if(txt) mants=mants.filter(m=>m.nombre.toLowerCase().includes(txt)||m.area.toLowerCase().includes(txt));
+  if(minaF) mants=mants.filter(m=>m.minaId===minaF);
+  if(estF) mants=mants.filter(m=>m.estado===estF);
+  if(tipoF) mants=mants.filter(m=>m.tipo===tipoF);
+  document.getElementById('mant-sub').textContent = `${mants.length} mantenciones`;
+  document.getElementById('mant-list').innerHTML = mants.map(mn=>{
+    const mina=S.minas.find(m=>m.id===mn.minaId);
+    const asig=S.asignaciones.filter(a=>a.mantId===mn.id).length;
+    const pct=Math.round((asig/mn.personalReq)*100);
+    return `<div class="mant-card">
+      <div class="mant-top">
+        <div>
+          <div class="mant-nombre">${mn.nombre}</div>
+          <div class="mant-meta">${mina?.nombre||''} · ${mn.area} · Admin: ${mn.admin}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">${tipoTag(mn.tipo)}${estadoTag(mn.estado)}</div>
+      </div>
+      <div class="mant-tags">
+        <span class="badge badge-blue">📅 ${mn.inicio} → ${mn.termino}</span>
+        <span class="badge badge-orange">${mn.hh.toLocaleString()} HH</span>
+        ${mn.especialidades.map(e=>`<span class="chip" style="background:var(--bg3);color:var(--text-muted);">${e}</span>`).join('')}
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <div class="prog" style="flex:1;"><div class="prog-fill ${progColor(pct)}" style="width:${pct}%;"></div></div>
+        <span style="font-size:12px;color:var(--text-muted);">${asig}/${mn.personalReq} personal asignado</span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="openMantDetalle('${mn.id}')">🔍 Detalle</button>
+        <button class="btn btn-secondary btn-sm" onclick="openAsignarPersonalDirect('${mn.id}')">👷 Asignar</button>
+        <button class="btn btn-blue btn-sm" onclick="openCalloutDirect('${mn.id}')">📲 Llamado WA</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteMantencion('${mn.id}')">Eliminar</button>
+      </div>
+    </div>`;
+  }).join('') || '<div style="color:var(--text-muted);padding:20px;text-align:center;">Sin mantenciones con los filtros seleccionados</div>';
+}
+
+let currentMantId = null;
+function openMantDetalle(mantId) {
+  currentMantId = mantId;
+  const mn = S.mantenciones.find(m=>m.id===mantId);
+  if(!mn) return;
+  const mina = S.minas.find(m=>m.id===mn.minaId);
+  document.getElementById('mant-det-title').textContent = mn.nombre;
+  const asigs = S.asignaciones.filter(a=>a.mantId===mantId);
+  // Personal tab
+  document.getElementById('mant-tab-personal').innerHTML = `
+    <div style="margin-bottom:12px;display:flex;gap:10px;">
+      <input class="filter-input" placeholder="🔍 Filtrar..." oninput="filterMantPersonal(this.value,'${mantId}')" style="width:200px;">
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Trabajador</th><th>Especialidad</th><th>Turno</th><th>Hotel</th><th>Acreditación</th><th>Estado</th></tr></thead>
+      <tbody id="mant-pers-tbody">${asigs.map(a=>{
+        const t=S.trabajadores.find(w=>w.id===a.trabId);
+        if(!t) return '';
+        const pct=acreditacion(t);
+        const ha=S.hotelAsig.find(h=>h.trabId===a.trabId&&h.mantId===mantId);
+        const hotel=ha?`${hotelNombre(ha.hotelId)} #${ha.pieza}`:'—';
+        return `<tr>
+          <td><div class="worker-name">${t.nombre}</div><div class="worker-rut">${t.rut}</div></td>
+          <td>${t.especialidad}</td>
+          <td><span class="badge badge-blue">${a.turno}</span></td>
+          <td style="font-size:12px;">${hotel}</td>
+          <td><div style="display:flex;align-items:center;gap:6px;"><div class="prog" style="width:60px;"><div class="prog-fill ${progColor(pct)}" style="width:${pct}%;"></div></div><span style="font-size:11px;">${pct}%</span></div></td>
+          <td><span class="badge ${a.estado==='confirmado'?'badge-ok':'badge-na'}">${a.estado}</span></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>`;
+  // Hotel tab
+  const hotelAsigs = S.hotelAsig.filter(h=>h.mantId===mantId);
+  document.getElementById('mant-tab-hotel').innerHTML = hotelAsigs.length ? `
+    <div class="table-wrap"><table>
+      <thead><tr><th>Trabajador</th><th>Hotel</th><th>Pieza</th><th>Tipo</th><th>Turno</th><th>Check-in</th><th>Check-out</th></tr></thead>
+      <tbody>${hotelAsigs.map(ha=>{
+        const t=S.trabajadores.find(w=>w.id===ha.trabId);
+        return `<tr>
+          <td>${t?.nombre||ha.trabId}</td>
+          <td>${hotelNombre(ha.hotelId)}</td>
+          <td>#${ha.pieza}</td>
+          <td><span class="badge badge-blue">${ha.tipo}</span></td>
+          <td>${ha.turno}</td>
+          <td>${ha.checkin}</td>
+          <td>${ha.checkout}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>` : '<div style="color:var(--text-muted);padding:20px;">Sin asignaciones de hotel</div>';
+  // Docs tab
+  document.getElementById('mant-tab-docs').innerHTML = `
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-header"><div class="card-title">Documentos Requeridos por Trabajador</div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        ${['Contrato por Obra/Faena','Anexo de Movilización','ODI – Obligación de Informar','Reglamento Interno'].map(doc=>{
+          const firmasDoc=S.firmas.filter(f=>f.mantId===mantId&&f.tipo===doc);
+          const firmados=firmasDoc.filter(f=>f.estado==='firmado').length;
+          return `<div style="padding:12px;background:var(--bg3);border-radius:8px;">
+            <div style="font-weight:600;font-size:13px;margin-bottom:4px;">${doc}</div>
+            <div style="font-size:12px;color:var(--text-muted);">${firmados}/${firmasDoc.length} firmados</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  // Timeline tab
+  document.getElementById('mant-tab-timeline').innerHTML = `
+    <div style="position:relative;padding-left:30px;">
+      <div style="position:absolute;left:10px;top:0;bottom:0;width:2px;background:var(--border);"></div>
+      ${[
+        {date:mn.inicio, icon:'📋', label:'Mantención creada', detail:`Admin: ${mn.admin}`},
+        {date:'2026-06-15', icon:'📲', label:'Primer llamado WA', detail:`${S.callouts.filter(c=>c.mantId===mantId).length} llamado(s) realizados`},
+        {date:'2026-06-20', icon:'👷', label:`${asigs.length} trabajadores asignados`, detail:`${asigs.length}/${mn.personalReq} cupos ocupados`},
+        {date:mn.inicio, icon:'🚀', label:'Inicio planificado', detail:mn.area},
+        {date:mn.termino, icon:'🏁', label:'Término estimado', detail:`${mn.hh.toLocaleString()} HH proyectadas`}
+      ].map(ev=>`<div style="margin-bottom:16px;position:relative;">
+        <div style="position:absolute;left:-24px;width:20px;height:20px;background:var(--bg3);border:2px solid var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;">${ev.icon}</div>
+        <div style="font-size:12px;color:var(--text-muted);">${ev.date}</div>
+        <div style="font-weight:600;font-size:13px;">${ev.label}</div>
+        <div style="font-size:12px;color:var(--text-dim);">${ev.detail}</div>
+      </div>`).join('')}
+    </div>`;
+  openModal('modal-mant-detalle');
+}
+function filterMantPersonal(txt, mantId) {
+  const rows = document.querySelectorAll('#mant-pers-tbody tr');
+  rows.forEach(r=>{ r.style.display = r.textContent.toLowerCase().includes(txt.toLowerCase())?'':'none'; });
+}
+function switchMantTab(tab,btn) {
+  document.querySelectorAll('#modal-mant-detalle .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['personal','hotel','docs','timeline'].forEach(t=>{
+    const el=document.getElementById(`mant-tab-${t}`);
+    if(el) el.classList.toggle('active',t===tab);
+  });
+}
+function openCalloutFromMant() { closeModal('modal-mant-detalle'); openCalloutDirect(currentMantId); }
+function openAsignarPersonal() { closeModal('modal-mant-detalle'); openAsignarPersonalDirect(currentMantId); }
+function openCalloutDirect(mantId) {
+  const sel=document.getElementById('co-mant');
+  if(sel) sel.value=mantId;
+  loadCalloutEsps();
+  openModal('modal-callout');
+}
+function openAsignarPersonalDirect(mantId) {
+  const sel=document.getElementById('asig-mant');
+  if(sel) sel.value=mantId;
+  loadAsignarWorkers();
+  openModal('modal-asignar');
+}
+
+// ===================== CONTRATOS =====================
+function renderContratos() {
+  // Contratos marco
+  document.getElementById('contratos-table').innerHTML = `
+    <thead><tr><th>Contrato</th><th>Número</th><th>Minera</th><th>Tipo</th><th>Vigencia</th><th>Monto UF</th><th>Estado</th><th></th></tr></thead>
+    <tbody>${S.contratos.map(c=>{
+      const mina=S.minas.find(m=>m.id===c.minaId);
+      return `<tr>
+        <td><div style="font-weight:600;">${c.nombre}</div></td>
+        <td style="font-size:12px;color:var(--text-muted);">${c.numero}</td>
+        <td>${mina?`<span style="color:${mina.color};">${mina.nombre}</span>`:'—'}</td>
+        <td><span class="badge ${c.tipo==='permanente'?'badge-blue':'badge-orange'}">${c.tipo}</span></td>
+        <td style="font-size:12px;">${c.inicio} → ${c.termino}</td>
+        <td><b style="color:var(--orange);">${c.montoUF.toLocaleString()} UF</b></td>
+        <td>${estadoTag(c.estado)}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="toast('Ver contrato ${c.numero}')">Ver</button> <button class="btn btn-danger btn-sm" onclick="deleteContrato('${c.id}')">Eliminar</button></td>
+      </tr>`;
+    }).join('')}</tbody>`;
+  // Firmas
+  document.getElementById('firmas-table').innerHTML = `
+    <thead><tr><th>Trabajador</th><th>Tipo Documento</th><th>Mantención</th><th>Canal</th><th>Enviado</th><th>Firmado</th><th>Estado</th><th></th></tr></thead>
+    <tbody>${S.firmas.map(f=>{
+      const t=S.trabajadores.find(w=>w.id===f.trabId);
+      const mn=S.mantenciones.find(m=>m.id===f.mantId);
+      const estCls={borrador:'badge-na',enviado:'badge-warn',pendiente:'badge-crit',firmado:'badge-ok'};
+      return `<tr>
+        <td><div style="font-weight:600;">${t?.nombre||f.trabId}</div></td>
+        <td style="font-size:12px;">${f.tipo}</td>
+        <td style="font-size:12px;color:var(--text-muted);">${mn?.nombre||f.mantId}</td>
+        <td><span class="badge badge-blue">${f.canal}</span></td>
+        <td style="font-size:12px;">${f.enviado||'—'}</td>
+        <td style="font-size:12px;">${f.firmado||'—'}</td>
+        <td><span class="badge ${estCls[f.estado]||'badge-na'}">${f.estado}</span></td>
+        <td style="white-space:nowrap;">
+          ${f.estado!=='firmado'?`<button class="btn btn-success btn-sm" onclick="marcarFirmado('${f.id}')">✅ Firmado</button>`:''} 
+          <button class="btn btn-ghost btn-sm" onclick="toast('Reenvío en proceso...')">↩ Reenviar</button>
+          <button class="btn btn-blue btn-sm" onclick="previewContrato('${f.trabId}','${f.mantId}','${f.tipo}')">👁 Preview</button>
+        </td>
+      </tr>`;
+    }).join('')}</tbody>`;
+}
+function marcarFirmado(firmaId) {
+  const f=S.firmas.find(x=>x.id===firmaId);
+  if(!f) return;
+  f.estado='firmado'; f.firmado=hoy();
+  persistTenant(); renderContratos(); updateBadges();
+  toast('Documento marcado como firmado');
+}
+function switchContTab(tab, btn) {
+  document.querySelectorAll('#page-contratos .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('contratos-marcos-view').style.display=tab==='marcos'?'':'none';
+  document.getElementById('contratos-firmas-view').style.display=tab==='firmas'?'':'none';
+}
+// ===================== HOTELERÍA =====================
+function renderHoteleria() {
+  const cards = document.getElementById('hotel-cards');
+  cards.innerHTML = S.hoteles.map(h=>{
+    const asigs = S.hotelAsig.filter(a=>a.hotelId===h.id);
+    const simUso = asigs.filter(a=>a.tipo==='simple').length;
+    const dobUso = asigs.filter(a=>a.tipo==='doble').length;
+    return `<div class="hotel-card">
+      <div class="hotel-card-name">${h.nombre}</div>
+      <div class="hotel-card-city">📍 ${h.ciudad} · 📞 ${h.tel}</div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Simples: ${simUso}/${h.simples}</div>
+        <div class="prog"><div class="prog-fill ${progColor(Math.round(simUso/h.simples*100))}" style="width:${Math.min(100,Math.round(simUso/h.simples*100))}%;"></div></div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Dobles: ${dobUso}/${h.dobles}</div>
+        <div class="prog"><div class="prog-fill ${progColor(Math.round(dobUso/h.dobles*100))}" style="width:${Math.min(100,Math.round(dobUso/h.dobles*100))}%;"></div></div>
+      </div>
+      <div style="font-size:12px;color:var(--orange);font-weight:700;">$${h.tarifa.toLocaleString()}/noche</div><button class="btn btn-danger btn-sm" style="margin-top:8px;" onclick="deleteHotel('${h.id}')">Eliminar hotel</button>
+      <div style="margin-top:6px;">${h.minaIds.map(id=>{const m=S.minas.find(x=>x.id===id);return m?`<span class="chip" style="background:rgba(240,125,54,.15);color:${m.color};">${m.nombre.replace('Minera ','').replace('Codelco ','')}</span>`:''}).join('')}</div>
+    </div>`;
+  }).join('');
+  const table = document.getElementById('hotel-table');
+  table.innerHTML = `<thead><tr><th>Trabajador</th><th>Mantención</th><th>Hotel</th><th>Pieza</th><th>Tipo</th><th>Turno</th><th>Check-in</th><th>Check-out</th><th>Comparte con</th></tr></thead>
+    <tbody>${S.hotelAsig.map(ha=>{
+      const t=S.trabajadores.find(w=>w.id===ha.trabId);
+      const mn=S.mantenciones.find(m=>m.id===ha.mantId);
+      return `<tr>
+        <td><div style="font-weight:600;">${t?.nombre||ha.trabId}</div><div style="font-size:11px;color:var(--text-muted);">${t?.especialidad||''}</div></td>
+        <td style="font-size:12px;">${mn?.nombre||ha.mantId}</td>
+        <td>${hotelNombre(ha.hotelId)}</td>
+        <td>#${ha.pieza}</td>
+        <td><span class="badge badge-blue">${ha.tipo}</span></td>
+        <td>${ha.turno}</td>
+        <td>${ha.checkin}</td>
+        <td>${ha.checkout}</td>
+        <td style="font-size:12px;color:var(--text-muted);">${ha.comparte||'—'}</td>
+      </tr>`;
+    }).join('')}</tbody>`;
+}
+
+// ===================== LLAMADOS WA =====================
+function renderLlamados() {
+  document.getElementById('callout-table').innerHTML = `
+    <thead><tr><th>Mantención</th><th>Especialidades</th><th>Turno</th><th>Cupos</th><th>Enviados</th><th>Respondieron</th><th>Asignados</th><th>Fecha</th><th></th></tr></thead>
+    <tbody>${S.callouts.map(co=>{
+      const mn=S.mantenciones.find(m=>m.id===co.mantId);
+      const mina=S.minas.find(m=>m.id===mn?.minaId);
+      const tasa=co.enviados?Math.round(co.respondieron/co.enviados*100):0;
+      return `<tr>
+        <td><div style="font-weight:600;">${mn?.nombre||co.mantId}</div><div style="font-size:11px;color:var(--text-muted);">${mina?.nombre||''}</div></td>
+        <td style="font-size:12px;">${co.especialidades.join(', ')}</td>
+        <td><span class="badge badge-blue">${co.turno}</span></td>
+        <td><b style="color:var(--orange);">${co.cupos}</b></td>
+        <td>${co.enviados}</td>
+        <td>${co.respondieron} <span style="font-size:11px;color:var(--text-muted);">(${tasa}%)</span></td>
+        <td><b style="color:var(--green);">${co.asignados}</b></td>
+        <td style="font-size:12px;">${co.fecha}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-ghost btn-sm" onclick="toast('Respuestas: ${co.respondieron} recibidas')">Ver resp.</button>
+          <button class="btn btn-blue btn-sm" onclick="toast('Reenvío programado')">↩ Reenviar</button>
+        </td>
+      </tr>`;
+    }).join('')}</tbody>`;
+}
+
+// ===================== EXÁMENES =====================
+const EXAMENES_MAP = {
+  exPreocupacional:'Preocupacional',
+  exAlturaGeo:'Altura Geográfica',
+  exPsicosens:'Psicosensotécnico',
+  exAudiometria:'Audiometría',
+  exVisual:'Visual',
+  exAlcohol:'Alcohol/Drogas'
+};
+function buildExamenRows() {
+  const rows = [];
+  S.trabajadores.filter(t=>!t.bloqueado).forEach(t=>{
+    Object.entries(EXAMENES_MAP).forEach(([field, label])=>{
+      const ex = t[field];
+      if(!ex) return;
+      const vence = ex.vence||ex.fecha;
+      const est = estadoFecha(vence);
+      const dias = diasHasta(vence);
+      const mina = S.minas.find(m=>t.mineras?.includes(m.id));
+      rows.push({trabId:t.id, nombre:t.nombre, mina:mina?.nombre||'—', minaId:mina?.id||'', field, label, centro:ex.centro||'—', vence, estado:est, dias});
+    });
+  });
+  return rows;
+}
+function renderExamenes() {
+  const txt = document.getElementById('filt-ex-txt')?.value.toLowerCase()||'';
+  const tipo = document.getElementById('filt-ex-tipo')?.value||'';
+  const est = document.getElementById('filt-ex-est')?.value||'';
+  const minaF = document.getElementById('filt-ex-mina')?.value||'';
+  let rows = buildExamenRows();
+  if(txt) rows=rows.filter(r=>r.nombre.toLowerCase().includes(txt));
+  if(tipo) rows=rows.filter(r=>r.field===tipo);
+  if(est) rows=rows.filter(r=>r.estado===est);
+  if(minaF) rows=rows.filter(r=>r.minaId===minaF);
+  document.getElementById('ex-table').innerHTML = `
+    <thead><tr><th>Trabajador</th><th>Minera</th><th>Tipo Examen</th><th>Centro</th><th>Vencimiento</th><th>Estado</th><th>Días</th><th></th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td><div class="worker-name" style="cursor:pointer;" onclick="openFicha('${r.trabId}')">${r.nombre}</div></td>
+      <td style="font-size:12px;color:var(--text-muted);">${r.mina}</td>
+      <td>${r.label}</td>
+      <td style="font-size:12px;">${r.centro}</td>
+      <td style="font-size:12px;">${r.vence||'—'}</td>
+      <td>${badgeEstado(r.vence)}</td>
+      <td style="font-size:12px;">${r.dias!==null?Math.abs(r.dias)+'d':''}</td>
+      <td><button class="btn btn-success btn-sm" onclick="notifWA('${r.trabId}','${r.label} vence ${r.vence}')">📲 WA</button></td>
+    </tr>`).join('')}</tbody>`;
+}
+
+// ===================== CURSOS =====================
+const CURSOS_MAP = {
+  curODI:'ODI – Obligación de Informar',
+  curReglamento:'Reglamento Interno',
+  curLOTO:'LOTO / Bloqueo y Etiquetado',
+  curAlturaFisica:'Trabajo en Altura Física',
+  curEspaciosConfinados:'Espacios Confinados',
+  curTrabajosCaliente:'Trabajos en Caliente',
+  curManejoDefensivo:'Manejo Defensivo',
+  curArcFlash:'Arc Flash / Seguridad Eléctrica'
+};
+function buildCursoRows() {
+  const rows = [];
+  S.trabajadores.filter(t=>!t.bloqueado).forEach(t=>{
+    Object.entries(CURSOS_MAP).forEach(([field, label])=>{
+      const cur = t[field];
+      if(!cur) return;
+      const vence = cur.vence||cur.fecha;
+      const est = estadoFecha(vence);
+      const dias = diasHasta(vence);
+      rows.push({trabId:t.id, nombre:t.nombre, field, label, otec:cur.otec||'—', vence, estado:est, dias});
+    });
+    // Inducciones
+    (t.curInduccion||[]).forEach(ind=>{
+      rows.push({trabId:t.id, nombre:t.nombre, field:'curInduccion', label:`Inducción ${ind.mina}`, otec:'Interna', vence:ind.fecha, estado:estadoFecha(ind.fecha), dias:diasHasta(ind.fecha)});
+    });
+  });
+  return rows;
+}
+function renderCursos() {
+  const txt = document.getElementById('filt-cur-txt')?.value.toLowerCase()||'';
+  const tipo = document.getElementById('filt-cur-tipo')?.value||'';
+  const est = document.getElementById('filt-cur-est')?.value||'';
+  let rows = buildCursoRows();
+  if(txt) rows=rows.filter(r=>r.nombre.toLowerCase().includes(txt));
+  if(tipo) rows=rows.filter(r=>r.field===tipo);
+  if(est) rows=rows.filter(r=>r.estado===est);
+  document.getElementById('cur-table').innerHTML = `
+    <thead><tr><th>Trabajador</th><th>Curso / Certificación</th><th>OTEC</th><th>Vencimiento</th><th>Estado</th><th>Días</th><th></th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td><div class="worker-name" style="cursor:pointer;" onclick="openFicha('${r.trabId}')">${r.nombre}</div></td>
+      <td>${r.label}</td>
+      <td style="font-size:12px;color:var(--text-muted);">${r.otec}</td>
+      <td style="font-size:12px;">${r.vence||'—'}</td>
+      <td>${badgeEstado(r.vence)}</td>
+      <td style="font-size:12px;">${r.dias!==null?Math.abs(r.dias)+'d':''}</td>
+      <td><button class="btn btn-success btn-sm" onclick="notifWA('${r.trabId}','${r.label} vence ${r.vence}')">📲 WA</button></td>
+    </tr>`).join('')}</tbody>`;
+}
+
+// ===================== FICHA TRABAJADOR =====================
+let currentFichaTrab = null;
+function openFicha(id) {
+  const t = S.trabajadores.find(w=>w.id===id);
+  if(!t) return;
+  currentFichaTrab = t;
+  document.getElementById('ficha-title').textContent = t.nombre;
+  const col=avatarColor(t.id);
+  const pct=acreditacion(t);
+  const minas=(t.mineras||[]).map(id=>{const m=S.minas.find(x=>x.id===id);return m?`<span class="chip" style="background:rgba(240,125,54,.15);color:${m.color};">${m.nombre}</span>`:''}).join('');
+  // Datos personales
+  document.getElementById('ficha-tab-datos').innerHTML = `
+    <div style="display:flex;align-items:center;gap:20px;margin-bottom:20px;padding:16px;background:var(--bg3);border-radius:10px;">
+      <div class="avatar" style="background:${col};width:56px;height:56px;font-size:20px;">${initials(t.nombre)}</div>
+      <div style="flex:1;">
+        <div style="font-size:20px;font-weight:800;">${t.nombre} ${t.bloqueado?'<span class="blocked-badge">🚫 BLOQUEADO</span>':''}</div>
+        <div style="font-size:14px;color:var(--text-muted);">${t.especialidad} · ${t.rut}</div>
+        <div style="display:flex;gap:8px;margin-top:8px;">${dispBadge(t.disponibilidad)}<span class="badge" style="background:${calColor(t.calificacion)}22;color:${calColor(t.calificacion)};">CAL ${calLetra(t.calificacion)} (${t.calificacion})</span><span class="badge ${pct>=85?'badge-ok':pct>=60?'badge-warn':'badge-err'}">${pct}% Acreditado</span></div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:32px;font-weight:800;color:${pct>=85?'var(--green)':pct>=60?'var(--yellow)':'var(--red)'};">${pct}%</div>
+        <div style="font-size:11px;color:var(--text-muted);">Acreditación</div>
+        <div class="prog" style="width:80px;margin:4px 0 0 auto;"><div class="prog-fill ${progColor(pct)}" style="width:${pct}%;"></div></div>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">RUT</label><div style="padding:9px 12px;background:var(--bg3);border-radius:8px;font-size:13px;">${t.rut}</div></div>
+      <div class="form-group"><label class="form-label">Fecha Nacimiento</label><div style="padding:9px 12px;background:var(--bg3);border-radius:8px;font-size:13px;">${t.nacimiento||'—'}</div></div>
+      <div class="form-group"><label class="form-label">Teléfono</label><div style="padding:9px 12px;background:var(--bg3);border-radius:8px;font-size:13px;">${t.tel||'—'}</div></div>
+      <div class="form-group"><label class="form-label">Email</label><div style="padding:9px 12px;background:var(--bg3);border-radius:8px;font-size:13px;">${t.email||'—'}</div></div>
+      <div class="form-group"><label class="form-label">Ciudad</label><div style="padding:9px 12px;background:var(--bg3);border-radius:8px;font-size:13px;">${t.ciudad||'—'}</div></div>
+      <div class="form-group"><label class="form-label">Tipo Contrato</label><div style="padding:9px 12px;background:var(--bg3);border-radius:8px;font-size:13px;">${t.tipo}</div></div>
+      <div class="form-group"><label class="form-label">AFP</label><div style="padding:9px 12px;background:var(--bg3);border-radius:8px;font-size:13px;">${t.afp||'—'}</div></div>
+      <div class="form-group"><label class="form-label">Salud</label><div style="padding:9px 12px;background:var(--bg3);border-radius:8px;font-size:13px;">${t.salud||'—'}</div></div>
+      <div class="form-group"><label class="form-label">Mutual Seguridad</label><div style="padding:9px 12px;background:var(--bg3);border-radius:8px;font-size:13px;">${t.mutual||'—'}</div></div>
+      <div class="form-group"><label class="form-label">Licencia Conducir</label><div style="padding:9px 12px;background:var(--bg3);border-radius:8px;font-size:13px;">${t.docLicencia?`Clase ${t.docLicencia.tipo} — Vence ${t.docLicencia.vence}`:'Sin licencia'}</div></div>
+      <div class="form-group full"><label class="form-label">Mineras Habilitadas</label><div style="padding:9px 12px;background:var(--bg3);border-radius:8px;">${minas||'Sin asignar'}</div></div>
+      ${t.bloqueado?`<div class="form-group full"><label class="form-label">Motivo Bloqueo</label><div style="padding:9px 12px;background:rgba(248,113,113,.1);border-radius:8px;font-size:13px;color:var(--red);">${t.motivoBloq}</div></div>`:''}
+    </div>`;
+  // Docs y Exámenes
+  const docRows = [
+    {label:'Cédula de Identidad', vence:t.docCI?.vence},
+    {label:'Contrato de Trabajo', vence:t.docContrato?.vence, extra:t.docContrato?.estado?`<span class="badge badge-blue">${t.docContrato.estado}</span>`:''},
+    {label:'AFP', vence:t.docAFP?.vence},
+    {label:'Salud (Fonasa/Isapre)', vence:t.docSalud?.vence},
+    {label:'Licencia Conducir', vence:t.docLicencia?.vence},
+  ];
+  const exRows = [
+    {label:'Preocupacional', vence:t.exPreocupacional?.vence, centro:t.exPreocupacional?.centro},
+    {label:'Altura Geográfica', vence:t.exAlturaGeo?.vence, centro:t.exAlturaGeo?.centro},
+    {label:'Psicosensotécnico', vence:t.exPsicosens?.vence},
+    {label:'Audiometría', vence:t.exAudiometria?.vence},
+    {label:'Visual', vence:t.exVisual?.vence},
+    {label:'Alcohol/Drogas', vence:t.exAlcohol?.fecha, extra:t.exAlcohol?.resultado?`<span class="badge badge-ok">${t.exAlcohol.resultado}</span>`:''},
+  ];
+  document.getElementById('ficha-tab-docs').innerHTML = `
+    <div style="margin-bottom:20px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Documentos Personales</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Documento</th><th>Vencimiento</th><th>Estado</th><th>Días</th></tr></thead>
+        <tbody>${docRows.map(r=>`<tr>
+          <td style="font-weight:600;">${r.label}</td>
+          <td style="font-size:12px;">${r.vence||'—'}</td>
+          <td>${r.vence?badgeEstado(r.vence):'<span class="badge badge-na">Sin datos</span>'} ${r.extra||''}</td>
+          <td style="font-size:12px;">${r.vence?Math.abs(diasHasta(r.vence))+'d':''}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Exámenes Médicos</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Examen</th><th>Centro</th><th>Vencimiento</th><th>Estado</th></tr></thead>
+        <tbody>${exRows.map(r=>`<tr>
+          <td style="font-weight:600;">${r.label}</td>
+          <td style="font-size:12px;color:var(--text-muted);">${r.centro||'—'}</td>
+          <td style="font-size:12px;">${r.vence||'—'}</td>
+          <td>${r.vence?badgeEstado(r.vence):'<span class="badge badge-na">Sin datos</span>'} ${r.extra||''}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+    </div>`;
+  // Cursos
+  const curRows = Object.entries(CURSOS_MAP).map(([field,label])=>{
+    const cur=t[field];
+    return cur?{label,vence:cur.vence||cur.fecha,otec:cur.otec||'—'}:null;
+  }).filter(Boolean);
+  if(t.curInduccion) t.curInduccion.forEach(ind=>curRows.push({label:`Inducción ${ind.mina}`,vence:ind.fecha,otec:'Interna'}));
+  document.getElementById('ficha-tab-cur').innerHTML = curRows.length ? `
+    <div class="table-wrap"><table>
+      <thead><tr><th>Curso / Certificación</th><th>OTEC</th><th>Vencimiento</th><th>Estado</th></tr></thead>
+      <tbody>${curRows.map(r=>`<tr>
+        <td style="font-weight:600;">${r.label}</td>
+        <td style="font-size:12px;color:var(--text-muted);">${r.otec}</td>
+        <td style="font-size:12px;">${r.vence||'—'}</td>
+        <td>${r.vence?badgeEstado(r.vence):'<span class="badge badge-na">Sin datos</span>'}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>` : '<div style="color:var(--text-muted);padding:20px;">Sin cursos registrados</div>';
+  // Historial
+  const trabAsigs = S.asignaciones.filter(a=>a.trabId===id);
+  const trabFirmas = S.firmas.filter(f=>f.trabId===id);
+  document.getElementById('ficha-tab-hist').innerHTML = `
+    <div style="margin-bottom:20px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text-muted);margin-bottom:10px;">MANTENCIONES ASIGNADAS</div>
+      ${trabAsigs.length?`<div class="table-wrap"><table>
+        <thead><tr><th>Mantención</th><th>Minera</th><th>Período</th><th>Turno</th><th>Estado</th></tr></thead>
+        <tbody>${trabAsigs.map(a=>{
+          const mn=S.mantenciones.find(m=>m.id===a.mantId);
+          const mina=S.minas.find(m=>m.id===mn?.minaId);
+          return `<tr>
+            <td style="font-weight:600;">${mn?.nombre||a.mantId}</td>
+            <td style="font-size:12px;color:var(--text-muted);">${mina?.nombre||'—'}</td>
+            <td style="font-size:12px;">${mn?.inicio||'?'} → ${mn?.termino||'?'}</td>
+            <td><span class="badge badge-blue">${a.turno}</span></td>
+            <td><span class="badge ${a.estado==='confirmado'?'badge-ok':'badge-na'}">${a.estado}</span></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>` : '<div style="color:var(--text-muted);">Sin asignaciones</div>'}
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:var(--text-muted);margin-bottom:10px;">DOCUMENTOS EN PROCESO DE FIRMA</div>
+      ${trabFirmas.length?`<div class="table-wrap"><table>
+        <thead><tr><th>Tipo Documento</th><th>Mantención</th><th>Estado</th><th>Enviado</th><th>Firmado</th></tr></thead>
+        <tbody>${trabFirmas.map(f=>{
+          const mn=S.mantenciones.find(m=>m.id===f.mantId);
+          const estCls={borrador:'badge-na',enviado:'badge-warn',pendiente:'badge-crit',firmado:'badge-ok'};
+          return `<tr>
+            <td>${f.tipo}</td>
+            <td style="font-size:12px;color:var(--text-muted);">${mn?.nombre||f.mantId}</td>
+            <td><span class="badge ${estCls[f.estado]||'badge-na'}">${f.estado}</span></td>
+            <td style="font-size:12px;">${f.enviado||'—'}</td>
+            <td style="font-size:12px;">${f.firmado||'—'}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>` : '<div style="color:var(--text-muted);">Sin documentos en firma</div>'}
+    </div>`;
+  // WA button
+  const waBtn = document.getElementById('ficha-wa-btn');
+  waBtn.onclick = () => {
+    const tel=(t.tel||'').replace(/\D/g,'');
+    window.open(`https://wa.me/${tel}?text=${encodeURIComponent(`Hola ${t.nombre.split(' ')[0]}, le contacta Domian SpA. ¿Disponible para coordinar?`)}`, '_blank');
+  };
+  openModal('modal-ficha');
+}
+function switchFichaTab(tab, btn) {
+  document.querySelectorAll('#modal-ficha .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['datos','docs','cur','hist'].forEach(t=>{
+    const el=document.getElementById(`ficha-tab-${t}`);
+    if(el) el.classList.toggle('active',t===tab);
+  });
+}
+// ===================== MODALS =====================
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(ov=>{
+  ov.addEventListener('click',e=>{ if(e.target===ov) ov.classList.remove('open'); });
+});
+
+// ===================== NUEVO TRABAJADOR =====================
+function saveNuevoTrab() {
+  const nombre = document.getElementById('nt-nombre').value.trim();
+  const rut = document.getElementById('nt-rut').value.trim();
+  if(!nombre||!rut) { toast('Nombre y RUT son requeridos','err'); return; }
+  const esp = document.getElementById('nt-esp').value;
+  const minasChecks = document.querySelectorAll('#nt-minas-checks input:checked');
+  const minaIds = [...minasChecks].map(c=>c.value);
+  const newId = 't'+(S.trabajadores.length+1);
+  S.trabajadores.push({
+    id: newId,
+    nombre,
+    rut,
+    nacimiento: document.getElementById('nt-nacimiento').value,
+    tel: document.getElementById('nt-tel').value,
+    email: document.getElementById('nt-email').value,
+    ciudad: document.getElementById('nt-ciudad').value,
+    tipo: document.getElementById('nt-tipo').value,
+    especialidad: esp,
+    calificacion: parseInt(document.getElementById('nt-cal').value)||3,
+    disponibilidad: 'disponible',
+    afp: document.getElementById('nt-afp').value,
+    salud: document.getElementById('nt-salud').value,
+    mutual: document.getElementById('nt-mutual').value,
+    mineras: minaIds,
+    bloqueado: false
+  });
+  closeModal('modal-nuevo-trab');
+  persistTenant();
+  toast(`${nombre} agregado al sistema`);
+  renderTrabajadores();
+  updateBadges();
+}
+
+// ===================== NUEVA MANTENCIÓN =====================
+let mantEsps = [];
+function addEspToMant() {
+  const sel = document.getElementById('nm-esp-sel');
+  const val = sel.value;
+  if(!val||mantEsps.includes(val)) return;
+  mantEsps.push(val);
+  renderMantEsps();
+}
+function removeEspFromMant(esp) {
+  mantEsps = mantEsps.filter(e=>e!==esp);
+  renderMantEsps();
+}
+function renderMantEsps() {
+  document.getElementById('nm-esps-list').innerHTML = mantEsps.map((e,i)=>`
+    <span class="chip" style="background:var(--bg3);color:var(--text-muted);">${e}
+      <span style="cursor:pointer;margin-left:4px;color:var(--red);" onclick="removeEspIdx(${i})">✕</span>
+    </span>`).join('');
+}
+function removeEspIdx(i) {
+  mantEsps.splice(i,1);
+  renderMantEsps();
+}
+function saveNuevaMant() {
+  const nombre = document.getElementById('nm-nombre').value.trim();
+  if(!nombre) { toast('Nombre es requerido','err'); return; }
+  const newId = 'mn'+(S.mantenciones.length+1);
+  S.mantenciones.push({
+    id: newId,
+    nombre,
+    minaId: document.getElementById('nm-mina').value,
+    contratoId: document.getElementById('nm-contrato').value,
+    tipo: document.getElementById('nm-tipo').value,
+    area: document.getElementById('nm-area').value,
+    inicio: document.getElementById('nm-inicio').value,
+    termino: document.getElementById('nm-termino').value,
+    hh: parseInt(document.getElementById('nm-hh').value)||0,
+    personalReq: parseInt(document.getElementById('nm-req').value)||0,
+    estado: 'planificada',
+    admin: document.getElementById('nm-admin').value,
+    contraparte: document.getElementById('nm-contraparte').value,
+    especialidades: [...mantEsps],
+    zonas: []
+  });
+  mantEsps = [];
+  closeModal('modal-nueva-mant');
+  persistTenant();
+  toast('Mantención creada correctamente');
+  renderMantenciones();
+}
+
+// ===================== ASIGNAR PERSONAL =====================
+let asignarChecks = {};
+function loadAsignarWorkers() {
+  const mantId = document.getElementById('asig-mant').value;
+  const mn = S.mantenciones.find(m=>m.id===mantId);
+  if(!mn) return;
+  asignarChecks = {};
+  const existing = S.asignaciones.filter(a=>a.mantId===mantId).map(a=>a.trabId);
+  const workers = S.trabajadores.filter(t=>!t.bloqueado&&t.mineras?.includes(mn.minaId));
+  const espSel = document.getElementById('filt-asig-esp');
+  espSel.innerHTML = '<option value="">Especialidad</option>' + mn.especialidades.map(e=>`<option value="${e}">${e}</option>`).join('');
+  renderAsignarList(workers, existing, mantId);
+}
+function filterAsignarWorkers() {
+  const mantId = document.getElementById('asig-mant').value;
+  const mn = S.mantenciones.find(m=>m.id===mantId);
+  if(!mn) return;
+  const txt = document.getElementById('filt-asig-txt').value.toLowerCase();
+  const esp = document.getElementById('filt-asig-esp').value;
+  const existing = S.asignaciones.filter(a=>a.mantId===mantId).map(a=>a.trabId);
+  let workers = S.trabajadores.filter(t=>!t.bloqueado&&t.mineras?.includes(mn.minaId));
+  if(txt) workers=workers.filter(t=>t.nombre.toLowerCase().includes(txt)||t.especialidad.toLowerCase().includes(txt));
+  if(esp) workers=workers.filter(t=>t.especialidad===esp);
+  renderAsignarList(workers, existing, mantId);
+}
+function renderAsignarList(workers, existing, mantId) {
+  document.getElementById('asignar-workers-list').innerHTML = workers.map(t=>{
+    const pct=acreditacion(t);
+    const isAsig=existing.includes(t.id);
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px;border-bottom:1px solid var(--border);">
+      <input type="checkbox" ${isAsig?'checked':''} onchange="asignarChecks['${t.id}']=this.checked" style="width:16px;height:16px;cursor:pointer;">
+      <div class="avatar" style="background:${avatarColor(t.id)};width:32px;height:32px;font-size:11px;">${initials(t.nombre)}</div>
+      <div style="flex:1;">
+        <div style="font-weight:600;font-size:13px;">${t.nombre}</div>
+        <div style="font-size:11px;color:var(--text-muted);">${t.especialidad} · Cal. ${calLetra(t.calificacion)} · ${pct}% acred.</div>
+      </div>
+      ${dispBadge(t.disponibilidad)}
+      <select class="filter-select" id="asig-turno-${t.id}" style="width:90px;">
+        <option value="día">Día</option><option value="noche">Noche</option><option value="ambos">Ambos</option>
+      </select>
+    </div>`;
+  }).join('');
+  // Check already assigned
+  existing.forEach(tid=>{ asignarChecks[tid]=true; });
+}
+function saveAsignaciones() {
+  const mantId = document.getElementById('asig-mant').value;
+  // Remove existing
+  S.asignaciones = S.asignaciones.filter(a=>a.mantId!==mantId);
+  // Add checked
+  Object.entries(asignarChecks).forEach(([tid, checked])=>{
+    if(!checked) return;
+    const turno = document.getElementById(`asig-turno-${tid}`)?.value || 'día';
+    S.asignaciones.push({ id:`asig_${mantId}_${tid}`, mantId, trabId:tid, turno, estado:'confirmado' });
+  });
+  closeModal('modal-asignar');
+  toast('Asignaciones guardadas correctamente');
+  renderMantenciones();
+}
+
+// ===================== GENERAR CONTRATO =====================
+function autoFillContrato() {
+  const mantId = document.getElementById('gc-mant').value;
+  const mn = S.mantenciones.find(m=>m.id===mantId);
+  if(!mn) return;
+  document.getElementById('gc-inicio').value = mn.inicio;
+  document.getElementById('gc-termino').value = mn.termino;
+}
+function generarContrato() {
+  const trabId = document.getElementById('gc-trab').value;
+  const mantId = document.getElementById('gc-mant').value;
+  const tipo = document.getElementById('gc-tipo').value;
+  const turno = document.getElementById('gc-turno').value;
+  const rem = document.getElementById('gc-rem').value;
+  const canal = document.getElementById('gc-canal').value;
+  if(!trabId||!mantId) { toast('Seleccione trabajador y mantención','err'); return; }
+  const t = S.trabajadores.find(w=>w.id===trabId);
+  const mn = S.mantenciones.find(m=>m.id===mantId);
+  const mina = S.minas.find(m=>m.id===mn?.minaId);
+  const newFirma = {
+    id: 'fi'+(S.firmas.length+1),
+    trabId, tipo, mantId, estado:'enviado',
+    enviado: hoy(), firmado: null, canal
+  };
+  S.firmas.push(newFirma);
+  previewContrato(trabId, mantId, tipo, rem, turno);
+  closeModal('modal-generar-contrato');
+  updateBadges();
+  toast('Contrato generado y enviado a firma');
+}
+function previewContrato(trabId, mantId, tipo, rem, turno) {
+  const t = S.trabajadores.find(w=>w.id===trabId);
+  const mn = S.mantenciones.find(m=>m.id===mantId);
+  const mina = S.minas.find(m=>m.id===mn?.minaId);
+  const remStr = rem ? `$${parseInt(rem).toLocaleString()} brutos mensuales` : '[A DEFINIR]';
+  document.getElementById('contrato-preview-body').innerHTML = `
+    <div class="contract-doc">
+      <h2>${(tipo||'CONTRATO DE TRABAJO').toUpperCase()}</h2>
+      <div class="contract-sub">Domian Servicios Industriales SpA · RUT 78.425.213-2</div>
+      <div style="font-size:12px;margin-bottom:16px;color:#666;">En Santiago de Chile, a ${new Date().toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric'})}</div>
+      <p style="font-size:12px;">Entre <b>Domian Servicios Industriales SpA</b>, RUT 78.425.213-2, representada por <b>Ricardo Hornig</b> ("Empleador"), y el trabajador individualizado a continuación ("Trabajador"), se celebra el siguiente contrato:</p>
+      <div class="contract-grid">
+        <div class="cf"><b>Nombre Trabajador:</b> ${t?.nombre||'—'}</div>
+        <div class="cf"><b>RUT:</b> ${t?.rut||'—'}</div>
+        <div class="cf"><b>Especialidad:</b> ${t?.especialidad||'—'}</div>
+        <div class="cf"><b>Ciudad:</b> ${t?.ciudad||'—'}</div>
+        <div class="cf"><b>Faena:</b> ${mina?.nombre||'—'}</div>
+        <div class="cf"><b>Área:</b> ${mn?.area||'—'}</div>
+        <div class="cf"><b>Turno:</b> ${turno||'—'}</div>
+        <div class="cf"><b>Período:</b> ${mn?.inicio||'?'} al ${mn?.termino||'?'}</div>
+      </div>
+      <div class="divider" style="border-top:1px solid #ddd;margin:16px 0;"></div>
+      <div class="clause"><div class="clause-title">PRIMERO — ANTECEDENTES</div><p>El presente instrumento se suscribe en conformidad a lo dispuesto en el Código del Trabajo, Ley N° 20.123 sobre subcontratación, y D.S. N° 132 del Ministerio de Minería, Reglamento de Seguridad Minera.</p></div>
+      <div class="clause"><div class="clause-title">SEGUNDO — FUNCIONES</div><p>El Trabajador se desempeñará como <b>${t?.especialidad||'—'}</b> en la faena de <b>${mina?.nombre||'—'}</b>, específicamente en el área <b>${mn?.area||'—'}</b>, ejecutando las labores propias de su oficio bajo la supervisión de ${mn?.admin||'el administrador de contrato'}.</p></div>
+      <div class="clause"><div class="clause-title">TERCERO — REMUNERACIÓN</div><p>El Empleador pagará al Trabajador una remuneración de <b>${remStr}</b>, la que incluye gratificación legal y será pagada dentro de los primeros cinco días del mes siguiente al trabajado, previa realización de los descuentos legales.</p></div>
+      <div class="clause"><div class="clause-title">CUARTO — JORNADA</div><p>El Trabajador cumplirá turno <b>${turno||'—'}</b>, en régimen de trabajo en faena minera, con descanso conforme a la normativa vigente. Las horas extraordinarias, de existir, se compensarán según lo dispuesto en el Código del Trabajo.</p></div>
+      <div class="clause"><div class="clause-title">QUINTO — PLAZO</div><p>El presente contrato tendrá una duración desde el <b>${mn?.inicio||'—'}</b> hasta el <b>${mn?.termino||'—'}</b>, correspondiente a la duración de la actividad de ${mn?.nombre||'la mantención'}.</p></div>
+      <div class="clause"><div class="clause-title">SEXTO — SEGURIDAD</div><p>El Trabajador deberá cumplir con todos los estándares de seguridad establecidos por el D.S. 132, los reglamentos internos de ${mina?.nombre||'la minera'} y Domian SpA, en particular uso correcto de EPP y cumplimiento de protocolos ODI y LOTO.</p></div>
+      <div class="sigs">
+        <div><div class="sig-line"><b>Domian Servicios Industriales SpA</b><br>RUT 78.425.213-2<br>Ricardo Hornig<br>Representante Legal</div></div>
+        <div><div class="sig-line"><b>${t?.nombre||'Trabajador'}</b><br>RUT ${t?.rut||'—'}<br>Firma y Timbre</div></div>
+      </div>
+    </div>`;
+  openModal('modal-contrato-preview');
+}
+
+// ===================== NUEVA FIRMA =====================
+function saveNuevaFirma() {
+  const trabId = document.getElementById('nf-trab').value;
+  const tipo = document.getElementById('nf-tipo').value;
+  const mantId = document.getElementById('nf-mant').value;
+  const canal = document.getElementById('nf-canal').value;
+  if(!trabId||!tipo||!mantId) { toast('Trabajador, tipo y mantención son requeridos','err'); return; }
+  S.firmas.push({ id:'fi'+(S.firmas.length+1), trabId, tipo, mantId, estado:'enviado', enviado:hoy(), firmado:null, canal });
+  closeModal('modal-nueva-firma');
+  toast('Documento enviado a firma');
+  renderContratos();
+  updateBadges();
+}
+
+// ===================== HOTEL ASIGNAR =====================
+function filterHotelesByMant() {
+  const mantId = document.getElementById('ha-mant').value;
+  const mn = S.mantenciones.find(m=>m.id===mantId);
+  if(!mn) return;
+  const hotelesMina = S.hoteles.filter(h=>h.minaIds.includes(mn.minaId));
+  document.getElementById('ha-hotel').innerHTML = hotelesMina.map(h=>`<option value="${h.id}">${h.nombre} (${h.ciudad})</option>`).join('');
+  document.getElementById('ha-checkin').value = mn.inicio;
+  document.getElementById('ha-checkout').value = mn.termino;
+}
+function saveHotelAsig() {
+  const trabId = document.getElementById('ha-trab').value;
+  const mantId = document.getElementById('ha-mant').value;
+  const hotelId = document.getElementById('ha-hotel').value;
+  const pieza = document.getElementById('ha-pieza').value;
+  if(!trabId||!mantId||!hotelId) { toast('Trabajador, mantención y hotel son requeridos','err'); return; }
+  S.hotelAsig.push({
+    id: 'ha'+(S.hotelAsig.length+1),
+    trabId, mantId, hotelId,
+    pieza: pieza||'—',
+    tipo: document.getElementById('ha-tipo').value,
+    turno: document.getElementById('ha-turno').value,
+    checkin: document.getElementById('ha-checkin').value,
+    checkout: document.getElementById('ha-checkout').value,
+    comparte: document.getElementById('ha-comparte').value
+  });
+  closeModal('modal-hotel-asignar');
+  toast('Alojamiento asignado correctamente');
+  renderHoteleria();
+}
+
+// ===================== CALLOUT WA =====================
+const calloutTemplates = {
+  '1': (mn,esps,cupos) => `📢 *CONVOCATORIA Domian SpA*\n\n🔧 *Trabajo:* ${mn?.nombre||'Mantención'}\n📍 *Lugar:* ${S.minas.find(m=>m.id===mn?.minaId)?.nombre||'Minera'}\n⚙️ *Especialidades:* ${esps.join(', ')}\n🎯 *Cupos disponibles:* ${cupos}\n📅 *Inicio:* ${mn?.inicio||'A confirmar'}\n\n¿Está disponible? Responda SI o NO.\nDomian RRHH · ${new Date().toLocaleDateString('es-CL')}`,
+  '2': (mn,esps,cupos) => `⚡ *URGENTE — EMERGENCIA Domian*\n\n🚨 Requerimos personal *INMEDIATO* para:\n🔧 ${mn?.nombre||'Emergencia'}\n📍 ${S.minas.find(m=>m.id===mn?.minaId)?.nombre||'Faena'}\n⚙️ ${esps.join(', ')}\n⏰ Inicio: HOY\n\nResponda a la brevedad. Domian SpA.`,
+  '3': (mn,esps,cupos) => `🔄 *Recordatorio — Domian SpA*\n\nLe recordamos que tiene una convocatoria pendiente para:\n${mn?.nombre||'Mantención'} · ${S.minas.find(m=>m.id===mn?.minaId)?.nombre||'Faena'}\n\nResponda a la brevedad. Gracias.`,
+  '4': (mn,esps,cupos) => `✅ *Confirmación de Asignación — Domian SpA*\n\nUd. ha sido confirmado para:\n🔧 ${mn?.nombre||'Mantención'}\n📍 ${S.minas.find(m=>m.id===mn?.minaId)?.nombre||'Faena'}\n📅 ${mn?.inicio||'?'} al ${mn?.termino||'?'}\n\nFavor confirmar recepción. Domian RRHH.`
+};
+function loadCalloutEsps() {
+  const mantId = document.getElementById('co-mant').value;
+  const mn = S.mantenciones.find(m=>m.id===mantId);
+  if(!mn) return;
+  document.getElementById('co-esps-checks').innerHTML = (mn.especialidades||[]).map(e=>`
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 8px;background:var(--bg3);border-radius:6px;">
+      <input type="checkbox" checked value="${e}"> <span style="font-size:12px;">${e}</span>
+    </label>`).join('');
+  updateCalloutElegibles(mn);
+  loadCalloutTemplate();
+}
+function updateCalloutElegibles(mn) {
+  const checked = [...document.querySelectorAll('#co-esps-checks input:checked')].map(c=>c.value);
+  const elegibles = S.trabajadores.filter(t=>!t.bloqueado&&t.disponibilidad==='disponible'&&checked.includes(t.especialidad));
+  document.getElementById('co-elegibles').textContent = `— ${elegibles.length} trabajadores elegibles`;
+}
+function loadCalloutTemplate() {
+  const tpl = document.getElementById('co-template').value;
+  const mantId = document.getElementById('co-mant').value;
+  const mn = S.mantenciones.find(m=>m.id===mantId);
+  const esps = [...document.querySelectorAll('#co-esps-checks input:checked')].map(c=>c.value);
+  const cupos = document.getElementById('co-cupos').value || '?';
+  const fn = calloutTemplates[tpl]||calloutTemplates['1'];
+  document.getElementById('co-mensaje').value = fn(mn, esps, cupos);
+}
+function sendCallout() {
+  const mantId = document.getElementById('co-mant').value;
+  const cupos = parseInt(document.getElementById('co-cupos').value)||0;
+  const turno = document.getElementById('co-turno').value;
+  const msg = document.getElementById('co-mensaje').value;
+  const esps = [...document.querySelectorAll('#co-esps-checks input:checked')].map(c=>c.value);
+  if(!mantId||!esps.length) { toast('Seleccione mantención y especialidades','err'); return; }
+  const elegibles = S.trabajadores.filter(t=>!t.bloqueado&&t.disponibilidad==='disponible'&&esps.includes(t.especialidad));
+  S.callouts.push({
+    id: 'co'+(S.callouts.length+1),
+    fecha: new Date().toISOString().slice(0,16).replace('T',' '),
+    mantId, especialidades:esps, turno, cupos,
+    enviados: elegibles.length, respondieron: 0, asignados: 0
+  });
+  closeModal('modal-callout');
+  toast(`Llamado enviado a ${elegibles.length} trabajadores`);
+  if(elegibles.length>0) {
+    const tel=(elegibles[0].tel||'').replace(/\D/g,'');
+    window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`,'_blank');
+  }
+  renderLlamados();
+}
+// ===================== EXPORTS =====================
+function exportNomina() {
+  const headers = ['ID','Nombre','RUT','Especialidad','Tipo','Ciudad','Disponibilidad','Calificación','AFP','Salud','Mutual','Mineras','Teléfono','Email','Acreditación %'];
+  const rows = S.trabajadores.map(t=>[
+    t.id, t.nombre, t.rut, t.especialidad, t.tipo, t.ciudad||'', t.disponibilidad,
+    calLetra(t.calificacion), t.afp||'', t.salud||'', t.mutual||'',
+    (t.mineras||[]).map(id=>minaNombre(id)).join(' / '),
+    t.tel||'', t.email||'', acreditacion(t)+'%'
+  ]);
+  exportCSV([headers,...rows], `nomina_domian_${hoy()}.csv`);
+  toast('Nómina exportada');
+}
+function exportReporteMant() {
+  const idx = prompt(`Seleccione mantención (1-${S.mantenciones.length}):\n${S.mantenciones.map((m,i)=>`${i+1}. ${m.nombre}`).join('\n')}`);
+  if(!idx) return;
+  const mn = S.mantenciones[parseInt(idx)-1];
+  if(!mn) { toast('Mantención no encontrada','err'); return; }
+  const asigs = S.asignaciones.filter(a=>a.mantId===mn.id);
+  const headers = ['Trabajador','RUT','Especialidad','Turno','Acreditación %','Estado'];
+  const rows = asigs.map(a=>{
+    const t=S.trabajadores.find(w=>w.id===a.trabId);
+    return [t?.nombre||a.trabId, t?.rut||'', t?.especialidad||'', a.turno, acreditacion(t||{})+'%', a.estado];
+  });
+  exportCSV([headers,...rows], `mant_${mn.id}_${hoy()}.csv`);
+  toast(`Reporte de ${mn.nombre} exportado`);
+}
+function exportAlertasCSV() {
+  const alertas = computeAlertas();
+  const headers = ['Trabajador','Tipo','Urgencia','Mensaje'];
+  const rows = alertas.map(a=>[a.trab?.nombre||a.trabId, a.tipo, a.urgencia, a.msg]);
+  exportCSV([headers,...rows], `alertas_${hoy()}.csv`);
+  toast('Alertas exportadas');
+}
+function exportContratos() {
+  const headers = ['Tipo','Trabajador','Mantención','Canal','Estado','Enviado','Firmado'];
+  const rows = S.firmas.map(f=>[f.tipo, trabNombre(f.trabId), mantNombre(f.mantId), f.canal, f.estado, f.enviado||'', f.firmado||'']);
+  exportCSV([headers,...rows], `firmas_${hoy()}.csv`);
+  toast('Contratos/Firmas exportados');
+}
+function exportHoteles() {
+  const headers = ['Trabajador','Mantención','Hotel','Pieza','Tipo','Turno','Check-in','Check-out'];
+  const rows = S.hotelAsig.map(h=>[trabNombre(h.trabId), mantNombre(h.mantId), hotelNombre(h.hotelId), h.pieza, h.tipo, h.turno, h.checkin, h.checkout]);
+  exportCSV([headers,...rows], `hoteleria_${hoy()}.csv`);
+  toast('Hotelería exportada');
+}
+function exportAuditoria() {
+  const headers = ['Trabajador','RUT','CI','AFP','Salud','Ex.Preoc.','Alt.Geo.','Psicosens.','Audiom.','Visual','ODI','LOTO','Acreditación %','Estado'];
+  const rows = S.trabajadores.filter(t=>!t.bloqueado).map(t=>{
+    const pct=acreditacion(t);
+    return [t.nombre, t.rut,
+      estadoFecha(t.docCI?.vence), estadoFecha(t.docAFP?.vence), estadoFecha(t.docSalud?.vence),
+      estadoFecha(t.exPreocupacional?.vence), estadoFecha(t.exAlturaGeo?.vence), estadoFecha(t.exPsicosens?.vence),
+      estadoFecha(t.exAudiometria?.vence), estadoFecha(t.exVisual?.vence),
+      estadoFecha(t.curODI?.vence), estadoFecha(t.curLOTO?.vence),
+      pct+'%', pct>85?'PUEDE':pct>=60?'REVISAR':'NO PUEDE'
+    ];
+  });
+  exportCSV([headers,...rows], `auditoria_${hoy()}.csv`);
+  toast('Auditoría exportada');
+}
+function exportExamenes() {
+  const rows = buildExamenRows();
+  const headers = ['Trabajador','Minera','Examen','Centro','Vencimiento','Estado','Días'];
+  const data = rows.map(r=>[r.nombre, r.mina, r.label, r.centro, r.vence||'', r.estado, r.dias!==null?Math.abs(r.dias)+'d':'']);
+  exportCSV([headers,...data], `examenes_${hoy()}.csv`);
+  toast('Exámenes exportados');
+}
+function exportCursos() {
+  const rows = buildCursoRows();
+  const headers = ['Trabajador','Curso','OTEC','Vencimiento','Estado'];
+  const data = rows.map(r=>[r.nombre, r.label, r.otec, r.vence||'', r.estado]);
+  exportCSV([headers,...data], `cursos_${hoy()}.csv`);
+  toast('Cursos exportados');
+}
+function exportAllCSV() {
+  const page = currentPage;
+  if(page==='examenes') exportExamenes();
+  else if(page==='cursos') exportCursos();
+  else if(page==='auditoria') exportAuditoria();
+  else if(page==='contratos') exportContratos();
+  else if(page==='hoteleria') exportHoteles();
+  else exportNomina();
+}
+
+// ===================== INIT SELECTS =====================
+function initSelects() {
+  // Especialidad filters
+  const espSels = ['filt-trab-esp','nt-esp','nm-esp-sel'];
+  espSels.forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    el.innerHTML='<option value="">Especialidad</option>'+S.ESPECIALIDADES.map(e=>`<option value="${e}">${e}</option>`).join('');
+    if(id==='nt-esp') el.innerHTML=S.ESPECIALIDADES.map(e=>`<option value="${e}">${e}</option>`).join('');
+  });
+  // Mina filters
+  ['filt-trab-mina','filt-aud-mina','filt-mant-mina','filt-ex-mina','nm-mina'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    const base = id.startsWith('filt')?'<option value="">Todas las minas</option>':'';
+    el.innerHTML = base+S.minas.map(m=>`<option value="${m.id}">${m.nombre}</option>`).join('');
+  });
+  // Worker selects
+  const trabSels = ['gc-trab','nf-trab','ha-trab'];
+  trabSels.forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    el.innerHTML='<option value="">Seleccionar...</option>'+S.trabajadores.filter(t=>!t.bloqueado).map(t=>`<option value="${t.id}">${t.nombre}</option>`).join('');
+  });
+  // Mant selects
+  const mantSels = ['gc-mant','nf-mant','ha-mant','asig-mant','co-mant'];
+  mantSels.forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    el.innerHTML='<option value="">Seleccionar...</option>'+S.mantenciones.map(m=>`<option value="${m.id}">${m.nombre}</option>`).join('');
+  });
+  // Nm contrato
+  const nmCont=document.getElementById('nm-contrato');
+  if(nmCont) nmCont.innerHTML='<option value="">Seleccionar...</option>'+S.contratos.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
+  // Nt minas checks
+  const ntMinas=document.getElementById('nt-minas-checks');
+  if(ntMinas) ntMinas.innerHTML=S.minas.map(m=>`<label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 8px;background:var(--bg3);border-radius:6px;">
+    <input type="checkbox" value="${m.id}"><span style="font-size:12px;color:${m.color};">${m.nombre}</span>
+  </label>`).join('');
+  const hotMinas=document.getElementById('hot-minas-checks');
+  if(hotMinas) hotMinas.innerHTML=S.minas.map(m=>`<label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 8px;background:var(--bg3);border-radius:6px;"><input type="checkbox" value="${m.id}"><span style="font-size:12px;color:${m.color};">${m.nombre}</span></label>`).join('');
+}
+
+// ===================== INIT =====================
+function init() {
+  seed();
+  S.empresa = domianEmpresa();
+  bootSeedSnapshot = snapshotState();
+  const savedTenant = sessionStorage.getItem('accesomina_current_tenant');
+  if(savedTenant) {
+    currentTenantId = savedTenant;
+    const saved = localStorage.getItem(tenantKey(currentTenantId));
+    if(saved) applyState(JSON.parse(saved));
+    enterPrivate();
+  } else {
+    showPublic();
+  }
+  initSelects();
+  updateBadges();
+  renderDashboard();
+  const audMina = document.getElementById('filt-aud-mina');
+  if(audMina) audMina.innerHTML='<option value="">Todas las minas</option>'+S.minas.map(m=>`<option value="${m.id}">${m.nombre}</option>`).join('');
+}
+
+// Close modal on ESC
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>
