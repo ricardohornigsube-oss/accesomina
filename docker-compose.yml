@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: accesomina
+      POSTGRES_USER: accesomina
+      POSTGRES_PASSWORD: accesomina
+    ports: ["5432:5432"]
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U accesomina"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  app:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://accesomina:accesomina@postgres:5432/accesomina
+    ports: ["8088:8088"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+volumes:
+  postgres_data:

@@ -1,55 +1,51 @@
-# AccesoMina Domian
+# AccesoMina Cloud
 
-Sistema web para gestión de acreditación minera de empresas contratistas.
+Plataforma multiempresa para controlar trabajadores, contratos, proyectos, mantenciones, acreditación, documentos, hotelería, vehículos y comunicaciones de empresas contratistas mineras.
 
-## Estado actual
+## Arquitectura V7
 
-- Aplicación HTML funcional en `AccesoMina_v6.html`.
-- Versión publicable en `public/index.html`.
-- Portada pública Domian.
-- Acceso privado por cliente.
-- Registro de clientes con validación de RUT chileno y email.
-- Datos separados por cliente en `localStorage` para prototipo local.
-- Cuenta administradora Domian: RUT `78.425.213-2`.
+- Frontend: `public/index.html` y `public/cloud-client.js`.
+- API: Node.js 20+ con Express.
+- Base de datos: PostgreSQL 15+ con `tenant_id` y Row-Level Security.
+- Sesiones: token aleatorio almacenado como hash y cookie `HttpOnly`, `Secure`, `SameSite=Strict`.
+- Archivos: S3 privado en producción; disco local únicamente para desarrollo.
+- Concurrencia: versión optimista del estado de empresa; un cambio antiguo recibe `409 VERSION_CONFLICT`.
+- Auditoría: `audit_log` append-only con usuario, fecha, entidad y resumen del cambio.
+- Integraciones: SMTP, Meta WhatsApp Cloud API y webhooks para firma, ERP y acreditación.
 
-## Funcionalidades
+La data operacional ya no debe almacenarse en GitHub ni en `localStorage`. El HTML independiente conserva modo demostración al abrirse con `file://`; el despliegue servido por la API usa PostgreSQL como fuente autoritativa.
 
-- Trabajadores.
-- Mineras / mandantes.
-- Proyectos y mantenciones.
-- Hotelería.
-- Contratos y firmas.
-- Auditoría documental automática.
-- Exámenes médicos.
-- Cursos y certificaciones.
-- Alertas de vencimiento.
-- Reportes CSV.
-
-## Base de datos para AWS RDS
-
-La estructura PostgreSQL está en:
-
-```text
-database/postgres/001_schema.sql
-database/postgres/002_seed_domian.sql
-database/postgres/003_rls_template.sql
-```
-
-Ejecutar en RDS PostgreSQL:
+## Desarrollo local
 
 ```bash
-psql "$DATABASE_URL" -f database/postgres/001_schema.sql
-psql "$DATABASE_URL" -f database/postgres/002_seed_domian.sql
+cp .env.example .env
+docker compose up -d postgres
+corepack enable
+pnpm install
+pnpm run migrate
+pnpm run seed:admin
+pnpm start
 ```
 
-## Importante sobre persistencia
+Abrir `http://localhost:8088`.
 
-GitHub guarda el proyecto, la estructura de base de datos y los seeds. La data real de clientes debe guardarse en Amazon RDS y los archivos en S3 privado. No se debe usar GitHub como base de datos operacional.
+## Pruebas
 
-## Despliegue AWS
-
-Ver guía completa:
-
-```text
-docs/AWS_RDS_DEPLOY.md
+```bash
+pnpm run check
 ```
+
+## Migraciones
+
+Se ejecutan en orden desde `database/postgres/` y quedan registradas en `schema_migrations`.
+
+## Producción
+
+1. Configurar PostgreSQL privado.
+2. Configurar S3 privado y escaneo antivirus.
+3. Configurar HTTPS, secretos y cookie segura.
+4. Ejecutar migraciones y seed inicial.
+5. Configurar SMTP, WhatsApp y proveedores externos necesarios.
+6. Ejecutar pruebas de aislamiento con al menos tres empresas.
+
+Ver [arquitectura cloud](docs/CLOUD_ARCHITECTURE.md) y [despliegue AWS](docs/AWS_RDS_DEPLOY.md).

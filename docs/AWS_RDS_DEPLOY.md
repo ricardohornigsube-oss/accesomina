@@ -3,7 +3,7 @@
 ## Arquitectura recomendada
 
 - Frontend: S3 privado + CloudFront + ACM SSL.
-- API/backend: Laravel PHP o Node.js en AWS Lightsail, ECS Fargate o Elastic Beanstalk.
+- API/backend: Node.js en ECS Fargate, App Runner o Elastic Beanstalk usando el `Dockerfile` del repositorio.
 - Base de datos: Amazon RDS PostgreSQL.
 - Archivos: S3 privado por tenant.
 - Login: AWS Cognito o backend auth propio con MFA.
@@ -28,11 +28,11 @@ El repositorio sí incluye `database/postgres/*.sql`, que define la estructura p
 3. Activar backups automáticos mínimo 7 a 30 días.
 4. Crear base de datos: `accesomina`.
 5. Crear usuario de aplicación con permisos limitados.
-6. Ejecutar:
+6. Ejecutar las migraciones desde la aplicación:
 
 ```bash
-psql "$DATABASE_URL" -f database/postgres/001_schema.sql
-psql "$DATABASE_URL" -f database/postgres/002_seed_domian.sql
+pnpm run migrate
+pnpm run seed:admin
 ```
 
 7. Crear bucket S3 privado para documentos:
@@ -52,6 +52,19 @@ AWS_S3_BUCKET=accesomina-domian-prod
 COGNITO_USER_POOL_ID=
 COGNITO_CLIENT_ID=
 ```
+
+Agregar también `REGISTRATION_INVITE_CODE`, `ADMIN_INITIAL_PASSWORD`, configuración SMTP, Meta WhatsApp y servicio antivirus desde AWS Secrets Manager. No guardar secretos en imágenes Docker, GitHub o archivos públicos.
+
+## Despliegue recomendado
+
+- Application Load Balancer con HTTPS y certificado ACM.
+- ECS Fargate en subred privada.
+- RDS PostgreSQL sin acceso público.
+- VPC Endpoint para S3.
+- AWS WAF delante del balanceador.
+- Secrets Manager para credenciales.
+- CloudWatch para logs, alarmas y métricas.
+- tareas separadas para migraciones y procesos programados.
 
 ## Modelo multi-cliente
 

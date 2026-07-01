@@ -253,8 +253,8 @@ body.private #main { display:block; }
     <div class="access-panel" id="access-panel">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;"><div class="logo-mark">D</div><div><div style="font-weight:900;font-size:20px;">AccesoMina Domian</div><div style="color:var(--text-muted);font-size:12px;">Sitio privado de gestión minera</div></div></div>
       <div class="access-tabs"><button class="access-tab active" id="tab-login" onclick="showAccessTab('login')">Acceso</button><button class="access-tab" id="tab-registro" onclick="showAccessTab('registro')">Nuevo cliente</button></div>
-      <div class="access-view active" id="access-login"><div class="form-group" style="margin-bottom:12px;"><label class="form-label">Empresa / RUT</label><input class="form-input" id="login-rut" value="78.425.213-2" placeholder="78.425.213-2" onblur="this.value=formatRut(this.value)"></div><div class="form-group" style="margin-bottom:14px;"><label class="form-label">Correo</label><input class="form-input" id="login-email" type="email" value="contacto@domian.cl" placeholder="correo@empresa.cl"></div><button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="loginTenant()">Ingresar al sitio privado</button><div style="color:var(--text-dim);font-size:11px;line-height:1.45;margin-top:12px;">Acceso local para operación y pruebas. Para seguridad real en internet se debe publicar con backend, usuarios, permisos, base de datos y SSL.</div></div>
-      <div class="access-view" id="access-registro"><div class="form-group" style="margin-bottom:10px;"><label class="form-label">Nombre empresa</label><input class="form-input" id="reg-empresa" placeholder="Ej: Servicios Mineros Norte SpA"></div><div class="form-grid" style="grid-template-columns:1fr 1fr;margin-bottom:10px;"><div class="form-group"><label class="form-label">RUT empresa</label><input class="form-input" id="reg-rut" placeholder="76.123.456-7" onblur="this.value=formatRut(this.value)"></div><div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="reg-tel" placeholder="+56 9..."></div></div><div class="form-group" style="margin-bottom:14px;"><label class="form-label">Correo administrador</label><input class="form-input" id="reg-email" type="email" placeholder="admin@empresa.cl"></div><button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="registerTenant()">Crear sitio privado vacío</button><div style="color:var(--text-dim);font-size:11px;line-height:1.45;margin-top:12px;">La nueva empresa parte sin trabajadores, proyectos ni hoteles. Queda lista para cargar sus propios datos.</div></div>
+      <div class="access-view active" id="access-login"><div class="form-group" style="margin-bottom:12px;"><label class="form-label">Empresa / RUT</label><input class="form-input" id="login-rut" value="78.425.213-2" placeholder="78.425.213-2" onblur="this.value=formatRut(this.value)"></div><div class="form-group" style="margin-bottom:12px;"><label class="form-label">Correo personal autorizado</label><input class="form-input" id="login-email" type="email" value="contacto@domian.cl" placeholder="persona@empresa.cl"></div><div class="form-group" style="margin-bottom:14px;"><label class="form-label">Contraseña</label><input class="form-input" id="login-password" type="password" autocomplete="current-password" placeholder="Contraseña segura"></div><button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="loginTenant()">Ingresar al sitio privado</button><div style="color:var(--text-dim);font-size:11px;line-height:1.45;margin-top:12px;">En cloud, la sesión usa cookie segura y los datos se consultan exclusivamente desde la empresa autenticada.</div></div>
+      <div class="access-view" id="access-registro"><div class="form-group" style="margin-bottom:10px;"><label class="form-label">Nombre empresa</label><input class="form-input" id="reg-empresa" placeholder="Ej: Servicios Mineros Norte SpA"></div><div class="form-grid" style="grid-template-columns:1fr 1fr;margin-bottom:10px;"><div class="form-group"><label class="form-label">RUT empresa</label><input class="form-input" id="reg-rut" placeholder="76.123.456-7" onblur="this.value=formatRut(this.value)"></div><div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="reg-tel" placeholder="+56 9..."></div></div><div class="form-group" style="margin-bottom:10px;"><label class="form-label">Nombre administrador</label><input class="form-input" id="reg-admin-name" placeholder="Nombre y apellido"></div><div class="form-group" style="margin-bottom:10px;"><label class="form-label">Correo administrador</label><input class="form-input" id="reg-email" type="email" placeholder="admin@empresa.cl"></div><div class="form-grid" style="grid-template-columns:1fr 1fr;margin-bottom:14px;"><div class="form-group"><label class="form-label">Contraseña</label><input class="form-input" id="reg-password" type="password" autocomplete="new-password" placeholder="12+ caracteres"></div><div class="form-group"><label class="form-label">Código de invitación</label><input class="form-input" id="reg-invite" type="password" placeholder="Entregado por Domian"></div></div><button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="registerTenant()">Crear sitio privado vacío</button><div style="color:var(--text-dim);font-size:11px;line-height:1.45;margin-top:12px;">El alta requiere invitación de Domian. Cada empresa parte con una base independiente y un administrador propio.</div></div>
     </div>
   </div>
 </section>
@@ -291,6 +291,7 @@ body.private #main { display:block; }
   <div class="nav-item" onclick="nav('reportes')">📊 Reportes</div>
   <div class="nav-group-label">Administración Empresa</div>
   <div class="nav-item" onclick="nav('usuarios')">👥 Usuarios y Permisos</div>
+  <div class="nav-item" onclick="nav('bitacora')">🧾 Bitácora de Cambios</div>
   <div class="nav-group-label" id="nav-admin-label" style="display:none;">Administración Domian</div>
   <div class="nav-item" id="nav-clientes" style="display:none;" onclick="nav('clientes')">🏢 Clientes</div>
   <div class="sidebar-bottom">
@@ -650,6 +651,11 @@ body.private #main { display:block; }
       <div class="card-header"><div><div class="card-title">Equipo con acceso al sitio privado</div><div class="card-subtitle">Todos ven la misma empresa; ningún usuario puede consultar datos de otra empresa.</div></div></div>
       <div class="table-wrap"><table id="usuarios-table"></table></div>
     </div>
+  </div>
+
+  <div id="page-bitacora" class="page">
+    <div class="section-header"><div><div class="section-title">🧾 Bitácora Inmutable</div><div class="section-sub">Quién cambió qué, cuándo y en qué empresa</div></div><button class="btn btn-secondary" onclick="renderCloudAuditLog()">Actualizar</button></div>
+    <div class="card"><div class="card-header"><div><div class="card-title">Eventos de seguridad y operación</div><div class="card-subtitle">Los eventos productivos se almacenan en el servidor y no pueden editarse ni eliminarse.</div></div></div><div class="table-wrap"><table id="cloud-audit-table"><tbody><tr><td>Disponible al conectar la API cloud.</td></tr></tbody></table></div></div>
   </div>
 
   <!-- PAGE: VEHICULOS Y EQUIPOS -->
@@ -1245,6 +1251,7 @@ body.private #main { display:block; }
 <!-- Modal: Cloud -->
 <div class="modal-overlay" id="modal-cloud"><div class="modal modal-wide"><div class="modal-header"><div class="modal-title">Publicar en cloud / URL pública</div><button class="modal-close" onclick="closeModal('modal-cloud')">✕</button></div><div class="modal-body"><div class="cloud-note"><b>Estado actual:</b> esta versión demuestra la separación por empresa, usuarios y permisos en almacenamiento local. Para que 10, 20 o más personas trabajen realmente al mismo tiempo desde distintos equipos, se debe activar backend PHP o Node, base de datos multiempresa, contraseñas seguras, archivos privados, SSL y backups.</div><div class="grid-2" style="margin-top:16px;"><div class="card"><div class="card-title">Arquitectura recomendada</div><div style="color:var(--text-muted);font-size:13px;line-height:1.5;margin-top:8px;">Laravel/PHP o Node + MySQL/PostgreSQL. Cada empresa conserva un <b>tenant_id</b> propio, usuarios, roles, sesiones y archivos completamente separados.</div></div><div class="card"><div class="card-title">Respaldo portable</div><div style="color:var(--text-muted);font-size:13px;line-height:1.5;margin-top:8px;">Usa <b>Respaldo</b> para descargar la data de la empresa actual y migrarla posteriormente al servidor privado.</div></div></div><div style="margin-top:16px;"><button class="btn btn-primary" onclick="exportTenantBackup()">Descargar respaldo de esta empresa</button></div></div></div></div>
 
+<script src="/cloud-client.js"></script>
 <script>
 // ===================== STATE =====================
 const S = {
@@ -2901,9 +2908,9 @@ function previewContrato(trabId, mantId, tipo, rem, turno) {
   document.getElementById('contrato-preview-body').innerHTML = `
     <div class="contract-doc">
       <h2>${(tipo||'CONTRATO DE TRABAJO').toUpperCase()}</h2>
-      <div class="contract-sub">Domian Servicios Industriales SpA · RUT 78.425.213-2</div>
+      <div class="contract-sub">${S.empresa?.nombre||'Empresa contratista'} · RUT ${S.empresa?.rut||'—'}</div>
       <div style="font-size:12px;margin-bottom:16px;color:#666;">En Santiago de Chile, a ${new Date().toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric'})}</div>
-      <p style="font-size:12px;">Entre <b>Domian Servicios Industriales SpA</b>, RUT 78.425.213-2, representada por <b>Ricardo Hornig</b> ("Empleador"), y el trabajador individualizado a continuación ("Trabajador"), se celebra el siguiente contrato:</p>
+      <p style="font-size:12px;">Entre <b>${S.empresa?.nombre||'Empresa contratista'}</b>, RUT ${S.empresa?.rut||'—'}, representada por <b>${S.empresa?.representante||'Representante legal'}</b> ("Empleador"), y el trabajador individualizado a continuación ("Trabajador"), se celebra el siguiente contrato:</p>
       <div class="contract-grid">
         <div class="cf"><b>Nombre Trabajador:</b> ${t?.nombre||'—'}</div>
         <div class="cf"><b>RUT:</b> ${t?.rut||'—'}</div>
@@ -2922,7 +2929,7 @@ function previewContrato(trabId, mantId, tipo, rem, turno) {
       <div class="clause"><div class="clause-title">QUINTO — PLAZO</div><p>El presente contrato tendrá una duración desde el <b>${mn?.inicio||'—'}</b> hasta el <b>${mn?.termino||'—'}</b>, correspondiente a la duración de la actividad de ${mn?.nombre||'la mantención'}.</p></div>
       <div class="clause"><div class="clause-title">SEXTO — SEGURIDAD</div><p>El Trabajador deberá cumplir con todos los estándares de seguridad establecidos por el D.S. 132, los reglamentos internos de ${mina?.nombre||'la minera'} y Domian SpA, en particular uso correcto de EPP y cumplimiento de protocolos ODI y LOTO.</p></div>
       <div class="sigs">
-        <div><div class="sig-line"><b>Domian Servicios Industriales SpA</b><br>RUT 78.425.213-2<br>Ricardo Hornig<br>Representante Legal</div></div>
+        <div><div class="sig-line"><b>${S.empresa?.nombre||'Empresa contratista'}</b><br>RUT ${S.empresa?.rut||'—'}<br>${S.empresa?.representante||'Representante legal'}<br>Representante Legal</div></div>
         <div><div class="sig-line"><b>${t?.nombre||'Trabajador'}</b><br>RUT ${t?.rut||'—'}<br>Firma y Timbre</div></div>
       </div>
     </div>`;
@@ -2978,10 +2985,10 @@ function saveHotelAsig() {
 
 // ===================== CALLOUT WA =====================
 const calloutTemplates = {
-  '1': (mn,esps,cupos) => `📢 *CONVOCATORIA Domian SpA*\n\n🔧 *Trabajo:* ${mn?.nombre||'Mantención'}\n📍 *Lugar:* ${S.minas.find(m=>m.id===mn?.minaId)?.nombre||'Minera'}\n⚙️ *Especialidades:* ${esps.join(', ')}\n🎯 *Cupos disponibles:* ${cupos}\n📅 *Inicio:* ${mn?.inicio||'A confirmar'}\n\n¿Está disponible? Responda SI o NO.\nDomian RRHH · ${new Date().toLocaleDateString('es-CL')}`,
-  '2': (mn,esps,cupos) => `⚡ *URGENTE — EMERGENCIA Domian*\n\n🚨 Requerimos personal *INMEDIATO* para:\n🔧 ${mn?.nombre||'Emergencia'}\n📍 ${S.minas.find(m=>m.id===mn?.minaId)?.nombre||'Faena'}\n⚙️ ${esps.join(', ')}\n⏰ Inicio: HOY\n\nResponda a la brevedad. Domian SpA.`,
-  '3': (mn,esps,cupos) => `🔄 *Recordatorio — Domian SpA*\n\nLe recordamos que tiene una convocatoria pendiente para:\n${mn?.nombre||'Mantención'} · ${S.minas.find(m=>m.id===mn?.minaId)?.nombre||'Faena'}\n\nResponda a la brevedad. Gracias.`,
-  '4': (mn,esps,cupos) => `✅ *Confirmación de Asignación — Domian SpA*\n\nUd. ha sido confirmado para:\n🔧 ${mn?.nombre||'Mantención'}\n📍 ${S.minas.find(m=>m.id===mn?.minaId)?.nombre||'Faena'}\n📅 ${mn?.inicio||'?'} al ${mn?.termino||'?'}\n\nFavor confirmar recepción. Domian RRHH.`
+  '1': (mn,esps,cupos) => `📢 *CONVOCATORIA ${S.empresa?.nombre||'Empresa contratista'}*\n\n🔧 *Trabajo:* ${mn?.nombre||'Mantención'}\n📍 *Lugar:* ${S.minas.find(m=>m.id===mn?.minaId)?.nombre||'Minera'}\n⚙️ *Especialidades:* ${esps.join(', ')}\n🎯 *Cupos disponibles:* ${cupos}\n📅 *Inicio:* ${mn?.inicio||'A confirmar'}\n\n¿Está disponible? Responda SI o NO.\nRRHH · ${new Date().toLocaleDateString('es-CL')}`,
+  '2': (mn,esps,cupos) => `⚡ *URGENTE — ${S.empresa?.nombre||'Empresa contratista'}*\n\n🚨 Requerimos personal *INMEDIATO* para:\n🔧 ${mn?.nombre||'Emergencia'}\n📍 ${S.minas.find(m=>m.id===mn?.minaId)?.nombre||'Faena'}\n⚙️ ${esps.join(', ')}\n⏰ Inicio: HOY\n\nResponda a la brevedad.`,
+  '3': (mn,esps,cupos) => `🔄 *Recordatorio — ${S.empresa?.nombre||'Empresa contratista'}*\n\nLe recordamos que tiene una convocatoria pendiente para:\n${mn?.nombre||'Mantención'} · ${S.minas.find(m=>m.id===mn?.minaId)?.nombre||'Faena'}\n\nResponda a la brevedad. Gracias.`,
+  '4': (mn,esps,cupos) => `✅ *Confirmación de Asignación — ${S.empresa?.nombre||'Empresa contratista'}*\n\nUd. ha sido confirmado para:\n🔧 ${mn?.nombre||'Mantención'}\n📍 ${S.minas.find(m=>m.id===mn?.minaId)?.nombre||'Faena'}\n📅 ${mn?.inicio||'?'} al ${mn?.termino||'?'}\n\nFavor confirmar recepción. RRHH.`
 };
 function loadCalloutEsps() {
   const mantId = document.getElementById('co-mant').value;
@@ -3347,8 +3354,10 @@ function renderAuditoria() {
 }
 function saveNuevoTrab() {
   const nombre=document.getElementById('nt-nombre').value.trim();
-  const rut=document.getElementById('nt-rut').value.trim();
+  const rut=formatRut(document.getElementById('nt-rut').value.trim());
   if(!nombre||!rut){toast('Nombre y RUT son requeridos','err');return;}
+  if(!isValidRut(rut)){toast('El RUT del trabajador no es válido','err');return;}
+  if(S.trabajadores.some(t=>cleanRut(t.rut)===cleanRut(rut))){toast('Ya existe un trabajador con este RUT','err');return;}
   const esp=document.getElementById('nt-esp').value;
   const minasChecks=document.querySelectorAll('#nt-minas-checks input:checked');
   const minaIds=[...minasChecks].map(c=>c.value);
@@ -4054,7 +4063,14 @@ const emptyTenantDataV66=emptyTenantData;
 emptyTenantData=function(nombre,rut,email,tel){const data=emptyTenantDataV66(nombre,rut,email,tel);data.tenantUsers=[{id:'usr_owner',nombre:'Administrador',email:String(email||'').toLowerCase(),rol:'admin',activo:true,creado:hoy()}];return data;};
 function userCanEditV66(){return currentTenantUser?.rol==='admin'||currentTenantUser?.rol==='editor';}
 function userIsAdminV66(){return currentTenantUser?.rol==='admin';}
-function restoreTenantUserV66(){const email=sessionStorage.getItem('accesomina_current_user')||'';ensureTenantUsersV66();currentTenantUser=S.tenantUsers.find(u=>u.email===email&&u.activo!==false)||S.tenantUsers.find(u=>u.rol==='admin'&&u.activo!==false)||null;}
+function setCloudIdentityV7(identity){
+  const roleMap={domian_admin:'admin',client_admin:'admin',rrhh:'editor',prevencion:'editor',acreditacion:'editor',consulta:'lector'};
+  currentTenantId=identity?.user?.role==='domian_admin'?ADMIN_TENANT_ID:(identity?.tenant?.id||'');
+  currentTenantUser=identity?.user?{id:identity.user.id,nombre:identity.user.name,email:identity.user.email,rol:roleMap[identity.user.role]||'lector'}:null;
+  if(identity?.tenant?.name&&S.empresa)S.empresa.nombre=identity.tenant.name;
+  updateUserAccessV66();
+}
+function restoreTenantUserV66(){if(window.AccesoMinaCloud?.enabled&&currentTenantUser)return;const email=sessionStorage.getItem('accesomina_current_user')||'';ensureTenantUsersV66();currentTenantUser=S.tenantUsers.find(u=>u.email===email&&u.activo!==false)||null;}
 function updateUserAccessV66(){
   restoreTenantUserV66();
   const pill=document.getElementById('user-pill');if(pill)pill.textContent=currentTenantUser?`${currentTenantUser.nombre} · ${ROLE_LABELS_V66[currentTenantUser.rol]}`:'Sin usuario';
@@ -4081,9 +4097,9 @@ const registerTenantV66=registerTenant;
 registerTenant=function(){registerTenantV66();};
 const logoutTenantV66=logoutTenant;
 logoutTenant=function(){sessionStorage.removeItem('accesomina_current_user');currentTenantUser=null;logoutTenantV66();};
-pageLabels['usuarios']='Usuarios y Permisos';pageSubs['usuarios']='Accesos exclusivos de la empresa actual';
+pageLabels['usuarios']='Usuarios y Permisos';pageSubs['usuarios']='Accesos exclusivos de la empresa actual';pageLabels['bitacora']='Bitácora de Cambios';pageSubs['bitacora']='Auditoría inmutable del servidor';
 const renderPageV66=renderPage;
-renderPage=function(page){if(page==='usuarios')renderTenantUsersV66();else renderPageV66(page);};
+renderPage=function(page){if(page==='usuarios')renderTenantUsersV66();else if(page==='bitacora')window.renderCloudAuditLog?.();else renderPageV66(page);};
 function renderTenantUsersV66(){
   const users=ensureTenantUsersV66(),admins=users.filter(u=>u.activo&&u.rol==='admin').length,active=users.filter(u=>u.activo).length;
   document.getElementById('usuarios-sub').textContent=`${S.empresa?.nombre||'Empresa'} · datos independientes de otros clientes`;
@@ -4169,6 +4185,7 @@ function initSelects() {
 
 // ===================== INIT =====================
 function init() {
+  if(window.AccesoMinaCloud?.enabled) return window.AccesoMinaCloud.init();
   seed();
   S.empresa = domianEmpresa();
   bootSeedSnapshot = snapshotState();
@@ -4191,6 +4208,7 @@ function init() {
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 
+window.AccesoMinaCloud?.install();
 window.addEventListener('load', init);
 </script>
 </body>

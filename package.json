@@ -1,0 +1,32 @@
+{
+  "name": "accesomina-cloud",
+  "version": "7.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node --watch server/index.js",
+    "start": "node server/index.js",
+    "migrate": "node server/scripts/migrate.js",
+    "seed:admin": "node server/scripts/seed-admin.js",
+    "test": "node --test server/test/*.test.js",
+    "check": "node --check server/index.js && node --check public/cloud-client.js && node --test server/test/*.test.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.830.0",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.1.0",
+    "multer": "^2.0.1",
+    "nodemailer": "^9.0.1",
+    "pg": "^8.16.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.3"
+  }
+}
