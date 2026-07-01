@@ -248,7 +248,7 @@ body.private #main { display:block; }
       <h1 class="hero-title">Acreditación minera, contratos y alertas en un solo <span>sitio privado</span>.</h1>
       <p class="hero-copy">AccesoMina ordena trabajadores, proyectos, hoteles, mantenciones, exámenes, cursos, contratos y auditoría documental para empresas contratistas que necesitan ingresar personal a faenas mineras sin perder control de vencimientos ni respaldos.</p>
       <div class="hero-actions"><button class="btn btn-primary" onclick="showAccessTab('login')">Entrar al sitio privado</button><button class="btn btn-secondary" onclick="showAccessTab('registro')">Registrar empresa nueva</button></div>
-      <div class="hero-points"><div class="hero-point"><b>Auditoría automática</b><span>Semáforo por trabajador, curso, examen y documento con alertas inteligentes de vencimiento.</span></div><div class="hero-point"><b>Datos separados</b><span>Cada cliente opera en su propio sitio privado local; la información no se mezcla entre empresas.</span></div><div class="hero-point"><b>Listo para cloud</b><span>Exportación de respaldo y estructura preparada para migrar a PHP, base de datos y URL pública segura.</span></div></div>
+      <div class="hero-points"><div class="hero-point"><b>Usuarios por empresa</b><span>Cada empresa administra su equipo con permisos de administrador, edición o solo lectura.</span></div><div class="hero-point"><b>Datos totalmente separados</b><span>Empresa A y Empresa B operan en espacios independientes; su información nunca se mezcla.</span></div><div class="hero-point"><b>Preparado para trabajo simultáneo</b><span>La estructura multiempresa está lista para backend, base de datos, sesiones concurrentes y URL segura.</span></div></div>
     </div>
     <div class="access-panel" id="access-panel">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;"><div class="logo-mark">D</div><div><div style="font-weight:900;font-size:20px;">AccesoMina Domian</div><div style="color:var(--text-muted);font-size:12px;">Sitio privado de gestión minera</div></div></div>
@@ -289,6 +289,8 @@ body.private #main { display:block; }
   <div class="nav-item" onclick="nav('examenes')">🧪 Exámenes</div>
   <div class="nav-item" onclick="nav('cursos')">📚 Cursos</div>
   <div class="nav-item" onclick="nav('reportes')">📊 Reportes</div>
+  <div class="nav-group-label">Administración Empresa</div>
+  <div class="nav-item" onclick="nav('usuarios')">👥 Usuarios y Permisos</div>
   <div class="nav-group-label" id="nav-admin-label" style="display:none;">Administración Domian</div>
   <div class="nav-item" id="nav-clientes" style="display:none;" onclick="nav('clientes')">🏢 Clientes</div>
   <div class="sidebar-bottom">
@@ -308,6 +310,7 @@ body.private #main { display:block; }
     </div>
     <div class="topbar-right">
       <span class="private-client-pill" id="tenant-pill">Domian</span>
+      <span class="private-client-pill" id="user-pill">Administrador</span>
       <button class="btn btn-secondary btn-sm" onclick="exportTenantBackup()">Respaldo</button>
       <button class="btn btn-secondary btn-sm" onclick="showCloudGuide()">Cloud</button>
       <button class="btn btn-secondary btn-sm" onclick="exportAllCSV()">⬇ Exportar</button>
@@ -625,6 +628,7 @@ body.private #main { display:block; }
     <div class="section-header">
       <div><div class="section-title">📲 Llamados WhatsApp</div></div>
       <div class="section-actions">
+        <button class="btn btn-blue" onclick="openWaIndividual()">Mensaje individual</button>
         <button class="btn btn-secondary" onclick="openModal('modal-wa-grupo')">+ Grupo WA</button>
         <button class="btn btn-primary" onclick="openModal('modal-callout')">+ Nuevo Llamado</button>
       </div>
@@ -632,6 +636,19 @@ body.private #main { display:block; }
     <div class="card">
       <div class="card-header"><div class="card-title">Historial de Llamados</div></div>
       <div class="table-wrap"><table id="callout-table"></table></div>
+    </div>
+  </div>
+
+  <!-- PAGE: USUARIOS Y PERMISOS -->
+  <div id="page-usuarios" class="page">
+    <div class="section-header">
+      <div><div class="section-title">👥 Usuarios y Permisos</div><div class="section-sub" id="usuarios-sub">Accesos exclusivos de esta empresa</div></div>
+      <button class="btn btn-primary" id="btn-nuevo-usuario" onclick="openUserModal()">+ Dar acceso</button>
+    </div>
+    <div class="grid-3" id="usuarios-kpis"></div>
+    <div class="card">
+      <div class="card-header"><div><div class="card-title">Equipo con acceso al sitio privado</div><div class="card-subtitle">Todos ven la misma empresa; ningún usuario puede consultar datos de otra empresa.</div></div></div>
+      <div class="table-wrap"><table id="usuarios-table"></table></div>
     </div>
   </div>
 
@@ -1195,11 +1212,18 @@ body.private #main { display:block; }
         <div class="form-group"><label class="form-label">Minera</label><select class="form-select" id="wg-mina"></select></div>
         <div class="form-group full"><label class="form-label">Personas del grupo</label><div id="wg-personas" style="max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;background:var(--bg3);"></div></div>
         <div class="form-group full"><label class="form-label">Mensaje inicial</label><textarea class="form-textarea" id="wg-msg" placeholder="Mensaje para copiar a WhatsApp"></textarea></div>
+        <div class="form-group full"><label class="form-label">Enlace del grupo WhatsApp (opcional)</label><input class="form-input" id="wg-link" placeholder="https://chat.whatsapp.com/..."><div style="font-size:11px;color:var(--text-muted);margin-top:5px;">Si el grupo ya existe, pega su enlace. Si no existe, AccesoMina prepara la lista de participantes para crearlo en WhatsApp.</div></div>
       </div>
     </div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-wa-grupo')">Cancelar</button><button class="btn btn-primary" onclick="saveWaGroup()">Crear grupo / abrir WA</button></div>
   </div>
 </div>
+
+<!-- Modal: Usuario empresa -->
+<div class="modal-overlay" id="modal-usuario-empresa"><div class="modal"><div class="modal-header"><div class="modal-title">Dar acceso a una persona</div><button class="modal-close" onclick="closeModal('modal-usuario-empresa')">✕</button></div><div class="modal-body"><div class="form-grid"><div class="form-group full"><label class="form-label">Nombre</label><input class="form-input" id="usr-nombre" placeholder="Nombre y apellido"></div><div class="form-group full"><label class="form-label">Correo de acceso</label><input class="form-input" type="email" id="usr-email" placeholder="persona@empresa.cl"></div><div class="form-group full"><label class="form-label">Permiso</label><select class="form-select" id="usr-rol"><option value="editor">Editor · puede cargar y modificar</option><option value="lector">Solo lectura · puede consultar</option><option value="admin">Administrador · controla usuarios y toda la data</option></select></div></div><div class="cloud-note" style="margin-top:14px;">El usuario ingresará con el mismo RUT de la empresa y su propio correo. Solo verá la información de esta empresa.</div></div><div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-usuario-empresa')">Cancelar</button><button class="btn btn-primary" onclick="saveTenantUser()">Guardar acceso</button></div></div></div>
+
+<!-- Modal: WhatsApp individual -->
+<div class="modal-overlay" id="modal-wa-individual"><div class="modal"><div class="modal-header"><div class="modal-title">Mensaje individual por WhatsApp</div><button class="modal-close" onclick="closeModal('modal-wa-individual')">✕</button></div><div class="modal-body"><div class="form-grid"><div class="form-group full"><label class="form-label">Persona</label><select class="form-select" id="wi-trab"></select></div><div class="form-group full"><label class="form-label">Mensaje</label><textarea class="form-textarea" id="wi-msg" placeholder="Escribe el mensaje para esta persona"></textarea></div></div></div><div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-wa-individual')">Cancelar</button><button class="btn btn-blue" onclick="sendWaIndividual()">Abrir WhatsApp</button></div></div></div>
 
 <!-- Modal: Nuevo Vehículo / Equipo -->
 <div class="modal-overlay" id="modal-nuevo-vehiculo"><div class="modal modal-wide"><div class="modal-header"><div class="modal-title">+ Vehículo / Equipo</div><button class="modal-close" onclick="closeModal('modal-nuevo-vehiculo')">✕</button></div><div class="modal-body"><div class="form-grid"><div class="form-group"><label class="form-label">Tipo</label><select class="form-select" id="veh-tipo"><option value="camioneta">Camioneta</option><option value="bus">Bus</option><option value="grua">Grúa</option><option value="manlift">Manlift</option><option value="equipo_levante">Equipo de levante</option><option value="herramienta_critica">Herramienta crítica</option><option value="maquinaria">Maquinaria</option></select></div><div class="form-group"><label class="form-label">Nombre / descripción</label><input class="form-input" id="veh-nombre" placeholder="Ej: Camioneta 4x4 turno A"></div><div class="form-group"><label class="form-label">Patente</label><input class="form-input" id="veh-patente" placeholder="AA-BB-11"></div><div class="form-group"><label class="form-label">Serie / código interno</label><input class="form-input" id="veh-serie"></div><div class="form-group"><label class="form-label">Propiedad</label><select class="form-select" id="veh-propiedad"><option value="propia">Propia</option><option value="arrendada">Arrendada</option></select></div><div class="form-group"><label class="form-label">Operador / personal a cargo</label><select class="form-select" id="veh-operador"></select></div><div class="form-group"><label class="form-label">Arriendo inicio</label><input class="form-input" type="date" id="veh-arr-inicio"></div><div class="form-group"><label class="form-label">Arriendo término</label><input class="form-input" type="date" id="veh-arr-fin"></div><div class="form-group full"><label class="form-label">Mineras asociadas</label><div id="veh-minas-checks" style="display:flex;gap:8px;flex-wrap:wrap;"></div></div><div class="form-group"><label class="form-label">Permiso circulación</label><input class="form-input" type="date" id="veh-permiso"></div><div class="form-group"><label class="form-label">Revisión técnica</label><input class="form-input" type="date" id="veh-revision"></div><div class="form-group"><label class="form-label">Seguro</label><input class="form-input" type="date" id="veh-seguro"></div><div class="form-group"><label class="form-label">Autorización minera</label><input class="form-input" type="date" id="veh-autorizacion"></div><div class="form-group"><label class="form-label">Certificación / mantención</label><input class="form-input" type="date" id="veh-certificacion"></div><div class="form-group"><label class="form-label">Estado</label><select class="form-select" id="veh-estado"><option value="activo">Activo</option><option value="observado">Observado</option><option value="fuera_servicio">Fuera de servicio</option></select></div><div class="form-group full"><label class="form-label">Observación</label><input class="form-input" id="veh-observacion"></div></div></div><div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-nuevo-vehiculo')">Cancelar</button><button class="btn btn-primary" onclick="saveNuevoVehiculo()">Guardar equipo</button></div></div></div>
@@ -1219,7 +1243,7 @@ body.private #main { display:block; }
 <!-- Modal: Protocolo Salud -->
 <div class="modal-overlay" id="modal-nuevo-protocolo"><div class="modal"><div class="modal-header"><div class="modal-title">+ Protocolo Salud Ocupacional</div><button class="modal-close" onclick="closeModal('modal-nuevo-protocolo')">✕</button></div><div class="modal-body"><div class="form-grid"><div class="form-group"><label class="form-label">Protocolo</label><select class="form-select" id="pr-tipo"><option value="hipobaria">Hipobaria</option><option value="ruido">Ruido</option><option value="silice">Sílice</option><option value="uv">Radiación UV</option><option value="psicosocial">Psicosocial</option><option value="sustancias">Sustancias peligrosas</option><option value="altura_fisica">Altura física</option><option value="alcohol_drogas">Alcohol y drogas</option></select></div><div class="form-group"><label class="form-label">Minera</label><select class="form-select" id="pr-mina"></select></div><div class="form-group full"><label class="form-label">Trabajador</label><select class="form-select" id="pr-trab"></select></div><div class="form-group"><label class="form-label">Examen / control</label><input class="form-input" id="pr-examen" placeholder="Ej: audiometría"></div><div class="form-group"><label class="form-label">Curso / control preventivo</label><input class="form-input" id="pr-curso" placeholder="Ej: charla ruido"></div><div class="form-group"><label class="form-label">Vencimiento</label><input class="form-input" type="date" id="pr-vence"></div><div class="form-group"><label class="form-label">Estado</label><select class="form-select" id="pr-estado"><option value="pendiente">Pendiente</option><option value="vigente">Vigente</option><option value="observado">Observado</option><option value="vencido">Vencido</option></select></div><div class="form-group full"><label class="form-label">Observación</label><input class="form-input" id="pr-observacion"></div></div></div><div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-nuevo-protocolo')">Cancelar</button><button class="btn btn-primary" onclick="saveNuevoProtocolo()">Guardar protocolo</button></div></div></div>
 <!-- Modal: Cloud -->
-<div class="modal-overlay" id="modal-cloud"><div class="modal modal-wide"><div class="modal-header"><div class="modal-title">Publicar en cloud / URL pública</div><button class="modal-close" onclick="closeModal('modal-cloud')">✕</button></div><div class="modal-body"><div class="cloud-note"><b>Estado actual:</b> esta versión funciona como app HTML local con datos separados por cliente en este computador. Para publicarla en internet de forma segura, Domian debe activar backend PHP o Node, base de datos, login con contraseñas, almacenamiento privado de archivos, SSL y backups.</div><div class="grid-2" style="margin-top:16px;"><div class="card"><div class="card-title">Opción recomendada</div><div style="color:var(--text-muted);font-size:13px;line-height:1.5;margin-top:8px;">Migrar a Laravel/PHP + MySQL/PostgreSQL. Cada cliente queda con un <b>tenant_id</b> propio, usuarios por empresa, permisos y archivos separados.</div></div><div class="card"><div class="card-title">Respaldo portable</div><div style="color:var(--text-muted);font-size:13px;line-height:1.5;margin-top:8px;">Usa el botón <b>Respaldo</b> para descargar toda la data del cliente actual en JSON y cargarla luego en un servidor.</div></div></div><div style="margin-top:16px;"><button class="btn btn-primary" onclick="exportTenantBackup()">Descargar respaldo del cliente actual</button></div></div></div></div>
+<div class="modal-overlay" id="modal-cloud"><div class="modal modal-wide"><div class="modal-header"><div class="modal-title">Publicar en cloud / URL pública</div><button class="modal-close" onclick="closeModal('modal-cloud')">✕</button></div><div class="modal-body"><div class="cloud-note"><b>Estado actual:</b> esta versión demuestra la separación por empresa, usuarios y permisos en almacenamiento local. Para que 10, 20 o más personas trabajen realmente al mismo tiempo desde distintos equipos, se debe activar backend PHP o Node, base de datos multiempresa, contraseñas seguras, archivos privados, SSL y backups.</div><div class="grid-2" style="margin-top:16px;"><div class="card"><div class="card-title">Arquitectura recomendada</div><div style="color:var(--text-muted);font-size:13px;line-height:1.5;margin-top:8px;">Laravel/PHP o Node + MySQL/PostgreSQL. Cada empresa conserva un <b>tenant_id</b> propio, usuarios, roles, sesiones y archivos completamente separados.</div></div><div class="card"><div class="card-title">Respaldo portable</div><div style="color:var(--text-muted);font-size:13px;line-height:1.5;margin-top:8px;">Usa <b>Respaldo</b> para descargar la data de la empresa actual y migrarla posteriormente al servidor privado.</div></div></div><div style="margin-top:16px;"><button class="btn btn-primary" onclick="exportTenantBackup()">Descargar respaldo de esta empresa</button></div></div></div></div>
 
 <script>
 // ===================== STATE =====================
@@ -4011,6 +4035,88 @@ initSelects=function(){
   const sc=document.getElementById('subc-contrato');if(sc)sc.innerHTML=contOptions;
   const vehMinas=document.getElementById('veh-minas-checks');if(vehMinas)vehMinas.innerHTML=S.minas.map(m=>`<label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 8px;background:var(--bg3);border-radius:6px;"><input type="checkbox" value="${m.id}"><span style="font-size:12px;color:${m.color};">${m.nombre}</span></label>`).join('');
 };
+
+// ===================== V6.6: MULTIEMPRESA, USUARIOS Y WHATSAPP =====================
+let currentTenantUser = null;
+const ROLE_LABELS_V66 = {admin:'Administrador',editor:'Editor',lector:'Solo lectura'};
+function ensureTenantUsersV66() {
+  if(!Array.isArray(S.tenantUsers)) S.tenantUsers=[];
+  const ownerEmail=String(S.empresa?.email||'').trim().toLowerCase();
+  if(ownerEmail && !S.tenantUsers.some(u=>u.email===ownerEmail)) S.tenantUsers.unshift({id:'usr_owner',nombre:S.empresa?.representante||'Administrador',email:ownerEmail,rol:'admin',activo:true,creado:hoy()});
+  S.tenantUsers.forEach(u=>{u.email=String(u.email||'').trim().toLowerCase();u.rol=u.rol||'editor';u.activo=u.activo!==false;});
+  return S.tenantUsers;
+}
+const snapshotStateV66=snapshotState;
+snapshotState=function(){ensureTenantUsersV66();const data=snapshotStateV66();data.tenantUsers=S.tenantUsers;return JSON.parse(JSON.stringify(data));};
+const applyStateV66=applyState;
+applyState=function(data){applyStateV66(data);S.tenantUsers=Array.isArray(data?.tenantUsers)?data.tenantUsers:[];ensureTenantUsersV66();};
+const emptyTenantDataV66=emptyTenantData;
+emptyTenantData=function(nombre,rut,email,tel){const data=emptyTenantDataV66(nombre,rut,email,tel);data.tenantUsers=[{id:'usr_owner',nombre:'Administrador',email:String(email||'').toLowerCase(),rol:'admin',activo:true,creado:hoy()}];return data;};
+function userCanEditV66(){return currentTenantUser?.rol==='admin'||currentTenantUser?.rol==='editor';}
+function userIsAdminV66(){return currentTenantUser?.rol==='admin';}
+function restoreTenantUserV66(){const email=sessionStorage.getItem('accesomina_current_user')||'';ensureTenantUsersV66();currentTenantUser=S.tenantUsers.find(u=>u.email===email&&u.activo!==false)||S.tenantUsers.find(u=>u.rol==='admin'&&u.activo!==false)||null;}
+function updateUserAccessV66(){
+  restoreTenantUserV66();
+  const pill=document.getElementById('user-pill');if(pill)pill.textContent=currentTenantUser?`${currentTenantUser.nombre} · ${ROLE_LABELS_V66[currentTenantUser.rol]}`:'Sin usuario';
+  const add=document.getElementById('btn-nuevo-usuario');if(add)add.style.display=userIsAdminV66()?'':'none';
+  document.body.classList.toggle('read-only',!userCanEditV66());
+}
+const enterPrivateV66=enterPrivate;
+enterPrivate=function(){enterPrivateV66();updateUserAccessV66();};
+loginTenant=function(){
+  const rutRaw=document.getElementById('login-rut').value.trim(),email=document.getElementById('login-email').value.trim().toLowerCase();
+  if(!rutRaw||!isValidRut(rutRaw)){alert('Ingresa un RUT de empresa válido.');return;}
+  if(!isValidEmail(email)){alert('Ingresa el correo autorizado de la persona.');return;}
+  const rut=formatRut(rutRaw);currentTenantId=normalizeTenantId(rut);document.getElementById('login-rut').value=rut;
+  const saved=localStorage.getItem(tenantKey(currentTenantId));
+  if(saved) applyState(JSON.parse(saved));
+  else if(currentTenantId===ADMIN_TENANT_ID){applyState(bootSeedSnapshot);S.empresa=domianEmpresa();ensureTenantUsersV66();persistTenant();}
+  else {alert('Empresa no encontrada. Primero debe crear su cuenta.');showAccessTab('registro');return;}
+  ensureTenantUsersV66();
+  const user=S.tenantUsers.find(u=>u.email===email&&u.activo!==false);
+  if(!user){alert('Este correo no tiene acceso a la empresa. Solicita autorización al administrador de la cuenta.');return;}
+  currentTenantUser=user;sessionStorage.setItem('accesomina_current_tenant',currentTenantId);sessionStorage.setItem('accesomina_current_user',user.email);enterPrivate();toast(`Bienvenido ${user.nombre} a ${S.empresa.nombre}`);
+};
+const registerTenantV66=registerTenant;
+registerTenant=function(){registerTenantV66();};
+const logoutTenantV66=logoutTenant;
+logoutTenant=function(){sessionStorage.removeItem('accesomina_current_user');currentTenantUser=null;logoutTenantV66();};
+pageLabels['usuarios']='Usuarios y Permisos';pageSubs['usuarios']='Accesos exclusivos de la empresa actual';
+const renderPageV66=renderPage;
+renderPage=function(page){if(page==='usuarios')renderTenantUsersV66();else renderPageV66(page);};
+function renderTenantUsersV66(){
+  const users=ensureTenantUsersV66(),admins=users.filter(u=>u.activo&&u.rol==='admin').length,active=users.filter(u=>u.activo).length;
+  document.getElementById('usuarios-sub').textContent=`${S.empresa?.nombre||'Empresa'} · datos independientes de otros clientes`;
+  document.getElementById('usuarios-kpis').innerHTML=`<div class="kpi kpi-blue"><div class="kpi-value">${active}</div><div class="kpi-label">Usuarios activos</div></div><div class="kpi kpi-orange"><div class="kpi-value">${admins}</div><div class="kpi-label">Administradores</div></div><div class="kpi kpi-green"><div class="kpi-value">1</div><div class="kpi-label">Espacio privado independiente</div></div>`;
+  document.getElementById('usuarios-table').innerHTML=`<thead><tr><th>Persona</th><th>Correo de acceso</th><th>Permiso</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${users.map(u=>`<tr><td><b>${u.nombre}</b>${u.email===currentTenantUser?.email?'<div class="worker-rut">Sesión actual</div>':''}</td><td>${u.email}</td><td><span class="badge ${u.rol==='admin'?'badge-orange':u.rol==='editor'?'badge-blue':'badge-na'}">${ROLE_LABELS_V66[u.rol]}</span></td><td><span class="badge ${u.activo?'badge-ok':'badge-err'}">${u.activo?'Activo':'Suspendido'}</span></td><td>${userIsAdminV66()?`<button class="btn btn-secondary btn-sm" onclick="changeTenantUserRoleV66('${u.id}')">Permiso</button> <button class="btn btn-${u.activo?'danger':'success'} btn-sm" onclick="toggleTenantUserV66('${u.id}')">${u.activo?'Suspender':'Activar'}</button>`:'—'}</td></tr>`).join('')}</tbody>`;
+  updateUserAccessV66();
+}
+function openUserModal(){if(!userIsAdminV66()){toast('Solo un administrador puede dar accesos','err');return;}['usr-nombre','usr-email'].forEach(id=>document.getElementById(id).value='');document.getElementById('usr-rol').value='editor';openModal('modal-usuario-empresa');}
+function saveTenantUser(){
+  if(!userIsAdminV66()){toast('Permiso insuficiente','err');return;}
+  const nombre=document.getElementById('usr-nombre').value.trim(),email=document.getElementById('usr-email').value.trim().toLowerCase(),rol=document.getElementById('usr-rol').value;
+  if(!nombre||!isValidEmail(email)){toast('Nombre y correo válido son requeridos','err');return;}
+  const users=ensureTenantUsersV66();if(users.some(u=>u.email===email)){toast('Este correo ya tiene acceso','err');return;}
+  users.push({id:'usr'+Date.now(),nombre,email,rol,activo:true,creado:hoy()});persistTenant();closeModal('modal-usuario-empresa');renderTenantUsersV66();toast('Acceso creado para esta empresa');
+}
+function changeTenantUserRoleV66(id){if(!userIsAdminV66())return;const u=ensureTenantUsersV66().find(x=>x.id===id);if(!u)return;const rol=prompt('Nuevo permiso: admin, editor o lector',u.rol);if(!ROLE_LABELS_V66[rol]){toast('Permiso no válido','err');return;}if(u.email===currentTenantUser?.email&&rol!=='admin'&&ensureTenantUsersV66().filter(x=>x.activo&&x.rol==='admin').length===1){toast('Debe quedar al menos un administrador','err');return;}u.rol=rol;currentTenantUser.email===u.email&&(currentTenantUser=u);persistTenant();renderTenantUsersV66();}
+function toggleTenantUserV66(id){if(!userIsAdminV66())return;const u=ensureTenantUsersV66().find(x=>x.id===id);if(!u)return;if(u.email===currentTenantUser?.email){toast('No puedes suspender tu propia sesión','err');return;}if(u.rol==='admin'&&u.activo&&ensureTenantUsersV66().filter(x=>x.activo&&x.rol==='admin').length===1){toast('Debe quedar al menos un administrador','err');return;}u.activo=!u.activo;persistTenant();renderTenantUsersV66();}
+document.addEventListener('click',e=>{if(userCanEditV66()||!document.body.classList.contains('private'))return;const b=e.target.closest('button');if(!b)return;const fn=b.getAttribute('onclick')||'';if(/save|delete|add|asign|marcar|trigger|openModal|openProyectoModal|openUserModal|toggle|change/i.test(fn)){e.preventDefault();e.stopImmediatePropagation();toast('Tu permiso es Solo lectura','err');}},true);
+
+function openWaIndividual(trabId=''){const sel=document.getElementById('wi-trab');sel.innerHTML='<option value="">Seleccionar...</option>'+S.trabajadores.filter(t=>!t.bloqueado&&t.tel).map(t=>`<option value="${t.id}" ${t.id===trabId?'selected':''}>${t.nombre} · ${t.tel}</option>`).join('');document.getElementById('wi-msg').value='';openModal('modal-wa-individual');}
+function sendWaIndividual(){const t=S.trabajadores.find(x=>x.id===document.getElementById('wi-trab').value),msg=document.getElementById('wi-msg').value.trim();if(!t||!msg){toast('Selecciona una persona y escribe el mensaje','err');return;}const tel=(t.tel||'').replace(/\D/g,'');if(!tel){toast('La persona no tiene teléfono','err');return;}closeModal('modal-wa-individual');window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`,'_blank');toast(`WhatsApp preparado para ${t.nombre}`);}
+const saveWaGroupV66=saveWaGroup;
+saveWaGroup=function(){
+  ensureV6Collections();const nombre=document.getElementById('wg-nombre').value.trim(),ids=[...document.querySelectorAll('#wg-personas input:checked')].map(c=>c.value),msg=document.getElementById('wg-msg').value.trim()||`Grupo ${nombre}: favor confirmar recepción.`,inviteUrl=document.getElementById('wg-link').value.trim();
+  if(!nombre||!ids.length){toast('Nombre y personas del grupo son requeridos','err');return;}if(inviteUrl&&!/^https:\/\/chat\.whatsapp\.com\//i.test(inviteUrl)){toast('El enlace debe ser de un grupo WhatsApp','err');return;}
+  S.waGroups.push({id:'wg'+Date.now(),nombre,mantId:document.getElementById('wg-mant').value,minaId:document.getElementById('wg-mina').value,trabIds:ids,msg,inviteUrl,created:hoy()});
+  closeModal('modal-wa-grupo');persistTenant();renderLlamados();prepareWaGroupV66(S.waGroups.at(-1).id);toast('Grupo guardado en esta empresa');
+};
+function prepareWaGroupV66(id){const g=S.waGroups.find(x=>x.id===id);if(!g)return;if(g.inviteUrl){window.open(g.inviteUrl,'_blank');return;}const people=(g.trabIds||[]).map(id=>S.trabajadores.find(t=>t.id===id)).filter(Boolean),text=`${g.nombre}\nParticipantes:\n${people.map(t=>`${t.nombre}: ${t.tel||'sin teléfono'}`).join('\n')}\n\nMensaje: ${g.msg||''}`;navigator.clipboard?.writeText(text);const first=people.find(t=>t.tel);if(first)window.open(`https://wa.me/${first.tel.replace(/\D/g,'')}?text=${encodeURIComponent(g.msg||g.nombre)}`,'_blank');toast('Lista copiada. Crea el grupo en WhatsApp y pega los participantes.');}
+openSavedWaGroup=function(id){prepareWaGroupV66(id);};
+const renderLlamadosV66=renderLlamados;
+renderLlamados=function(){renderLlamadosV66();const groups=S.waGroups||[];document.querySelectorAll('#callout-table tbody tr').forEach((tr,i)=>{const g=groups[i];if(!g)return;const people=(g.trabIds||[]).slice(0,6).map(id=>{const t=S.trabajadores.find(w=>w.id===id);return t?`<button class="btn btn-ghost btn-sm" onclick="openWaIndividual('${t.id}')">${t.nombre.split(' ')[0]}</button>`:''}).join(' ');tr.children[3].innerHTML=`${people}<div style="font-size:11px;color:var(--text-muted);margin-top:5px;">${g.inviteUrl?'Enlace de grupo disponible':'Grupo preparado en AccesoMina'}</div>`;tr.lastElementChild.innerHTML=`<button class="btn btn-blue btn-sm" onclick="prepareWaGroupV66('${g.id}')">${g.inviteUrl?'Abrir grupo':'Preparar grupo'}</button>`;});};
+window.addEventListener('storage',e=>{if(!currentTenantId||e.key!==tenantKey(currentTenantId)||!e.newValue)return;try{applyState(JSON.parse(e.newValue));renderCurrentPageSoft();toast('Datos actualizados desde otra sesión de esta empresa');}catch(err){console.warn(err);}});
 
 // ===================== INIT SELECTS =====================
 function initSelects() {
