@@ -25,6 +25,11 @@
   --yellow: #fbbf24;
   --sidebar-w: 260px;
 }
+body.light {
+  --bg:#f5f7fa;--bg2:#ffffff;--bg3:#eef1f5;--bg4:#ffffff;
+  --text:#17202a;--text-muted:#56616f;--text-dim:#7b8490;
+  --border:#d9dee6;--border-light:#c6ccd6;
+}
 * { box-sizing:border-box; margin:0; padding:0; }
 body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
 a { color:inherit; text-decoration:none; }
@@ -292,6 +297,7 @@ body.private #main { display:block; }
   <div class="nav-item" onclick="nav('reportes')">📊 Reportes</div>
   <div class="nav-group-label">Administración Empresa</div>
   <div class="nav-item" onclick="nav('configuracion')">⚙️ Configuración Empresa</div>
+  <div class="nav-item" onclick="nav('transferencia')">↕️ Importar / Exportar</div>
   <div class="nav-item" onclick="nav('usuarios')">👥 Usuarios y Permisos</div>
   <div class="nav-item" onclick="nav('bitacora')">🧾 Bitácora de Cambios</div>
   <div class="nav-group-label" id="nav-admin-label" style="display:none;">Administración Domian</div>
@@ -666,6 +672,7 @@ body.private #main { display:block; }
     <div class="grid-2">
       <div class="card"><div class="card-title">Identidad y alertas</div><div class="divider"></div><div class="form-grid">
         <div class="form-group full"><label class="form-label">Nombre visible</label><input class="form-input" id="cfg-display-name"></div>
+        <div class="form-group"><label class="form-label">Apariencia</label><select class="form-select" id="cfg-theme"><option value="dark">Fondo oscuro</option><option value="light">Fondo claro</option></select></div>
         <div class="form-group"><label class="form-label">Color principal</label><input class="form-input" id="cfg-accent" type="color" value="#f07d36"></div>
         <div class="form-group"><label class="form-label">Logo (URL HTTPS)</label><input class="form-input" id="cfg-logo" placeholder="https://..."></div>
         <div class="form-group"><label class="form-label">Alerta preventiva (días)</label><input class="form-input" id="cfg-warning" type="number" min="1" value="30"></div>
@@ -679,6 +686,14 @@ body.private #main { display:block; }
       <div class="form-group"><label class="form-label">WhatsApp Phone Number ID</label><input class="form-input" id="cfg-wa-phone"></div><div class="form-group"><label class="form-label">Token WhatsApp nuevo</label><input class="form-input" type="password" id="cfg-wa-token"></div>
       <div class="form-group"><label class="form-label">URL proveedor firma</label><input class="form-input" id="cfg-sign-url" placeholder="https://..."></div><div class="form-group"><label class="form-label">Token firma nuevo</label><input class="form-input" type="password" id="cfg-sign-token"></div>
     </div><div style="display:flex;gap:8px;margin-top:14px;"><button class="btn btn-secondary" onclick="saveTenantIntegrationCloud('smtp')">Guardar correo</button><button class="btn btn-secondary" onclick="saveTenantIntegrationCloud('whatsapp')">Guardar WhatsApp</button><button class="btn btn-secondary" onclick="saveTenantIntegrationCloud('signature')">Guardar firma</button></div><div id="cfg-integration-status" style="margin-top:12px;"></div></div>
+  </div>
+
+  <div id="page-transferencia" class="page">
+    <div class="section-header"><div><div class="section-title">↕️ Importar / Exportar</div><div class="section-sub">Respaldo empresarial y carga masiva validada</div></div></div>
+    <div class="grid-2">
+      <div class="card"><div class="card-title">Exportar información</div><div class="divider"></div><div class="form-group"><label class="form-label">Contenido</label><select class="form-select" id="exp-type"><option value="backup">Respaldo completo JSON</option><option value="trabajadores">Trabajadores CSV</option><option value="minas">Mineras CSV</option><option value="contratos">Contratos CSV</option><option value="mantenciones">Proyectos y mantenciones CSV</option></select></div><button class="btn btn-primary" style="margin-top:12px;" onclick="exportTenantDataCloud()">Descargar archivo</button></div>
+      <div class="card"><div class="card-title">Importar datos masivos</div><div class="divider"></div><div class="form-grid"><div class="form-group"><label class="form-label">Tipo de archivo</label><select class="form-select" id="imp-type"><option value="trabajadores">Trabajadores CSV</option><option value="minas">Mineras CSV</option><option value="contratos">Contratos CSV</option><option value="mantenciones">Proyectos y mantenciones CSV</option><option value="backup">Restaurar respaldo JSON</option></select></div><div class="form-group"><label class="form-label">Acción</label><select class="form-select" id="imp-mode"><option value="append">Agregar sin eliminar registros</option><option value="replace">Reemplazar este módulo</option></select></div><div class="form-group full"><label class="form-label">Archivo</label><input class="form-input" id="imp-file" type="file" accept=".csv,.json,application/json,text/csv"></div></div><div style="display:flex;gap:8px;margin-top:12px;"><button class="btn btn-secondary" onclick="downloadImportTemplateCloud()">Descargar plantilla</button><button class="btn btn-primary" onclick="importTenantDataCloud()">Validar e importar</button></div><div id="imp-result" style="margin-top:12px;"></div></div>
+    </div>
   </div>
 
   <div id="page-usuarios" class="page">
@@ -4258,9 +4273,13 @@ const saveNuevoHotelV72=saveNuevoHotel;saveNuevoHotel=function(){const nombre=un
 const saveHotelAsigV72=saveHotelAsig;saveHotelAsig=function(){const trabId=document.getElementById('ha-trab').value,mantId=document.getElementById('ha-mant').value,hotelId=document.getElementById('ha-hotel').value,checkin=document.getElementById('ha-checkin').value;if(S.hotelAsig.some(x=>x.trabId===trabId&&x.mantId===mantId&&x.hotelId===hotelId&&x.checkin===checkin)){toast('Este alojamiento ya está asignado al trabajador','err');return;}saveHotelAsigV72();};
 const saveEppDeliveryV72=saveEppDelivery;saveEppDelivery=async function(){const workerId=document.getElementById('epp-trab').value,itemId=document.getElementById('epp-item').value,date=document.getElementById('epp-date').value||hoy(),lot=uniqueKeyV72(document.getElementById('epp-lot').value);if(S.eppDeliveries.some(x=>x.workerId===workerId&&x.itemId===itemId&&x.deliveredAt===date&&uniqueKeyV72(x.lotSerial)===lot)){toast('Esta entrega de EPP ya fue registrada','err');return;}return saveEppDeliveryV72();};
 pageLabels.configuracion='Configuración Empresa';pageSubs.configuracion='Parámetros exclusivos del sitio privado';
-const renderPageV73=renderPage;renderPage=function(page){if(page==='configuracion')window.renderTenantSettingsCloud?.();else renderPageV73(page);};
+pageLabels.transferencia='Importar / Exportar';pageSubs.transferencia='Respaldo empresarial y carga masiva validada';
+const renderPageV73=renderPage;renderPage=function(page){if(page==='configuracion')window.renderTenantSettingsCloud?.();else if(page==='transferencia')window.renderTenantTransferCloud?.();else renderPageV73(page);};
 window.saveTenantSettingsCloud=window.saveTenantSettingsCloud||(()=>toast('La configuración independiente requiere ejecutar la versión cloud','warn'));
 window.saveTenantIntegrationCloud=window.saveTenantIntegrationCloud||(()=>toast('Las integraciones privadas requieren ejecutar la versión cloud','warn'));
+window.exportTenantDataCloud=window.exportTenantDataCloud||exportTenantBackup;
+window.downloadImportTemplateCloud=window.downloadImportTemplateCloud||(()=>toast('Las plantillas masivas requieren ejecutar la versión cloud','warn'));
+window.importTenantDataCloud=window.importTenantDataCloud||(()=>toast('La importación masiva requiere ejecutar la versión cloud','warn'));
 
 // ===================== INIT SELECTS =====================
 function initSelects() {

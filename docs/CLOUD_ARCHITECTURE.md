@@ -52,6 +52,8 @@ S3 privado
 
 `tenant_settings` mantiene identidad visual, módulos habilitados, umbrales de alerta y catálogos sin afectar a otros clientes. `tenant_integrations` guarda configuración pública y secretos cifrados separados para cada empresa.
 
+Cada empresa puede elegir tema claro u oscuro. El módulo de transferencia permite exportar un respaldo JSON completo o CSV por entidad, descargar plantillas e importar hasta 10.000 filas por archivo. Toda importación valida RUT, duplicados, fechas y relaciones antes de confirmar, y queda registrada en auditoría.
+
 ## Integraciones
 
 - SMTP: envío de correo con registro de resultado.
