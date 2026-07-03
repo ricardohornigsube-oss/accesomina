@@ -1,16 +1,13 @@
 import 'dotenv/config';
 import path from 'node:path';
+import { validateRuntimeEnvironment } from './runtime-validation.js';
 
-const required = ['DATABASE_URL'];
-for (const key of required) {
-  if (!process.env[key]) throw new Error(`Missing required environment variable: ${key}`);
-}
-if (process.env.NODE_ENV === 'production' && !process.env.TENANT_SECRET_KEY) throw new Error('TENANT_SECRET_KEY is required in production');
+validateRuntimeEnvironment(process.env);
 
 export const config = Object.freeze({
   env: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT || 8088),
-  origin: process.env.APP_ORIGIN || 'http://localhost:8088',
+  origin: (process.env.APP_ORIGIN || 'http://localhost:8088').replace(/\/$/, ''),
   databaseUrl: process.env.DATABASE_URL,
   sessionTtlHours: Math.max(1, Number(process.env.SESSION_TTL_HOURS || 8)),
   registrationInviteCode: process.env.REGISTRATION_INVITE_CODE || '',

@@ -6,7 +6,7 @@ import { hashPassword, normalizeEmail, randomToken, validatePassword } from '../
 import { sanitizeJson, userSchema } from '../validation.js';
 
 export const usersRouter = Router();
-usersRouter.get('/', async (req, res) => {
+usersRouter.get('/', allowRoles('domian_admin','client_admin'), async (req, res) => {
   const result = await withTenant(req.auth.tenantId, client => client.query('SELECT id,email,full_name,role,permissions,active,last_login_at,created_at FROM app_users WHERE tenant_id=$1 ORDER BY full_name', [req.auth.tenantId]));
   res.json(result.rows);
 });

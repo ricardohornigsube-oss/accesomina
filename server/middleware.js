@@ -38,6 +38,7 @@ export function requireCsrf(req, res, next) {
 export function requireOrigin(req, res, next) {
   if (['GET','HEAD','OPTIONS'].includes(req.method)) return next();
   const origin = req.get('origin');
+  if (config.env === 'production' && !origin) return res.status(403).json({ error: 'ORIGIN_REQUIRED' });
   if (origin && origin !== config.origin) return res.status(403).json({ error: 'ORIGIN_NOT_ALLOWED' });
   next();
 }
