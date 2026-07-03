@@ -52,12 +52,17 @@ test('N companies keep users, operational data and branding fully isolated', asy
       `INSERT INTO workers(tenant_id,full_name,rut) VALUES($1,$2,'12.345.678-5')`,
       [tenant.id, `Trabajador ${index}`]
     );
+    await db.query(
+      `INSERT INTO privacy_processing_activities(tenant_id,name,purpose,legal_basis,retention_days,updated_by)
+       VALUES($1,$2,$3,'ejecucion_contractual',365,$4)`,
+      [tenant.id, `Tratamiento ${index}`, `Finalidad ${index}`, user.id]
+    );
     await db.exec('COMMIT');
   }
 
   await db.exec('CREATE ROLE tenant_runtime_test NOLOGIN');
   await db.exec('GRANT USAGE ON SCHEMA public TO tenant_runtime_test');
-  await db.exec('GRANT SELECT ON app_users,tenant_module_state,tenant_settings,tenant_integrations,workers TO tenant_runtime_test');
+  await db.exec('GRANT SELECT ON app_users,tenant_module_state,tenant_settings,tenant_integrations,workers,privacy_processing_activities TO tenant_runtime_test');
 
   for (let index = 0; index < companies.length; index += 1) {
     await db.exec('BEGIN');
@@ -68,8 +73,9 @@ test('N companies keep users, operational data and branding fully isolated', asy
     const settings = await db.query('SELECT tenant_id,branding,modules,alerts FROM tenant_settings');
     const integrations = await db.query("SELECT tenant_id,public_config FROM tenant_integrations WHERE provider='whatsapp'");
     const workers = await db.query('SELECT tenant_id,rut FROM workers');
+    const privacy = await db.query('SELECT tenant_id,name FROM privacy_processing_activities');
 
-    for (const rows of [users.rows, state.rows, settings.rows, integrations.rows, workers.rows]) {
+    for (const rows of [users.rows, state.rows, settings.rows, integrations.rows, workers.rows, privacy.rows]) {
       assert.equal(rows.length, 1);
       assert.equal(rows[0].tenant_id, companies[index]);
     }
@@ -77,6 +83,7 @@ test('N companies keep users, operational data and branding fully isolated', asy
     assert.equal(settings.rows[0].branding.logoUrl, `https://cdn.example.com/logo-${index + 1}.png`);
     assert.equal(integrations.rows[0].public_config.phoneNumberId, `phone-${index + 1}`);
     assert.equal(state.rows[0].data[0].id, `worker-${index + 1}`);
+    assert.equal(privacy.rows[0].name, `Tratamiento ${index + 1}`);
     await db.exec('ROLLBACK');
   }
 

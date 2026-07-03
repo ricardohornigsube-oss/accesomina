@@ -360,6 +360,7 @@ body.private #main { display:block; }
   <div class="nav-item" onclick="nav('transferencia')">↕️ Importar / Exportar</div>
   <div class="nav-item" onclick="nav('usuarios')">👥 Usuarios y Permisos</div>
   <div class="nav-item" onclick="nav('bitacora')">🧾 Bitácora de Cambios</div>
+  <div class="nav-item" onclick="nav('privacidad')">🛡️ Privacidad y Datos</div>
   <div class="nav-group-label" id="nav-admin-label" style="display:none;">Administración Domian</div>
   <div class="nav-item" id="nav-clientes" style="display:none;" onclick="nav('clientes')">🏢 Clientes</div>
   <div class="sidebar-bottom">
@@ -772,6 +773,17 @@ body.private #main { display:block; }
   <div id="page-bitacora" class="page">
     <div class="section-header"><div><div class="section-title">🧾 Bitácora Inmutable</div><div class="section-sub">Quién cambió qué, cuándo y en qué empresa</div></div><button class="btn btn-secondary" onclick="renderCloudAuditLog()">Actualizar</button></div>
     <div class="card"><div class="card-header"><div><div class="card-title">Eventos de seguridad y operación</div><div class="card-subtitle">Los eventos productivos se almacenan en el servidor y no pueden editarse ni eliminarse.</div></div></div><div class="table-wrap"><table id="cloud-audit-table"><tbody><tr><td>Disponible al conectar la API cloud.</td></tr></tbody></table></div></div>
+  </div>
+
+  <div id="page-privacidad" class="page">
+    <div class="section-header"><div><div class="section-title">🛡️ Gobernanza de Datos</div><div class="section-sub">Tratamientos, derechos, consentimientos e incidentes de privacidad</div></div><button class="btn btn-secondary" onclick="renderPrivacyGovernanceCloud()">Actualizar</button></div>
+    <div class="kpi-grid" id="privacy-kpis"></div>
+    <div class="section-header" style="margin-top:18px;"><div><div class="card-title">Registro de actividades de tratamiento</div></div><button class="btn btn-primary" onclick="createPrivacyActivityCloud()">+ Actividad</button></div>
+    <div class="card"><div class="table-wrap"><table id="privacy-activities-table"><tbody><tr><td>Disponible al conectar la API cloud.</td></tr></tbody></table></div></div>
+    <div class="section-header" style="margin-top:18px;"><div><div class="card-title">Solicitudes de titulares</div></div><button class="btn btn-primary" onclick="createPrivacyRequestCloud()">+ Solicitud</button></div>
+    <div class="card"><div class="table-wrap"><table id="privacy-requests-table"><tbody><tr><td>Sin solicitudes registradas.</td></tr></tbody></table></div></div>
+    <div class="section-header" style="margin-top:18px;"><div><div class="card-title">Consentimientos e incidentes</div></div><div style="display:flex;gap:8px;"><button class="btn btn-secondary" onclick="createPrivacyConsentCloud()">+ Consentimiento</button><button class="btn btn-danger" onclick="createPrivacyIncidentCloud()">+ Incidente</button></div></div>
+    <div class="grid-2"><div class="card"><div class="table-wrap"><table id="privacy-consents-table"></table></div></div><div class="card"><div class="table-wrap"><table id="privacy-incidents-table"></table></div></div></div>
   </div>
 
   <!-- PAGE: VEHICULOS Y EQUIPOS -->
@@ -4242,9 +4254,9 @@ const registerTenantV66=registerTenant;
 registerTenant=function(){registerTenantV66();};
 const logoutTenantV66=logoutTenant;
 logoutTenant=function(){sessionStorage.removeItem('accesomina_current_user');currentTenantUser=null;logoutTenantV66();};
-pageLabels['usuarios']='Usuarios y Permisos';pageSubs['usuarios']='Accesos exclusivos de la empresa actual';pageLabels['bitacora']='Bitácora de Cambios';pageSubs['bitacora']='Auditoría inmutable del servidor';
+pageLabels['usuarios']='Usuarios y Permisos';pageSubs['usuarios']='Accesos exclusivos de la empresa actual';pageLabels['bitacora']='Bitácora de Cambios';pageSubs['bitacora']='Auditoría inmutable del servidor';pageLabels['privacidad']='Privacidad y Datos';pageSubs['privacidad']='Gobernanza Ley 21.719 por empresa';
 const renderPageV66=renderPage;
-renderPage=function(page){if(page==='usuarios')renderTenantUsersV66();else if(page==='bitacora')window.renderCloudAuditLog?.();else renderPageV66(page);};
+renderPage=function(page){if(page==='usuarios')renderTenantUsersV66();else if(page==='bitacora')window.renderCloudAuditLog?.();else if(page==='privacidad')window.renderPrivacyGovernanceCloud?.();else renderPageV66(page);};
 function renderTenantUsersV66(){
   const users=ensureTenantUsersV66(),admins=users.filter(u=>u.activo&&u.rol==='admin').length,active=users.filter(u=>u.activo).length;
   document.getElementById('usuarios-sub').textContent=`${S.empresa?.nombre||'Empresa'} · datos independientes de otros clientes`;
