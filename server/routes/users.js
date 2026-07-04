@@ -7,7 +7,7 @@ import { sanitizeJson, userSchema } from '../validation.js';
 
 export const usersRouter = Router();
 usersRouter.get('/', allowRoles('domian_admin','client_admin'), async (req, res) => {
-  const result = await withTenant(req.auth.tenantId, client => client.query('SELECT id,email,full_name,role,permissions,active,last_login_at,created_at FROM app_users WHERE tenant_id=$1 ORDER BY full_name', [req.auth.tenantId]));
+  const result = await withTenant(req.auth.tenantId, client => client.query('SELECT id,email,full_name,role,permissions,active,must_change_password,last_login_at,created_at FROM app_users WHERE tenant_id=$1 ORDER BY full_name', [req.auth.tenantId]));
   res.json(result.rows);
 });
 usersRouter.post('/', allowRoles('domian_admin','client_admin'), async (req, res) => {
@@ -36,4 +36,19 @@ usersRouter.patch('/:id', allowRoles('domian_admin','client_admin'), async (req,
     await appendAudit(client,{tenantId:req.auth.tenantId,userId:req.auth.userId,entityType:'user',entityId:req.params.id,action:'user.updated',oldValue:before.rows[0],newValue:result.rows[0]});return result.rows[0];
   });
   if(!row)return res.status(404).json({error:'USER_NOT_FOUND'});res.json(row);
+});
+usersRouter.post('/:id/reset-password', allowRoles('domian_admin','client_admin'), async (req, res) => {
+  if(req.params.id===req.auth.userId)return res.status(409).json({error:'CANNOT_RESET_SELF',message:'Use the personal password change option for your own account.'});
+  const temporary=`${randomToken(12)}Aa1`,credentials=await hashPassword(temporary);
+  const user=await withTenant(req.auth.tenantId,async client=>{
+    const before=(await client.query('SELECT id,email,full_name,role,active FROM app_users WHERE id=$1 AND tenant_id=$2',[req.params.id,req.auth.tenantId])).rows[0];
+    if(!before)return null;
+    if(before.role==='domian_admin'&&req.auth.role!=='domian_admin')throw Object.assign(new Error('The Domian global administrator account is protected'),{status:403,code:'DOMIAN_ADMIN_PROTECTED'});
+    const updated=(await client.query(`UPDATE app_users SET password_hash=$1,password_salt=$2,must_change_password=true,failed_login_count=0,locked_until=NULL,updated_at=now() WHERE id=$3 AND tenant_id=$4 RETURNING id,email,full_name,role,active,must_change_password`,[credentials.hash,credentials.salt,req.params.id,req.auth.tenantId])).rows[0];
+    await client.query('UPDATE user_sessions SET revoked_at=now() WHERE user_id=$1 AND tenant_id=$2 AND revoked_at IS NULL',[req.params.id,req.auth.tenantId]);
+    await appendAudit(client,{tenantId:req.auth.tenantId,userId:req.auth.userId,entityType:'user',entityId:req.params.id,action:'user.password_reset_by_company_admin',oldValue:{email:before.email},newValue:{mustChangePassword:true,sessionsRevoked:true}});
+    return updated;
+  });
+  if(!user)return res.status(404).json({error:'USER_NOT_FOUND'});
+  res.json({user,temporaryPassword:temporary,mustChangePassword:true});
 });
