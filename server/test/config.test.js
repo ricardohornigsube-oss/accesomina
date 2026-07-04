@@ -11,6 +11,7 @@ const productionEnv = {
   FILE_STORAGE: 's3',
   AWS_S3_BUCKET: 'private-accesomina-files',
   VIRUS_SCAN_API_URL: 'https://scanner.example.com/scan'
+  ,METRICS_TOKEN: 'monitor-4f57c269775f4caaa9156af36b3e'
 };
 
 test('production configuration accepts complete secure infrastructure', () => {

@@ -10,6 +10,8 @@ export const config = Object.freeze({
   origin: (process.env.APP_ORIGIN || 'http://localhost:8088').replace(/\/$/, ''),
   databaseUrl: process.env.DATABASE_URL,
   sessionTtlHours: Math.max(1, Number(process.env.SESSION_TTL_HOURS || 8)),
+  jobPollSeconds: Math.max(15, Number(process.env.JOB_POLL_SECONDS || 60)),
+  metricsToken: process.env.METRICS_TOKEN || '',
   registrationInviteCode: process.env.REGISTRATION_INVITE_CODE || '',
   tenantSecretKey: process.env.TENANT_SECRET_KEY || process.env.REGISTRATION_INVITE_CODE || 'development-only-secret',
   cookieSecure: process.env.COOKIE_SECURE === 'true' || process.env.NODE_ENV === 'production',
@@ -17,6 +19,7 @@ export const config = Object.freeze({
   uploadDir: path.resolve(process.env.LOCAL_UPLOAD_DIR || './uploads'),
   aws: { region: process.env.AWS_REGION || 'us-east-1', bucket: process.env.AWS_S3_BUCKET || '' },
   virusScan: { url: process.env.VIRUS_SCAN_API_URL || '', token: process.env.VIRUS_SCAN_API_TOKEN || '' },
+  documentAi: { url: process.env.DOCUMENT_AI_API_URL || '', token: process.env.DOCUMENT_AI_API_TOKEN || '' },
   smtp: {
     host: process.env.SMTP_HOST || '', port: Number(process.env.SMTP_PORT || 587),
     secure: process.env.SMTP_SECURE === 'true', user: process.env.SMTP_USER || '',

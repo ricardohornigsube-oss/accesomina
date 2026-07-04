@@ -26,6 +26,7 @@ async function storeFile(storageKey, file) {
     await s3.send(new PutObjectCommand({ Bucket:config.aws.bucket,Key:storageKey,Body:file.buffer,ContentType:file.mimetype,ServerSideEncryption:'AES256',Metadata:{originalname:safeName(file.originalname)} }));
   } else { const target=path.join(config.uploadDir,storageKey);await fs.mkdir(path.dirname(target),{recursive:true});await fs.writeFile(target,file.buffer,{mode:0o600}); }
 }
+export async function readStoredFile(file){if(file.storage_provider==='s3'){const object=await s3.send(new GetObjectCommand({Bucket:config.aws.bucket,Key:file.storage_key}));return Buffer.from(await object.Body.transformToByteArray());}return fs.readFile(path.join(config.uploadDir,file.storage_key));}
 
 filesRouter.post('/', allowRoles('domian_admin','client_admin','rrhh','prevencion','acreditacion'), upload.single('file'), async (req,res) => {
   if(!req.file)return res.status(400).json({error:'FILE_REQUIRED'});

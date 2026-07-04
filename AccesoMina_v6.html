@@ -202,8 +202,26 @@ tr:hover td { background:var(--bg3); }
 .back-btn { display:inline-flex; align-items:center; gap:8px; color:var(--text-muted); cursor:pointer; font-size:14px; margin-bottom:20px; padding:8px 14px; border-radius:8px; border:1px solid var(--border); background:var(--bg2); transition:.15s; }
 .back-btn:hover { color:var(--text); border-color:var(--border-light); }
 .blocked-badge { background:rgba(248,113,113,.2); color:var(--red); border:1px solid rgba(248,113,113,.3); padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700; }
-@media(max-width:900px){:root{--sidebar-w:0px;}#sidebar{display:none;}#main{margin-left:0;}}
-@media(max-width:900px){body.private{--sidebar-w:240px;}body.private #sidebar{display:flex;width:var(--sidebar-w);overflow-y:auto;}body.private #main{margin-left:var(--sidebar-w);}body.private #topbar{padding:0 12px;overflow-x:auto;}.topbar-right{gap:6px;}.btn-sm{padding:5px 9px;}}
+@media(max-width:900px){
+  :root,body.private{--sidebar-w:0px;}
+  #sidebar,body.private #sidebar{display:none!important;width:min(86vw,300px);box-shadow:0 0 0 100vmax rgba(0,0,0,.58);}
+  body.private #sidebar.mobile-open{display:flex!important;}
+  #main,body.private #main{margin-left:0;min-width:0;}
+  #topbar,body.private #topbar{height:auto;min-height:64px;padding:9px 12px;overflow:visible;align-items:flex-start;flex-wrap:wrap;}
+  .topbar-right{width:100%;margin-left:0;gap:6px;overflow-x:auto;padding-bottom:3px;scrollbar-width:thin;}
+  .topbar-right .btn,.topbar-right .private-client-pill{flex:0 0 auto;}
+  .page{padding:16px 12px;overflow:hidden;}
+  .grid-2,.grid-3,.form-grid{grid-template-columns:1fr!important;}
+  .card{padding:14px;max-width:100%;}
+  .section-header,.card-header{align-items:flex-start;gap:10px;flex-wrap:wrap;}
+  .filters{overflow-x:auto;display:flex;flex-wrap:nowrap;padding-bottom:4px;}
+  .filters>*{flex:0 0 min(78vw,280px);}
+  .modal{width:calc(100vw - 20px)!important;max-height:calc(100vh - 20px);padding:18px!important;}
+  .mobile-menu-button{display:inline-flex!important;}
+  .btn-sm{padding:7px 10px;min-height:36px;}
+}
+@media(min-width:901px){.mobile-menu-button{display:none!important;}}
+@media(max-width:520px){.kpi-grid{grid-template-columns:1fr 1fr;gap:10px}.kpi{padding:14px}.kpi-value{font-size:23px}.page{padding:12px 10px}.public-band{padding-left:16px;padding-right:16px}}
 @media print { #sidebar,#topbar,.btn,.modal-overlay:not(.open){display:none!important;} #main{margin-left:0;} }
 
 /* ===== DOMIAN PUBLIC + PRIVATE ACCESS ===== */
@@ -375,6 +393,7 @@ body.private #main { display:block; }
 <!-- MAIN -->
 <div id="main">
   <div id="topbar">
+    <button class="btn btn-secondary btn-sm mobile-menu-button" type="button" aria-label="Abrir menú principal" aria-controls="sidebar" aria-expanded="false" onclick="toggleMobileMenu(this)">☰</button>
     <div>
       <div class="topbar-title" id="topbar-title">Dashboard</div>
       <div class="topbar-subtitle" id="topbar-sub">Resumen operativo · Domian SpA</div>
@@ -763,10 +782,10 @@ body.private #main { display:block; }
     <div class="section-header"><div><div class="section-title">📡 Centro Operativo</div><div class="section-sub">Monitoreo, documentos inteligentes, comunicaciones y acceso del mandante</div></div><button class="btn btn-secondary" onclick="renderOperationsCloud()">Actualizar</button></div>
     <div class="kpi-grid" id="ops-kpis"></div>
     <div class="grid-2">
-      <div class="card"><div class="card-title">Programar notificación o reporte</div><div class="divider"></div><form id="ops-notification-form" class="form-grid" onsubmit="saveOperationNotification(event)"><div class="form-group"><label class="form-label">Nombre</label><input class="form-input" id="ops-not-name" required maxlength="160"></div><div class="form-group"><label class="form-label">Canal</label><select class="form-select" id="ops-not-channel"><option value="email">Correo</option><option value="whatsapp">WhatsApp</option><option value="report">Reporte programado</option></select></div><div class="form-group"><label class="form-label">Programación</label><select class="form-select" id="ops-not-rule"><option value="manual">Manual</option><option value="daily">Diario</option><option value="weekly">Semanal</option><option value="monthly">Mensual</option></select></div><div class="form-group"><label class="form-label">Próxima ejecución</label><input class="form-input" id="ops-not-next" type="datetime-local"></div><div class="form-group full"><label class="form-label">Mensaje o contenido</label><textarea class="form-textarea" id="ops-not-template" required maxlength="8000"></textarea></div><div class="form-group full"><button class="btn btn-primary" type="submit">Guardar programación</button></div></form></div>
+      <div class="card"><div class="card-title">Programar notificación o reporte</div><div class="divider"></div><form id="ops-notification-form" class="form-grid" onsubmit="saveOperationNotification(event)"><div class="form-group"><label class="form-label">Nombre</label><input class="form-input" id="ops-not-name" required maxlength="160"></div><div class="form-group"><label class="form-label">Canal</label><select class="form-select" id="ops-not-channel"><option value="email">Correo</option><option value="whatsapp">WhatsApp</option><option value="report">Reporte programado</option></select></div><div class="form-group"><label class="form-label">Programación</label><select class="form-select" id="ops-not-rule"><option value="manual">Una vez</option><option value="daily">Diario</option><option value="weekly">Semanal</option><option value="monthly">Mensual</option></select></div><div class="form-group"><label class="form-label">Próxima ejecución</label><input class="form-input" id="ops-not-next" type="datetime-local" required></div><div class="form-group full"><label class="form-label">Destinatarios</label><input class="form-input" id="ops-not-recipients" placeholder="Correos o teléfonos separados por coma"><span class="field-help">Si se deja vacío, se utilizarán los contactos válidos de los trabajadores de la empresa.</span></div><div class="form-group full"><label class="form-label">Mensaje o contenido</label><textarea class="form-textarea" id="ops-not-template" required maxlength="8000"></textarea></div><div class="form-group full"><button class="btn btn-primary" type="submit">Guardar programación</button></div></form></div>
       <div class="card"><div class="card-title">Acceso restringido del mandante</div><div class="divider"></div><form id="ops-portal-form" class="form-grid" onsubmit="saveMandanteAccess(event)"><div class="form-group"><label class="form-label">Nombre</label><input class="form-input" id="ops-portal-name" required></div><div class="form-group"><label class="form-label">Correo</label><input class="form-input" id="ops-portal-email" type="email" required></div><div class="form-group"><label class="form-label">Minera</label><select class="form-select" id="ops-portal-mine" required></select></div><div class="form-group"><label class="form-label">Permiso</label><select class="form-select" id="ops-portal-scope"><option value="view">Solo lectura</option><option value="review">Revisar</option><option value="approve">Revisar y aprobar</option><option value="reports">Reportes</option></select></div><div class="form-group"><label class="form-label">Acceso hasta</label><input class="form-input" id="ops-portal-exp" type="date"></div><div class="form-group"><button class="btn btn-primary" type="submit">Otorgar acceso</button></div></form></div>
     </div>
-    <div class="card" style="margin-top:16px;"><div class="card-title">Acreditación documental inteligente</div><div class="card-subtitle">Registra emisor, vigencia y controles OCR, firma, QR, fotografía e integridad. La aprobación final siempre queda asignada a una persona.</div><div class="divider"></div><form id="ops-document-form" class="form-grid" onsubmit="saveDocumentVerification(event)"><div class="form-group"><label class="form-label">Tipo de entidad</label><select class="form-select" id="ops-doc-entity-type"><option value="worker">Trabajador</option><option value="company">Empresa</option><option value="vehicle">Vehículo/equipo</option><option value="subcontractor">Subcontratista</option></select></div><div class="form-group"><label class="form-label">Identificador o RUT</label><input class="form-input" id="ops-doc-entity" required></div><div class="form-group"><label class="form-label">Tipo documento</label><input class="form-input" id="ops-doc-type" required></div><div class="form-group"><label class="form-label">Número documento</label><input class="form-input" id="ops-doc-number"></div><div class="form-group"><label class="form-label">Emisor</label><input class="form-input" id="ops-doc-issuer"></div><div class="form-group"><label class="form-label">Vencimiento</label><input class="form-input" id="ops-doc-expires" type="date"></div><div class="form-group full"><label class="form-label">Controles preliminares</label><div style="display:flex;gap:18px;flex-wrap:wrap;"><label><input type="checkbox" id="ops-check-ocr"> OCR legible</label><label><input type="checkbox" id="ops-check-signature"> Firma detectada</label><label><input type="checkbox" id="ops-check-qr"> QR válido</label><label><input type="checkbox" id="ops-check-photo"> Fotografía coincide</label><label><input type="checkbox" id="ops-check-integrity"> Archivo íntegro</label><label><input type="checkbox" id="ops-check-issuer"> Emisor validado</label></div></div><div class="form-group full"><label class="form-label">Observaciones</label><textarea class="form-textarea" id="ops-doc-notes"></textarea></div><div class="form-group"><button class="btn btn-primary" type="submit">Enviar a revisión</button></div></form></div>
+    <div class="card" style="margin-top:16px;"><div class="card-title">Acreditación documental inteligente</div><div class="card-subtitle">Registra emisor, vigencia y controles OCR, firma, QR, fotografía e integridad. La aprobación final siempre queda asignada a una persona.</div><div class="divider"></div><form id="ops-document-form" class="form-grid" onsubmit="saveDocumentVerification(event)"><div class="form-group"><label class="form-label">Tipo de entidad</label><select class="form-select" id="ops-doc-entity-type"><option value="worker">Trabajador</option><option value="company">Empresa</option><option value="vehicle">Vehículo/equipo</option><option value="subcontractor">Subcontratista</option></select></div><div class="form-group"><label class="form-label">Identificador o RUT</label><input class="form-input" id="ops-doc-entity" required></div><div class="form-group"><label class="form-label">Tipo documento</label><input class="form-input" id="ops-doc-type" required></div><div class="form-group"><label class="form-label">Número documento</label><input class="form-input" id="ops-doc-number"></div><div class="form-group"><label class="form-label">Emisor</label><input class="form-input" id="ops-doc-issuer"></div><div class="form-group"><label class="form-label">Vencimiento</label><input class="form-input" id="ops-doc-expires" type="date"></div><div class="form-group"><label class="form-label">Archivo a validar</label><input class="form-input" id="ops-doc-file" type="file" accept=".pdf,.jpg,.jpeg,.png" required></div><div class="form-group full"><label class="form-label">Controles preliminares</label><div style="display:flex;gap:18px;flex-wrap:wrap;"><label><input type="checkbox" id="ops-check-ocr"> OCR legible</label><label><input type="checkbox" id="ops-check-signature"> Firma detectada</label><label><input type="checkbox" id="ops-check-qr"> QR válido</label><label><input type="checkbox" id="ops-check-photo"> Fotografía coincide</label><label><input type="checkbox" id="ops-check-integrity"> Archivo íntegro</label><label><input type="checkbox" id="ops-check-issuer"> Emisor validado</label></div></div><div class="form-group full"><label class="form-label">Observaciones</label><textarea class="form-textarea" id="ops-doc-notes"></textarea></div><div class="form-group"><button class="btn btn-primary" type="submit">Cargar, analizar y revisar</button></div></form></div>
     <div class="grid-2" style="margin-top:16px;"><div class="card"><div class="card-title">Política de conservación</div><div class="divider"></div><form id="ops-retention-form" class="form-grid" onsubmit="saveRetentionPolicy(event)"><div class="form-group"><label class="form-label">Categoría</label><select class="form-select" id="ops-ret-cat"><option value="audit">Auditoría</option><option value="files">Archivos</option><option value="workers">Trabajadores</option><option value="notifications">Comunicaciones</option></select></div><div class="form-group"><label class="form-label">Conservar días</label><input class="form-input" id="ops-ret-days" type="number" min="1" max="36500" value="1825" required></div><div class="form-group"><label class="form-label">Acción</label><select class="form-select" id="ops-ret-action"><option value="review">Revisión manual</option><option value="anonymize">Anonimizar</option><option value="delete">Eliminar</option></select></div><div class="form-group"><label class="form-label"><input id="ops-ret-hold" type="checkbox"> Bloqueo legal</label></div><div class="form-group"><button class="btn btn-primary" type="submit">Guardar política</button></div><div class="form-group"><button class="btn btn-secondary" type="button" onclick="evaluateRetentionCloud()">Evaluar sin eliminar</button></div></form><div id="ops-retention-result"></div></div><div class="card"><div class="card-title">Estado operativo y eventos</div><div class="divider"></div><div class="table-wrap"><table id="ops-events-table"></table></div></div></div>
     <div class="card" style="margin-top:16px;"><div class="card-title">Formularios propios de la empresa</div><div class="card-subtitle">Los campos creados aquí pertenecen exclusivamente a esta empresa.</div><div class="divider"></div><form id="ops-form-builder" class="form-grid" onsubmit="saveTenantFormDefinition(event)"><div class="form-group"><label class="form-label">Nombre del formulario</label><input class="form-input" id="ops-form-name" required></div><div class="form-group"><label class="form-label">Módulo</label><select class="form-select" id="ops-form-module"><option value="trabajadores">Trabajadores</option><option value="servicios">Servicios</option><option value="subcontratos">Subcontratos</option><option value="vehiculos">Vehículos</option><option value="acreditacion">Acreditación</option></select></div><div class="form-group full"><label class="form-label">Campos, uno por línea: clave | etiqueta | tipo | obligatorio | opciones</label><textarea class="form-textarea" id="ops-form-fields" required placeholder="centro_costo | Centro de costo | text | si&#10;zona | Zona de trabajo | select | si | Norte;Sur;Planta"></textarea></div><div class="form-group"><button class="btn btn-primary" type="submit">Guardar formulario</button></div></form></div>
     <div class="card" style="margin-top:16px;"><div class="card-title">Cola documental y comunicaciones</div><div class="divider"></div><div class="table-wrap"><table id="ops-summary-table"></table></div></div>
@@ -1949,7 +1968,11 @@ function nav(page) {
   document.getElementById('topbar-sub').textContent = pageSubs[page]||'';
   currentPage = page;
   renderPage(page);
+  closeMobileMenu();
 }
+
+function toggleMobileMenu(button){const sidebar=document.getElementById('sidebar'),open=!sidebar.classList.contains('mobile-open');sidebar.classList.toggle('mobile-open',open);button?.setAttribute('aria-expanded',String(open));if(open)sidebar.querySelector('.nav-item')?.focus();}
+function closeMobileMenu(){const sidebar=document.getElementById('sidebar');sidebar?.classList.remove('mobile-open');document.querySelector('.mobile-menu-button')?.setAttribute('aria-expanded','false');}
 
 function renderPage(page) {
   if(page==='dashboard') renderDashboard();
@@ -4450,7 +4473,28 @@ function initSelects() {
 }
 
 // ===================== INIT =====================
+function enhanceAccessibility() {
+  document.querySelectorAll('.form-label').forEach((label,index)=>{
+    if(label.htmlFor||label.querySelector('input,select,textarea'))return;
+    const control=label.parentElement?.querySelector('input,select,textarea');
+    if(!control)return;
+    if(!control.id)control.id=`field-${index}`;
+    label.htmlFor=control.id;
+  });
+  document.querySelectorAll('input,select,textarea').forEach((control,index)=>{
+    if(control.type==='hidden'||control.getAttribute('aria-label')||control.labels?.length)return;
+    control.setAttribute('aria-label',control.placeholder||control.name||`Campo ${index+1}`);
+  });
+  document.querySelectorAll('.modal-overlay').forEach((overlay,index)=>{
+    const modal=overlay.querySelector('.modal')||overlay;
+    modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');
+    const heading=modal.querySelector('.modal-title,.card-title,h1,h2,h3');
+    if(heading){if(!heading.id)heading.id=`modal-title-${index}`;modal.setAttribute('aria-labelledby',heading.id);}
+  });
+  document.querySelectorAll('.nav-item').forEach(item=>{item.tabIndex=0;item.setAttribute('role','button');item.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();item.click();}});});
+}
 function init() {
+  enhanceAccessibility();
   if(window.AccesoMinaCloud?.enabled) return window.AccesoMinaCloud.init();
   seed();
   S.empresa = domianEmpresa();
@@ -4473,6 +4517,7 @@ function init() {
 
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
+document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
 
 window.AccesoMinaCloud?.install();
 window.addEventListener('load', init);
