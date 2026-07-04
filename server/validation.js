@@ -68,6 +68,11 @@ export function validateTenantState(input) {
   assertUnique((state.hoteles || []).map(h => `${normalizedText(h.nombre)}|${normalizedText(h.ciudad)}`), 'Duplicate hotel', 'DUPLICATE_HOTEL');
   assertUnique((state.subcontratos || []).map(s => normalizeRut(s.rut)), 'Duplicate subcontractor RUT', 'DUPLICATE_SUBCONTRACTOR_RUT');
   assertUnique((state.vehiculos || []).flatMap(v => [v.patente ? `p:${normalizedText(v.patente).replace(/[^a-z0-9]/g, '')}` : '', v.serie ? `s:${normalizedText(v.serie)}` : '']), 'Duplicate vehicle plate or serial', 'DUPLICATE_VEHICLE');
+  assertUnique((state.protocolosSalud || []).map(x => `${x.trabId}|${x.minaId}|${normalizedText(x.tipo)}|${x.vence || ''}`), 'Duplicate health protocol', 'DUPLICATE_HEALTH_PROTOCOL');
+  assertUnique((state.incidentes || []).map(x => `${x.mantId}|${x.fecha || ''}|${normalizedText(x.tipo)}|${normalizedText(x.descripcion)}`), 'Duplicate incident', 'DUPLICATE_INCIDENT');
+  assertUnique((state.permisosTrabajo || []).map(x => `${x.mantId}|${normalizedText(x.nombre)}`), 'Duplicate work permit', 'DUPLICATE_WORK_PERMIT');
+  assertUnique((state.waGroups || []).map(x => `${x.minaId || ''}|${x.mantId || ''}|${normalizedText(x.nombre)}`), 'Duplicate WhatsApp group', 'DUPLICATE_WHATSAPP_GROUP');
+  assertUnique((state.firmas || []).filter(x => !['firmado','rechazado','vencido'].includes(normalizedText(x.estado))).map(x => `${x.trabId}|${x.mantId}|${normalizedText(x.tipo)}`), 'Duplicate active signature request', 'DUPLICATE_SIGNATURE_REQUEST');
   const allCollections = [
     workers, projects, mines, contracts, state.hoteles, state.asignaciones, state.hotelAsig,
     state.turnos, state.credenciales, state.incidentes, state.protocolosSalud,
@@ -111,10 +116,12 @@ export function validateTenantState(input) {
     if (row.checkin && row.checkout && row.checkin > row.checkout) throw Object.assign(new Error('Hotel assignment has invalid dates'), { status: 409, code: 'INVALID_DATES' });
   }
   assertUnique((state.hotelAsig || []).map(x => `${x.trabId}|${x.mantId}|${x.hotelId}|${x.checkin || ''}`), 'Duplicate hotel assignment', 'DUPLICATE_HOTEL_ASSIGNMENT');
+  const lodgings=Array.isArray(state.hotelAsig)?state.hotelAsig:[];
+  for(let i=0;i<lodgings.length;i++)for(let j=i+1;j<lodgings.length;j++){const a=lodgings[i],b=lodgings[j],aStart=a.checkin||'0001-01-01',aEnd=a.checkout||'9999-12-31',bStart=b.checkin||'0001-01-01',bEnd=b.checkout||'9999-12-31';if(String(a.trabId)===String(b.trabId)&&aStart<=bEnd&&bStart<=aEnd)throw Object.assign(new Error('Worker has overlapping hotel assignments'),{status:409,code:'OVERLAPPING_HOTEL_ASSIGNMENT'});}
   for (const row of Array.isArray(state.turnos) ? state.turnos : []) {
     if (!workerIds.has(String(row.trabId)) || !projectIds.has(String(row.mantId))) throw Object.assign(new Error('Shift references an unknown worker or project'), { status: 409, code: 'INVALID_REFERENCE' });
   }
-  assertUnique((state.turnos || []).map(x => `${x.trabId}|${x.mantId}|${x.fecha}|${x.turno}`), 'Duplicate shift', 'DUPLICATE_SHIFT');
+  assertUnique((state.turnos || []).map(x => `${x.trabId}|${x.fecha}|${x.turno}`), 'Duplicate shift', 'DUPLICATE_SHIFT');
   for (const row of Array.isArray(state.credenciales) ? state.credenciales : []) {
     if (!workerIds.has(String(row.trabId)) || !mineIds.has(String(row.minaId))) throw Object.assign(new Error('Credential references an unknown worker or mine'), { status: 409, code: 'INVALID_REFERENCE' });
   }
@@ -148,5 +155,6 @@ export function validateTenantState(input) {
   for (const workerId of Object.keys(state.eppMeasurements || {})) {
     if (!workerIds.has(String(workerId))) throw Object.assign(new Error('EPP measurements reference an unknown worker'), { status: 409, code: 'INVALID_REFERENCE' });
   }
+  for(const worker of workers){const items=Array.isArray(worker.workerItems)?worker.workerItems:[];assertUnique(items.map(x=>String(x.id||'')),`Duplicate worker document id for ${worker.id}`,'DUPLICATE_WORKER_DOCUMENT_ID');assertUnique(items.map(x=>`${normalizedText(x.type)}|${normalizedText(x.name)}|${x.vence||''}`),`Duplicate worker document for ${worker.id}`,'DUPLICATE_WORKER_DOCUMENT');}
   return state;
 }
