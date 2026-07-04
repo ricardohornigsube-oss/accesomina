@@ -1,0 +1,50 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { enforceStateScope, sanitizeJson, validateTenantState } from '../validation.js';
+
+const scenario=()=>({
+  empresa:{nombre:'Servicios Industriales Atacama SpA',rut:'76.000.000-0'},
+  minas:[{id:'m1',nombre:'Distrito Norte',mandante:'Mandante Cobre'},{id:'m2',nombre:'Planta Cordillera',mandante:'Mandante Hierro'}],
+  contratos:[{id:'c1',numero:'MC-2026-001',nombre:'Mantenimiento Planta',minaId:'m1',inicio:'2026-01-01',termino:'2027-12-31'},{id:'c2',numero:'MH-2026-009',nombre:'Apoyo Operacional',minaId:'m2',inicio:'2026-03-01',termino:'2027-03-01'}],
+  mantenciones:[{id:'p1',nombre:'Cambio revestimientos',tipo:'mantencion',minaId:'m1',contratoId:'c1',inicio:'2026-08-01',termino:'2026-08-12'},{id:'p2',nombre:'Operación chancado',tipo:'operacion',minaId:'m1',contratoId:'c1',inicio:'2026-07-01',termino:'2027-06-30'},{id:'p3',nombre:'Montaje correa CV-07',tipo:'proyecto',minaId:'m2',contratoId:'c2',inicio:'2026-09-01',termino:'2026-11-30'}],
+  trabajadores:[
+    {id:'w1',nombre:'Ana Pérez Soto',rut:'14.567.890-0',tipo:'permanente',cargo:'Jefa de Operaciones',mineras:['m1','m2'],workerItems:[]},
+    {id:'w2',nombre:'Luis Rojas Díaz',rut:'12.345.678-5',tipo:'esporadico',cargo:'Mecánico',mineras:['m1'],workerItems:[]},
+    {id:'w3',nombre:'María Silva León',rut:'11.111.111-1',tipo:'esporadico',cargo:'Prevencionista',mineras:['m1'],workerItems:[]},
+    {id:'w4',nombre:'Pedro Torres Vera',rut:'13.579.246-2',tipo:'permanente',cargo:'Supervisor',mineras:['m2'],workerItems:[]}
+  ],
+  asignaciones:[],hoteles:[],hotelAsig:[],turnos:[],credenciales:[],protocolosSalud:[],incidentes:[],vehiculos:[],subcontratos:[],firmas:[],callouts:[],waGroups:[],permisosTrabajo:[],eppDeliveries:[],eppMeasurements:{}
+});
+const copy=value=>structuredClone(value);
+const rejects=(state,code)=>assert.throws(()=>validateTenantState(state),error=>error.code===code);
+
+test('AC-01 crea dos mineras con mandantes independientes',()=>{const s=validateTenantState(scenario());assert.equal(s.minas.length,2);assert.notEqual(s.minas[0].mandante,s.minas[1].mandante);});
+test('AC-02 relaciona cada contrato con su minera',()=>{const s=validateTenantState(scenario());assert.equal(s.contratos.find(x=>x.id==='c1').minaId,'m1');assert.equal(s.contratos.find(x=>x.id==='c2').minaId,'m2');});
+test('AC-03 relaciona proyecto, operación y mantención con contratos',()=>{const s=validateTenantState(scenario());assert.deepEqual(new Set(s.mantenciones.map(x=>x.tipo)),new Set(['mantencion','operacion','proyecto']));});
+test('AC-04 rechaza contrato con fechas invertidas',()=>{const s=scenario();s.contratos[0].inicio='2027-01-01';s.contratos[0].termino='2026-01-01';rejects(s,'INVALID_DATES');});
+test('AC-05 rechaza contrato asociado a minera inexistente',()=>{const s=scenario();s.contratos[0].minaId='missing';rejects(s,'INVALID_REFERENCE');});
+test('AC-06 rechaza números de contrato duplicados',()=>{const s=scenario();s.contratos[1].numero=' mc-2026-001 ';rejects(s,'DUPLICATE_CONTRACT_NUMBER');});
+test('AC-07 rechaza mineras duplicadas para el mismo mandante',()=>{const s=scenario();s.minas.push({...copy(s.minas[0]),id:'m3'});rejects(s,'DUPLICATE_MINE');});
+test('AC-08 rechaza proyecto conectado a contrato de otra minera',()=>{const s=scenario();s.mantenciones[0].contratoId='c2';rejects(s,'INVALID_REFERENCE');});
+test('AC-09 separa personal permanente y spot',()=>{const s=validateTenantState(scenario());assert.equal(s.trabajadores.filter(x=>x.tipo==='permanente').length,2);assert.equal(s.trabajadores.filter(x=>x.tipo==='esporadico').length,2);});
+test('AC-10 rechaza trabajador con RUT inválido',()=>{const s=scenario();s.trabajadores[0].rut='14.567.890-1';rejects(s,'INVALID_WORKER_RUT');});
+test('AC-11 rechaza trabajador sin nombre',()=>{const s=scenario();s.trabajadores[0].nombre='';rejects(s,'INCOMPLETE_WORKER');});
+test('AC-12 rechaza trabajador repetido aunque cambie formato del RUT',()=>{const s=scenario();s.trabajadores.push({...copy(s.trabajadores[0]),id:'w5',nombre:'Nombre duplicado',rut:'145678900'});rejects(s,'DUPLICATE_WORKER_RUT');});
+test('AC-13 asigna personal planta y spot al mismo servicio',()=>{const s=scenario();s.asignaciones=[{id:'a1',trabId:'w1',mantId:'p1'},{id:'a2',trabId:'w2',mantId:'p1'}];assert.equal(validateTenantState(s).asignaciones.length,2);});
+test('AC-14 rechaza asignación duplicada de trabajador y servicio',()=>{const s=scenario();s.asignaciones=[{id:'a1',trabId:'w2',mantId:'p1'},{id:'a2',trabId:'w2',mantId:'p1'}];rejects(s,'DUPLICATE_ASSIGNMENT');});
+test('AC-15 rechaza asignación con trabajador inexistente',()=>{const s=scenario();s.asignaciones=[{id:'a1',trabId:'missing',mantId:'p1'}];rejects(s,'INVALID_REFERENCE');});
+test('AC-16 registra cursos y exámenes vigentes en la ficha',()=>{const s=scenario();s.trabajadores[1].workerItems=[{id:'d1',type:'curso',name:'Trabajo en altura',emision:'2026-01-01',vence:'2027-01-01'},{id:'d2',type:'examen',name:'Altura física',emision:'2026-02-01',vence:'2027-02-01'}];assert.equal(validateTenantState(s).trabajadores[1].workerItems.length,2);});
+test('AC-17 rechaza curso o examen documental duplicado',()=>{const s=scenario(),item={type:'curso',name:'Trabajo en altura',vence:'2027-01-01'};s.trabajadores[1].workerItems=[{...item,id:'d1'},{...item,id:'d2'}];rejects(s,'DUPLICATE_WORKER_DOCUMENT');});
+test('AC-18 rechaza documento con emisión posterior al vencimiento',()=>{const s=scenario();s.trabajadores[1].workerItems=[{id:'d1',type:'examen',name:'Preocupacional',emision:'2027-01-01',vence:'2026-01-01'}];rejects(s,'INVALID_DATES');});
+test('AC-19 registra tallas y entrega múltiple de EPP',()=>{const s=scenario();s.eppMeasurements.w2={helmet:'M',shirt:'L',pants:'44',shoe:'42'};s.eppDeliveries=[{id:'e1',workerId:'w2',mantId:'p1',itemId:'casco',itemName:'Casco',qty:1,size:'M',condition:'nuevo',deliveryStatus:'entregado',deliveredAt:'2026-08-01',lotSerial:'C-01'},{id:'e2',workerId:'w2',mantId:'p1',itemId:'zapato',itemName:'Calzado',qty:1,size:'42',condition:'nuevo',deliveryStatus:'entregado',deliveredAt:'2026-08-01',lotSerial:'Z-01'}];assert.equal(validateTenantState(s).eppDeliveries.length,2);});
+test('AC-20 rechaza entrega EPP duplicada',()=>{const s=scenario(),item={workerId:'w2',mantId:'p1',itemId:'casco',itemName:'Casco',qty:1,deliveredAt:'2026-08-01',lotSerial:'C-01'};s.eppDeliveries=[{...item,id:'e1'},{...item,id:'e2'}];rejects(s,'DUPLICATE_EPP_DELIVERY');});
+test('AC-21 rechaza EPP asociado a trabajador inexistente',()=>{const s=scenario();s.eppDeliveries=[{id:'e1',workerId:'missing',mantId:'p1',itemId:'casco',itemName:'Casco',qty:1,deliveredAt:'2026-08-01'}];rejects(s,'INVALID_REFERENCE');});
+test('AC-22 asigna hotel y habitación al personal spot',()=>{const s=scenario();s.hoteles=[{id:'h1',nombre:'Hotel Calama',ciudad:'Calama',minaIds:['m1']}];s.hotelAsig=[{id:'ha1',trabId:'w2',mantId:'p1',hotelId:'h1',pieza:'204',checkin:'2026-08-01',checkout:'2026-08-12'}];assert.equal(validateTenantState(s).hotelAsig[0].pieza,'204');});
+test('AC-23 rechaza alojamientos superpuestos',()=>{const s=scenario();s.hoteles=[{id:'h1',nombre:'Hotel A',ciudad:'Calama'},{id:'h2',nombre:'Hotel B',ciudad:'Calama'}];s.hotelAsig=[{id:'ha1',trabId:'w2',mantId:'p1',hotelId:'h1',checkin:'2026-08-01',checkout:'2026-08-10'},{id:'ha2',trabId:'w2',mantId:'p1',hotelId:'h2',checkin:'2026-08-05',checkout:'2026-08-12'}];rejects(s,'OVERLAPPING_HOTEL_ASSIGNMENT');});
+test('AC-24 registra turno y asistencia para un servicio',()=>{const s=scenario();s.turnos=[{id:'t1',trabId:'w2',mantId:'p1',fecha:'2026-08-02',turno:'dia',ingreso:'08:00',salida:'20:00',hh:12,asistencia:'presente'}];assert.equal(validateTenantState(s).turnos[0].hh,12);});
+test('AC-25 rechaza turno duplicado del trabajador',()=>{const s=scenario(),shift={trabId:'w2',mantId:'p1',fecha:'2026-08-02',turno:'dia'};s.turnos=[{...shift,id:'t1'},{...shift,id:'t2'}];rejects(s,'DUPLICATE_SHIFT');});
+test('AC-26 rechaza credencial repetida dentro de la minera',()=>{const s=scenario();s.credenciales=[{id:'cr1',trabId:'w2',minaId:'m1',numero:'P-100'},{id:'cr2',trabId:'w3',minaId:'m1',numero:'p-100'}];rejects(s,'DUPLICATE_CREDENTIAL');});
+test('AC-27 rechaza patente o serie de vehículo duplicada',()=>{const s=scenario();s.vehiculos=[{id:'v1',patente:'AB-CD-12',minaIds:['m1']},{id:'v2',patente:'ABCD12',minaIds:['m1']}];rejects(s,'DUPLICATE_VEHICLE');});
+test('AC-28 controla protocolos de salud sin duplicados',()=>{const s=scenario(),protocol={trabId:'w2',minaId:'m1',tipo:'hipobaria',vence:'2027-01-01'};s.protocolosSalud=[{...protocol,id:'ps1'},{...protocol,id:'ps2'}];rejects(s,'DUPLICATE_HEALTH_PROTOCOL');});
+test('AC-29 conecta permisos, incidentes, firma y grupo WhatsApp al servicio',()=>{const s=scenario();s.permisosTrabajo=[{id:'pt1',mantId:'p1',nombre:'Trabajo en altura'}];s.incidentes=[{id:'i1',mantId:'p1',fecha:'2026-08-03',tipo:'observacion',descripcion:'Barrera incompleta'}];s.firmas=[{id:'f1',trabId:'w2',mantId:'p1',tipo:'anexo',estado:'enviado'}];s.waGroups=[{id:'g1',minaId:'m1',mantId:'p1',nombre:'Turno revestimientos',trabIds:['w1','w2','w3']}];assert.doesNotThrow(()=>validateTenantState(s));});
+test('AC-30 aplica permisos de usuarios y sanitiza contenido',()=>{assert.doesNotThrow(()=>enforceStateScope('rrhh',{trabajadores:[]},{trabajadores:[{id:'w1'}]}));assert.throws(()=>enforceStateScope('rrhh',{contratos:[]},{contratos:[{id:'c1'}]}),error=>error.code==='FIELD_PERMISSION_DENIED');assert.equal(sanitizeJson({name:'scriptalert(1)/script'}).name.includes('<'),false);});

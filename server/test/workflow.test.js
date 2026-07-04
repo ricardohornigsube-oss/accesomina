@@ -8,7 +8,7 @@ function completeWorkflow(){return{
   minas:[{id:'m1',nombre:'Mina Norte',mandante:'Mandante Uno'}],
   contratos:[{id:'c1',numero:'CTR-001',nombre:'Contrato Marco',minaId:'m1',inicio:'2026-01-01',termino:'2027-01-01'}],
   mantenciones:[{id:'p1',nombre:'Operación Planta',tipo:'operacion',minaId:'m1',contratoId:'c1',inicio:'2026-07-01',termino:'2026-12-31'}],
-  trabajadores:[{id:'w1',nombre:'Personal Planta',rut:'14.567.890-1',tipo:'permanente',mineras:['m1']},{id:'w2',nombre:'Personal Spot',rut:'12.345.678-5',tipo:'esporadico',mineras:['m1']}],
+  trabajadores:[{id:'w1',nombre:'Personal Planta',rut:'14.567.890-0',tipo:'permanente',mineras:['m1']},{id:'w2',nombre:'Personal Spot',rut:'12.345.678-5',tipo:'esporadico',mineras:['m1']}],
   asignaciones:[{id:'a1',trabId:'w1',mantId:'p1'},{id:'a2',trabId:'w2',mantId:'p1'}],
   hoteles:[{id:'h1',nombre:'Hotel Norte',ciudad:'Calama',minaIds:['m1']}],
   hotelAsig:[{id:'ha1',trabId:'w2',mantId:'p1',hotelId:'h1',pieza:'204',checkin:'2026-07-01',checkout:'2026-07-10'}],
@@ -19,7 +19,7 @@ function completeWorkflow(){return{
   protocolosSalud:[{id:'ps1',trabId:'w2',minaId:'m1'}],
   incidentes:[{id:'i1',mantId:'p1'}],
   vehiculos:[{id:'v1',patente:'AB-CD-12',operadorId:'w1',minaIds:['m1']}],
-  subcontratos:[{id:'s1',rut:'76.111.111-1',contratoId:'c1'}],
+  subcontratos:[{id:'s1',rut:'76.111.111-6',contratoId:'c1'}],
   firmas:[{id:'f1',trabId:'w2',mantId:'p1'}],callouts:[{id:'co1',mantId:'p1'}],waGroups:[{id:'g1',mantId:'p1',minaId:'m1',trabIds:['w1','w2']}],permisosTrabajo:[{id:'pt1',mantId:'p1'}]
 };}
 

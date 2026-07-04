@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { normalizeRut } from './security.js';
+import { isValidRut, normalizeRut } from './security.js';
 
 export const loginSchema = z.object({ rut: z.string().min(8).max(20), email: z.string().email().max(254), password: z.string().min(1).max(128) });
 export const registerSchema = z.object({
@@ -61,6 +61,8 @@ export function validateTenantState(input) {
   const projects = Array.isArray(state.mantenciones) ? state.mantenciones : [];
   const mines = Array.isArray(state.minas) ? state.minas : [];
   const contracts = Array.isArray(state.contratos) ? state.contratos : [];
+  for(const worker of workers){if(!worker.id||!String(worker.nombre||'').trim()||!worker.rut)throw Object.assign(new Error('Worker requires id, name and RUT'),{status:409,code:'INCOMPLETE_WORKER'});if(!isValidRut(worker.rut))throw Object.assign(new Error(`Worker ${worker.id} has invalid RUT`),{status:409,code:'INVALID_WORKER_RUT'});}
+  for(const subcontractor of Array.isArray(state.subcontratos)?state.subcontratos:[])if(subcontractor.rut&&!isValidRut(subcontractor.rut))throw Object.assign(new Error(`Subcontractor ${subcontractor.id} has invalid RUT`),{status:409,code:'INVALID_SUBCONTRACTOR_RUT'});
   assertUnique(workers.map(w => normalizeRut(w.rut)), 'Duplicate worker RUT', 'DUPLICATE_WORKER_RUT');
   assertUnique(contracts.map(c => normalizedText(c.numero)), 'Duplicate contract number', 'DUPLICATE_CONTRACT_NUMBER');
   assertUnique(mines.map(m => `${normalizedText(m.nombre)}|${normalizedText(m.mandante)}`), 'Duplicate mine', 'DUPLICATE_MINE');
@@ -157,6 +159,6 @@ export function validateTenantState(input) {
   for (const workerId of Object.keys(state.eppMeasurements || {})) {
     if (!workerIds.has(String(workerId))) throw Object.assign(new Error('EPP measurements reference an unknown worker'), { status: 409, code: 'INVALID_REFERENCE' });
   }
-  for(const worker of workers){const items=Array.isArray(worker.workerItems)?worker.workerItems:[];assertUnique(items.map(x=>String(x.id||'')),`Duplicate worker document id for ${worker.id}`,'DUPLICATE_WORKER_DOCUMENT_ID');assertUnique(items.map(x=>`${normalizedText(x.type)}|${normalizedText(x.name)}|${x.vence||''}`),`Duplicate worker document for ${worker.id}`,'DUPLICATE_WORKER_DOCUMENT');}
+  for(const worker of workers){const items=Array.isArray(worker.workerItems)?worker.workerItems:[];assertUnique(items.map(x=>String(x.id||'')),`Duplicate worker document id for ${worker.id}`,'DUPLICATE_WORKER_DOCUMENT_ID');assertUnique(items.map(x=>`${normalizedText(x.type)}|${normalizedText(x.name)}|${x.vence||''}`),`Duplicate worker document for ${worker.id}`,'DUPLICATE_WORKER_DOCUMENT');for(const item of items)if(item.emision&&item.vence&&item.emision>item.vence)throw Object.assign(new Error(`Worker document ${item.id} has invalid dates`),{status:409,code:'INVALID_DATES'});}
   return state;
 }

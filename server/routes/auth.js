@@ -3,7 +3,7 @@ import rateLimit from 'express-rate-limit';
 import { query, withTenant } from '../db.js';
 import { config } from '../config.js';
 import { loginSchema, registerSchema } from '../validation.js';
-import { clientIp, hashPassword, normalizeEmail, normalizeRut, randomToken, sha256, timingSafeEqualString, validatePassword, verifyPassword } from '../security.js';
+import { clientIp, hashPassword, isValidRut, normalizeEmail, normalizeRut, randomToken, sha256, timingSafeEqualString, validatePassword, verifyPassword } from '../security.js';
 import { appendAudit } from '../audit.js';
 import { authenticate, clearSessionCookie, requireCsrf, setSessionCookie } from '../middleware.js';
 
@@ -12,6 +12,7 @@ const limiter = rateLimit({ windowMs: 15 * 60_000, limit: 20, standardHeaders: t
 
 authRouter.post('/register', limiter, async (req, res) => {
   const body = registerSchema.parse(req.body);
+  if(!isValidRut(body.rut))return res.status(400).json({error:'INVALID_COMPANY_RUT',message:'El RUT de la empresa no es válido.'});
   if (!config.registrationInviteCode || !timingSafeEqualString(body.inviteCode, config.registrationInviteCode)) return res.status(403).json({ error: 'INVITE_CODE_INVALID' });
   if (!validatePassword(body.password)) return res.status(400).json({ error: 'WEAK_PASSWORD', message: 'Use at least 12 characters with uppercase, lowercase and a number.' });
   const rutKey = normalizeRut(body.rut), email = normalizeEmail(body.email), credentials = await hashPassword(body.password);
