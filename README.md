@@ -1,5 +1,7 @@
 # AccesoMina Cloud
 
+Version actual: 7.6.0. Incluye Centro Operativo multiempresa para monitoreo, flujo documental, notificaciones programadas, acceso mandante, formularios configurables y conservacion de datos. Ver `docs/OPERATIONS_HUB.md` para requisitos productivos y limites de validacion inteligente.
+
 Plataforma multiempresa para controlar trabajadores, contratos, proyectos, mantenciones, acreditación, documentos, hotelería, vehículos y comunicaciones de empresas contratistas mineras.
 
 ## Arquitectura V7

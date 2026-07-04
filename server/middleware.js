@@ -51,5 +51,6 @@ export function errorHandler(error, req, res, next) {
   if (res.headersSent) return next(error);
   console.error(error);
   const status = Number(error.status || (error.name === 'ZodError' ? 400 : error.code === '23505' ? 409 : 500));
+  if(status>=500&&req.auth?.tenantId)withTenant(req.auth.tenantId,client=>client.query(`INSERT INTO operational_events(tenant_id,source,severity,event_type,message,context) VALUES($1,'api','error',$2,$3,$4::jsonb)`,[req.auth.tenantId,'request.failed',String(error.message||'Unexpected server error').slice(0,1000),JSON.stringify({method:req.method,path:req.path,code:error.code||null,userId:req.auth.userId})])).catch(()=>{});
   res.status(status).json({ error: error.code || 'SERVER_ERROR', message: status < 500 ? error.message : 'Unexpected server error' });
 }

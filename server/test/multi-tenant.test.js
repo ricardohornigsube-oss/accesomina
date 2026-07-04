@@ -57,12 +57,14 @@ test('N companies keep users, operational data and branding fully isolated', asy
        VALUES($1,$2,$3,'ejecucion_contractual',365,$4)`,
       [tenant.id, `Tratamiento ${index}`, `Finalidad ${index}`, user.id]
     );
+    await db.query(`INSERT INTO operational_events(tenant_id,source,severity,event_type,message) VALUES($1,'test','info','tenant.check',$2)`,[tenant.id,`Evento ${index}`]);
+    await db.query(`INSERT INTO tenant_form_definitions(tenant_id,name,module_key,fields,created_by) VALUES($1,$2,'trabajadores',$3::jsonb,$4)`,[tenant.id,`Formulario ${index}`,JSON.stringify([{key:'zona',label:`Zona ${index}`,type:'text'}]),user.id]);
     await db.exec('COMMIT');
   }
 
   await db.exec('CREATE ROLE tenant_runtime_test NOLOGIN');
   await db.exec('GRANT USAGE ON SCHEMA public TO tenant_runtime_test');
-  await db.exec('GRANT SELECT ON app_users,tenant_module_state,tenant_settings,tenant_integrations,workers,privacy_processing_activities TO tenant_runtime_test');
+  await db.exec('GRANT SELECT ON app_users,tenant_module_state,tenant_settings,tenant_integrations,workers,privacy_processing_activities,operational_events,tenant_form_definitions TO tenant_runtime_test');
 
   for (let index = 0; index < companies.length; index += 1) {
     await db.exec('BEGIN');
@@ -74,8 +76,10 @@ test('N companies keep users, operational data and branding fully isolated', asy
     const integrations = await db.query("SELECT tenant_id,public_config FROM tenant_integrations WHERE provider='whatsapp'");
     const workers = await db.query('SELECT tenant_id,rut FROM workers');
     const privacy = await db.query('SELECT tenant_id,name FROM privacy_processing_activities');
+    const operations = await db.query('SELECT tenant_id,message FROM operational_events');
+    const forms = await db.query('SELECT tenant_id,name,fields FROM tenant_form_definitions');
 
-    for (const rows of [users.rows, state.rows, settings.rows, integrations.rows, workers.rows, privacy.rows]) {
+    for (const rows of [users.rows, state.rows, settings.rows, integrations.rows, workers.rows, privacy.rows, operations.rows, forms.rows]) {
       assert.equal(rows.length, 1);
       assert.equal(rows[0].tenant_id, companies[index]);
     }
@@ -84,6 +88,8 @@ test('N companies keep users, operational data and branding fully isolated', asy
     assert.equal(integrations.rows[0].public_config.phoneNumberId, `phone-${index + 1}`);
     assert.equal(state.rows[0].data[0].id, `worker-${index + 1}`);
     assert.equal(privacy.rows[0].name, `Tratamiento ${index + 1}`);
+    assert.equal(operations.rows[0].message, `Evento ${index + 1}`);
+    assert.equal(forms.rows[0].fields[0].label, `Zona ${index + 1}`);
     await db.exec('ROLLBACK');
   }
 
