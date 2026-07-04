@@ -407,7 +407,6 @@ body.private #main { display:block; }
       <span class="private-client-pill" id="user-pill">Administrador</span>
       <button class="btn btn-secondary btn-sm" onclick="exportTenantBackup()">Respaldo</button>
       <button class="btn btn-secondary btn-sm" onclick="showCloudGuide()">Cloud</button>
-      <button class="btn btn-secondary btn-sm" onclick="exportAllCSV()">⬇ Exportar</button>
       <button class="btn btn-secondary btn-sm" onclick="openModal('modal-nuevo-contrato')">+ Contrato</button>
       <button class="btn btn-secondary btn-sm" onclick="openModal('modal-nueva-mina')">+ Minera</button>
       <button class="btn btn-secondary btn-sm" onclick="openProyectoModal()">+ Proyecto</button>
@@ -4514,8 +4513,25 @@ function enhanceAccessibility() {
   });
   document.querySelectorAll('.nav-item').forEach(item=>{item.tabIndex=0;item.setAttribute('role','button');item.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();item.click();}});});
 }
+function translateClientTerminology(value) {
+  return String(value||'').replace(/\b(mineras|minas|minera|mina)\b/gi,match=>{
+    const plural=/as$|s$/i.test(match),replacement=plural?'clientes':'cliente';
+    return match[0]===match[0].toUpperCase()?replacement[0].toUpperCase()+replacement.slice(1):replacement;
+  });
+}
+function applyClientTerminology(root) {
+  if(!root)return;
+  if(root.nodeType===Node.TEXT_NODE){const parent=root.parentElement;if(parent&&!['SCRIPT','STYLE','NOSCRIPT'].includes(parent.tagName)){const translated=translateClientTerminology(root.nodeValue);if(translated!==root.nodeValue)root.nodeValue=translated;}return;}
+  if(root.nodeType!==Node.ELEMENT_NODE&&root!==document.body)return;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let node;
+  while((node=walker.nextNode())){const parent=node.parentElement;if(!parent||['SCRIPT','STYLE','NOSCRIPT'].includes(parent.tagName))continue;const translated=translateClientTerminology(node.nodeValue);if(translated!==node.nodeValue)node.nodeValue=translated;}
+  root.querySelectorAll?.('[placeholder],[aria-label],[title]').forEach(element=>['placeholder','aria-label','title'].forEach(attribute=>{if(!element.hasAttribute(attribute))return;const value=element.getAttribute(attribute),translated=translateClientTerminology(value);if(value!==translated)element.setAttribute(attribute,translated);}));
+}
+let clientTerminologyObserver;
+function installClientTerminology(){applyClientTerminology(document.body);if(clientTerminologyObserver)return;clientTerminologyObserver=new MutationObserver(records=>records.forEach(record=>record.addedNodes.forEach(applyClientTerminology)));clientTerminologyObserver.observe(document.body,{childList:true,subtree:true});}
 function init() {
   enhanceAccessibility();
+  installClientTerminology();
   if(window.AccesoMinaCloud?.enabled) return window.AccesoMinaCloud.init();
   seed();
   S.empresa = domianEmpresa();
