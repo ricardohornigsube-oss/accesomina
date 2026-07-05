@@ -136,6 +136,9 @@ export function validateTenantState(input) {
   for (const row of Array.isArray(state.vehiculos) ? state.vehiculos : []) {
     if (row.operadorId && !workerIds.has(String(row.operadorId))) throw Object.assign(new Error('Vehicle references an unknown operator'), { status: 409, code: 'INVALID_REFERENCE' });
     if ((row.minaIds || []).some(id => !mineIds.has(String(id)))) throw Object.assign(new Error('Vehicle references an unknown mine'), { status: 409, code: 'INVALID_REFERENCE' });
+    if (normalizedText(row.propiedad) === 'arrendada' && !(row.arriendoVence || row.arriendoFin || row.arrendadoHasta)) {
+      throw Object.assign(new Error('Rented vehicle requires a rental expiry date'), { status: 409, code: 'MISSING_RENTAL_EXPIRY' });
+    }
   }
   for (const row of Array.isArray(state.firmas) ? state.firmas : []) if (!workerIds.has(String(row.trabId)) || !projectIds.has(String(row.mantId))) throw Object.assign(new Error('Signature references an unknown worker or project'), { status: 409, code: 'INVALID_REFERENCE' });
   for (const row of Array.isArray(state.callouts) ? state.callouts : []) if (!projectIds.has(String(row.mantId))) throw Object.assign(new Error('Callout references an unknown project'), { status: 409, code: 'INVALID_REFERENCE' });
