@@ -4616,6 +4616,112 @@ function initSelects() {
 }
 
 // ===================== INIT =====================
+// ===================== V8.1: CONTROL OPERACIONAL TRAZABLE =====================
+function ensureV81Collections(){
+  ensureV6Collections();
+  ['hotelAssignmentHistory','eppReplacementRequests'].forEach(k=>{if(!Array.isArray(S[k]))S[k]=[];});
+  S.vehiculos?.forEach(v=>{if(!Array.isArray(v.documents))v.documents=[];});
+  S.subcontratos?.forEach(s=>{if(!Array.isArray(s.documents))s.documents=[];});
+  S.hoteles?.forEach(normalizeHotelRoomsV81);
+}
+function normalizeHotelRoomsV81(h){
+  if(!h)return null;
+  if(!Array.isArray(h.rooms)){
+    h.rooms=[];let n=101;
+    for(let i=0;i<(parseInt(h.simples)||0);i++)h.rooms.push({id:`${h.id}-s${i+1}`,number:String(n++),beds:1,rate:parseInt(h.tarifa)||0,active:true});
+    for(let i=0;i<(parseInt(h.dobles)||0);i++)h.rooms.push({id:`${h.id}-d${i+1}`,number:String(n++),beds:2,rate:parseInt(h.tarifa)||0,active:true});
+  }
+  return h;
+}
+function addFieldV81(parentId,html){const parent=document.querySelector(`#${parentId} .form-grid`);if(parent&&!parent.querySelector('[data-v81]'))parent.insertAdjacentHTML('beforeend',html);}
+function addFiltersV81(pageId,html){const filters=document.querySelector(`#${pageId} .filters`);if(filters&&!filters.querySelector('[data-v81]'))filters.insertAdjacentHTML('beforeend',html);}
+function installV81Ui(){
+  addFiltersV81('page-examenes','<select data-v81 class="filter-select" id="filt-ex-contrato" onchange="renderExamenes()"><option value="">Todos los contratos</option></select><select data-v81 class="filter-select" id="filt-ex-proyecto" onchange="renderExamenes()"><option value="">Todos los proyectos</option></select>');
+  addFiltersV81('page-cursos','<select data-v81 class="filter-select" id="filt-cur-mina" onchange="renderCursos()"><option value="">Todos los clientes</option></select><select data-v81 class="filter-select" id="filt-cur-contrato" onchange="renderCursos()"><option value="">Todos los contratos</option></select><select data-v81 class="filter-select" id="filt-cur-proyecto" onchange="renderCursos()"><option value="">Todos los proyectos</option></select>');
+  addFiltersV81('page-turnos','<select data-v81 class="filter-select" id="filt-turno-mina" onchange="renderTurnos()"><option value="">Todos los clientes</option></select><select data-v81 class="filter-select" id="filt-turno-contrato" onchange="renderTurnos()"><option value="">Todos los contratos</option></select>');
+  addFieldV81('modal-nuevo-vehiculo','<div data-v81 class="form-group"><label class="form-label">Costo mensual arriendo</label><input class="form-input" id="veh-costo" type="number" min="0" value="0"></div><div class="form-group"><label class="form-label">Moneda</label><select class="form-select" id="veh-moneda"><option>CLP</option><option>UF</option></select></div><div class="form-group"><label class="form-label">Contrato arriendo</label><input class="form-input" id="veh-file-arriendo" type="file" accept=".pdf,.jpg,.jpeg,.png"></div><div class="form-group"><label class="form-label">Permiso circulación</label><input class="form-input" id="veh-file-permiso" type="file" accept=".pdf,.jpg,.jpeg,.png"></div><div class="form-group"><label class="form-label">SOAP / seguro</label><input class="form-input" id="veh-file-seguro" type="file" accept=".pdf,.jpg,.jpeg,.png"></div><div class="form-group"><label class="form-label">Revisión técnica</label><input class="form-input" id="veh-file-revision" type="file" accept=".pdf,.jpg,.jpeg,.png"></div>');
+  addFieldV81('modal-nuevo-subcontrato','<div data-v81 class="form-group"><label class="form-label">Contrato / anexo</label><input class="form-input" id="subc-file-contrato" type="file" accept=".pdf,.jpg,.jpeg,.png"></div><div class="form-group"><label class="form-label">F30</label><input class="form-input" id="subc-file-f30" type="file" accept=".pdf,.jpg,.jpeg,.png"></div><div class="form-group"><label class="form-label">F30-1</label><input class="form-input" id="subc-file-f301" type="file" accept=".pdf,.jpg,.jpeg,.png"></div><div class="form-group"><label class="form-label">Cotizaciones</label><input class="form-input" id="subc-file-cotizaciones" type="file" accept=".pdf,.jpg,.jpeg,.png"></div><div class="form-group"><label class="form-label">Seguro / póliza</label><input class="form-input" id="subc-file-seguro" type="file" accept=".pdf,.jpg,.jpeg,.png"></div>');
+  addFieldV81('modal-epp-entrega','<div data-v81 class="form-group"><label class="form-label">Costo unitario</label><input class="form-input" id="epp-cost" type="number" min="0" value="0"></div><div class="form-group"><label class="form-label">Vida útil estimada (meses)</label><input class="form-input" id="epp-life" type="number" min="1" value="12"></div><div class="form-group"><label class="form-label">Motivo de reposición</label><select class="form-select" id="epp-reason"><option value="">Entrega inicial</option><option value="desgaste">Desgaste</option><option value="rotura">Rotura</option><option value="perdida">Pérdida</option><option value="vencimiento">Vencimiento</option></select></div><div class="form-group"><label class="form-label">Foto / evidencia de reposición</label><input class="form-input" id="epp-replacement-file" type="file" accept=".pdf,.jpg,.jpeg,.png"></div>');
+  if(!document.getElementById('v81-file-picker'))document.body.insertAdjacentHTML('beforeend','<input id="v81-file-picker" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" hidden onchange="finishEvidenceUpdateV81(this)"><div class="modal-overlay" id="modal-v81-detail"><div class="modal modal-wide"><div class="modal-header"><div class="modal-title" id="v81-detail-title">Ficha</div><button class="modal-close" onclick="closeModal(\'modal-v81-detail\')">&#10005;</button></div><div class="modal-body" id="v81-detail-body"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal(\'modal-v81-detail\')">Cerrar</button></div></div></div>');
+}
+function workerRelationsV81(workerId){
+  const projectIds=[...new Set(S.asignaciones.filter(a=>a.trabId===workerId&&a.estado!=='baja').map(a=>a.mantId))];
+  const projects=projectIds.map(id=>S.mantenciones.find(m=>m.id===id)).filter(Boolean);
+  return {projectIds,contractIds:[...new Set(projects.map(p=>p.contratoId).filter(Boolean))],clientIds:[...new Set(projects.map(p=>p.minaId).filter(Boolean))]};
+}
+function relationNamesV81(ids,collection){return ids.map(id=>collection.find(x=>x.id===id)?.nombre).filter(Boolean).join(', ')||'—';}
+const buildExamenRowsV81Base=buildExamenRows;
+buildExamenRows=function(){return buildExamenRowsV81Base().map(r=>({...r,...workerRelationsV81(r.trabId)}));};
+const renderExamenesV81Base=renderExamenes;
+renderExamenes=function(){renderExamenesV81Base();filterRelationTableV81('ex',buildExamenRows());};
+const renderCursosV81Base=renderCursos;
+renderCursos=function(){
+  const rows=buildCursoRows().map(r=>({...r,...workerRelationsV81(r.trabId)}));
+  const txt=(document.getElementById('filt-cur-txt')?.value||'').toLowerCase(),tipo=document.getElementById('filt-cur-tipo')?.value||'',est=document.getElementById('filt-cur-est')?.value||'',mina=document.getElementById('filt-cur-mina')?.value||'',cont=document.getElementById('filt-cur-contrato')?.value||'',proy=document.getElementById('filt-cur-proyecto')?.value||'';
+  const list=rows.filter(r=>(!txt||r.nombre.toLowerCase().includes(txt))&&(!tipo||r.field===tipo)&&(!est||r.estado===est)&&(!mina||r.clientIds.includes(mina))&&(!cont||r.contractIds.includes(cont))&&(!proy||r.projectIds.includes(proy)));
+  document.getElementById('cur-table').innerHTML=`<thead><tr><th>Trabajador</th><th>Cliente</th><th>Contrato</th><th>Proyecto/servicio</th><th>Curso</th><th>Vencimiento</th><th>Estado</th></tr></thead><tbody>${list.map(r=>`<tr><td><button class="btn btn-ghost btn-sm" onclick="openFicha('${r.trabId}')">${eppEsc(r.nombre)}</button></td><td>${eppEsc(relationNamesV81(r.clientIds,S.minas))}</td><td>${eppEsc(relationNamesV81(r.contractIds,S.contratos))}</td><td>${eppEsc(relationNamesV81(r.projectIds,S.mantenciones))}</td><td>${eppEsc(r.label)}</td><td>${r.vence||'—'}</td><td>${badgeEstado(r.vence)}</td></tr>`).join('')||'<tr><td colspan="7">Sin resultados</td></tr>'}</tbody>`;
+};
+function filterRelationTableV81(prefix,rows){
+  const mina=document.getElementById(`filt-${prefix}-mina`)?.value||'',cont=document.getElementById(`filt-${prefix}-contrato`)?.value||'',proy=document.getElementById(`filt-${prefix}-proyecto`)?.value||'';
+  if(!mina&&!cont&&!proy)return;
+  const allowed=new Set(rows.filter(r=>(!mina||r.clientIds.includes(mina))&&(!cont||r.contractIds.includes(cont))&&(!proy||r.projectIds.includes(proy))).map(r=>`${r.trabId}|${r.field}`));
+  document.querySelectorAll(`#${prefix}-table tbody tr`).forEach(tr=>{const b=tr.querySelector('[onclick*="openFicha"]');if(b){const id=(b.getAttribute('onclick').match(/'([^']+)'/)||[])[1];if(![...allowed].some(k=>k.startsWith(`${id}|`)))tr.remove();}});
+}
+let evidenceTargetV81=null;
+function requestEvidenceUpdateV81(collection,id,type,expiresAt=''){evidenceTargetV81={collection,id,type,expiresAt};const input=document.getElementById('v81-file-picker');input.value='';input.click();}
+async function finishEvidenceUpdateV81(input){
+  if(!evidenceTargetV81||!input.files.length)return;const row=(S[evidenceTargetV81.collection]||[]).find(x=>x.id===evidenceTargetV81.id);if(!row)return;
+  const docs=row.documents||(row.documents=[]),doc={id:'doc'+Date.now(),type:evidenceTargetV81.type,expiresAt:evidenceTargetV81.expiresAt,uploadedAt:new Date().toISOString(),status:'cargado',evidenceFiles:[]};
+  await captureEvidenceFilesV79(input,evidenceTargetV81.collection,row.id).then(files=>doc.evidenceFiles=files);docs.push(doc);persistTenant();renderCurrentPageSoft();toast('Nueva versión documental guardada sin perder el historial');
+}
+function docsButtonV81(collection,row){return `<button class="btn btn-secondary btn-sm" onclick="openDocsV81('${collection}','${row.id}')">Archivos (${row.documents?.length||0})</button>`;}
+function openDocsV81(collection,id){const row=(S[collection]||[]).find(x=>x.id===id);if(!row)return;document.getElementById('v81-detail-title').textContent='Historial documental';document.getElementById('v81-detail-body').innerHTML=`<div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Vencimiento</th><th>Cargado</th><th>Estado</th><th>Archivo</th></tr></thead><tbody>${(row.documents||[]).slice().reverse().map(d=>`<tr><td>${eppEsc(d.type)}</td><td>${d.expiresAt||'—'} ${d.expiresAt?badgeEstado(d.expiresAt):''}</td><td>${(d.uploadedAt||'').slice(0,10)}</td><td><span class="badge badge-blue">${d.status||'cargado'}</span></td><td>${(d.evidenceFiles||[]).map(f=>`<span class="badge badge-ok">${eppEsc(f.name||'Archivo')}</span>`).join(' ')||'—'}</td></tr>`).join('')||'<tr><td colspan="5">Sin documentos</td></tr>'}</tbody></table></div>`;openModal('modal-v81-detail');}
+const saveVehV81Base=saveNuevoVehiculo;
+saveNuevoVehiculo=async function(){
+  const editing=editingVehicleIdV78,cost=parseFloat(document.getElementById('veh-costo')?.value)||0,currency=document.getElementById('veh-moneda')?.value||'CLP',pending=[['Contrato arriendo','veh-file-arriendo','veh-arr-fin'],['Permiso circulación','veh-file-permiso','veh-permiso'],['SOAP / seguro','veh-file-seguro','veh-seguro'],['Revisión técnica','veh-file-revision','veh-revision']].map(([type,id,dateId])=>({type,date:document.getElementById(dateId)?.value||'',files:[...(document.getElementById(id)?.files||[])]}));saveVehV81Base();if(document.getElementById('modal-nuevo-vehiculo')?.classList.contains('open'))return;const row=editing?S.vehiculos.find(v=>v.id===editing):S.vehiculos[S.vehiculos.length-1];if(!row)return;
+  row.rentalCost=cost;row.currency=currency;row.documents=row.documents||[];
+  for(const item of pending){if(item.files.length){const holder={files:item.files};const files=await captureEvidenceFilesV79(holder,'vehiculos',row.id);row.documents.push({id:'doc'+Date.now()+item.type,type:item.type,expiresAt:item.date,uploadedAt:new Date().toISOString(),status:'cargado',evidenceFiles:files});}}
+  persistTenant();renderVehiculos();
+};
+const renderVehV81Base=renderVehiculos;
+renderVehiculos=function(){ensureV81Collections();renderVehV81Base();document.querySelectorAll('#veh-table tbody tr').forEach((tr,i)=>{const v=S.vehiculos[i];if(!v)return;const td=document.createElement('td');td.innerHTML=`${v.propiedad==='arrendada'?`${new Intl.NumberFormat('es-CL').format(v.rentalCost||0)} ${v.currency||'CLP'}/mes<br>`:''}${docsButtonV81('vehiculos',v)} <button class="btn btn-ghost btn-sm" onclick="requestEvidenceUpdateV81('vehiculos','${v.id}','Otro documento')">Actualizar</button>`;tr.appendChild(td);});const head=document.querySelector('#veh-table thead tr');if(head&&!head.querySelector('[data-v81]'))head.insertAdjacentHTML('beforeend','<th data-v81>Costos y documentos</th>');};
+let editingSubcV81=null;
+const saveSubcV81Base=saveNuevoSubcontrato;
+saveNuevoSubcontrato=async function(){
+  const before=S.subcontratos.length,pending=[['Contrato','subc-file-contrato',''],['F30','subc-file-f30','subc-f30'],['F30-1','subc-file-f301','subc-f301'],['Cotizaciones','subc-file-cotizaciones','subc-cotizaciones'],['Seguro/póliza','subc-file-seguro','subc-seguro']].map(([type,id,dateId])=>({type,date:dateId?document.getElementById(dateId).value:'',files:[...(document.getElementById(id)?.files||[])]}));saveSubcV81Base();if(document.getElementById('modal-nuevo-subcontrato')?.classList.contains('open'))return;const row=S.subcontratos[before];if(!row)return;row.documents=[];
+  for(const item of pending){if(item.files.length)row.documents.push({id:'doc'+Date.now()+item.type,type:item.type,expiresAt:item.date,uploadedAt:new Date().toISOString(),status:'cargado',evidenceFiles:await captureEvidenceFilesV79({files:item.files},'subcontratos',row.id)});}
+  persistTenant();renderSubcontratos();
+};
+const renderSubcV81Base=renderSubcontratos;
+renderSubcontratos=function(){ensureV81Collections();renderSubcV81Base();const head=document.querySelector('#subc-table thead tr');if(head&&!head.querySelector('[data-v81]'))head.insertAdjacentHTML('beforeend','<th data-v81>Ficha e historial</th>');document.querySelectorAll('#subc-table tbody tr').forEach((tr,i)=>{const s=S.subcontratos[i];if(!s)return;const td=document.createElement('td');td.innerHTML=`${docsButtonV81('subcontratos',s)} <button class="btn btn-ghost btn-sm" onclick="requestEvidenceUpdateV81('subcontratos','${s.id}','Renovación')">Renovar</button>`;tr.appendChild(td);});};
+const renderTurnosV81Base=renderTurnos;
+renderTurnos=function(){renderTurnosV81Base();const mina=document.getElementById('filt-turno-mina')?.value||'',cont=document.getElementById('filt-turno-contrato')?.value||'';document.querySelectorAll('#turnos-table tbody tr').forEach((tr,i)=>{const t=S.turnos[i],m=S.mantenciones.find(x=>x.id===t?.mantId);if(t&&((mina&&m?.minaId!==mina)||(cont&&m?.contratoId!==cont)))tr.remove();});};
+function openHotelV81(id){
+  const h=normalizeHotelRoomsV81(S.hoteles.find(x=>x.id===id));if(!h)return;const now=hoy(),active=S.hotelAsig.filter(a=>a.hotelId===id&&(!a.checkin||a.checkin<=now)&&(!a.checkout||a.checkout>=now));
+  document.getElementById('v81-detail-title').textContent=`Hotel ${h.nombre}`;document.getElementById('v81-detail-body').innerHTML=`<div class="kpi-grid"><div class="kpi kpi-blue"><div class="kpi-value">${h.rooms.length}</div><div class="kpi-label">Habitaciones</div></div><div class="kpi kpi-green"><div class="kpi-value">${h.rooms.reduce((n,r)=>n+r.beds,0)-active.length}</div><div class="kpi-label">Camas libres hoy</div></div><div class="kpi kpi-orange"><div class="kpi-value">${active.length}</div><div class="kpi-label">Personas alojadas</div></div></div><div class="table-wrap"><table><thead><tr><th>Habitación</th><th>Camas</th><th>Tarifa</th><th>Ocupantes vigentes</th></tr></thead><tbody>${h.rooms.map(r=>{const occ=active.filter(a=>a.pieza===r.number);return `<tr><td>${r.number}</td><td>${r.beds}</td><td><input class="form-input" type="number" value="${r.rate||0}" onchange="updateRoomV81('${h.id}','${r.id}','rate',this.value)"></td><td>${occ.map(a=>eppEsc(trabNombre(a.trabId))).join(', ')||'<span class="badge badge-ok">Libre</span>'}</td></tr>`}).join('')}</tbody></table></div>`;openModal('modal-v81-detail');
+}
+function updateRoomV81(hotelId,roomId,key,value){const room=S.hoteles.find(h=>h.id===hotelId)?.rooms?.find(r=>r.id===roomId);if(room){room[key]=key==='rate'?parseFloat(value)||0:value;persistTenant();toast('Habitación actualizada');}}
+const renderHotelV81Base=renderHoteleria;
+renderHoteleria=function(){ensureV81Collections();renderHotelV81Base();document.querySelectorAll('#hotel-cards .hotel-card,#hotel-cards .card').forEach((card,i)=>{const h=S.hoteles[i];if(h&&!card.querySelector('[data-v81]'))card.insertAdjacentHTML('beforeend',`<button data-v81 class="btn btn-secondary btn-sm" onclick="openHotelV81('${h.id}')">Abrir ficha y disponibilidad</button>`);});const head=document.querySelector('#hotel-table thead tr');if(head&&!head.querySelector('[data-v81]'))head.insertAdjacentHTML('beforeend','<th data-v81>Reasignar</th>');document.querySelectorAll('#hotel-table tbody tr').forEach((tr,i)=>{const a=S.hotelAsig[i];if(a){const td=document.createElement('td');td.innerHTML=`<button class="btn btn-ghost btn-sm" onclick="reassignHotelV81('${a.id}')">Cambiar</button>`;tr.appendChild(td);}});};
+function reassignHotelV81(id){const a=S.hotelAsig.find(x=>x.id===id);if(!a)return;S.hotelAssignmentHistory.push({...a,archivedAt:new Date().toISOString(),reason:'reasignación'});S.hotelAsig=S.hotelAsig.filter(x=>x.id!==id);persistTenant();initSelects();openModal('modal-hotel-asignar');toast('Asignación anterior guardada en historial');}
+const addEppDraftV81Base=addEppDraftItem;
+addEppDraftItem=function(){const ok=addEppDraftV81Base();if(ok){const item=eppDraftItems[eppDraftItems.length-1];item.unitCost=parseFloat(document.getElementById('epp-cost')?.value)||0;item.lifeMonths=parseInt(document.getElementById('epp-life')?.value)||12;item.replacementReason=document.getElementById('epp-reason')?.value||'';}return ok;};
+const saveEppV81Base=saveEppDelivery;
+saveEppDelivery=async function(){const workerId=document.getElementById('epp-trab')?.value,reason=document.getElementById('epp-reason')?.value,file=document.getElementById('epp-replacement-file');if(reason&&workerId)S.eppReplacementRequests.push({id:'epr'+Date.now(),workerId,reason,requestedAt:hoy(),status:'atendida',evidenceFiles:file?.files.length?await captureEvidenceFilesV79(file,'eppReplacementRequests',workerId):[]});return saveEppV81Base();};
+function dashboardV81(){
+  if(!document.getElementById('page-dashboard'))return;let box=document.getElementById('dashboard-v81');if(!box){box=document.createElement('div');box.id='dashboard-v81';document.querySelector('#page-dashboard .section-header')?.insertAdjacentElement('afterend',box);}
+  const alerts=computeAlertas(),workers=S.trabajadores.filter(t=>!t.bloqueado),compliance=workers.length?Math.round(workers.reduce((n,w)=>n+acreditacion(w),0)/workers.length):100,rental=(S.vehiculos||[]).reduce((n,v)=>n+(parseFloat(v.rentalCost)||0),0),hotel=(S.hotelAsig||[]).reduce((n,a)=>n+(parseFloat(S.hoteles.find(h=>h.id===a.hotelId)?.tarifa)||0),0),epp=(S.eppDeliveries||[]).reduce((n,e)=>n+(parseFloat(e.unitCost)||0)*(parseInt(e.quantity)||1),0);
+  box.innerHTML=`<div class="kpi-grid"><div class="kpi kpi-green"><div class="kpi-value">${compliance}%</div><div class="kpi-label">Cumplimiento documental</div></div><div class="kpi kpi-red"><div class="kpi-value">${alerts.filter(a=>a.nivel==='critico'||a.estado==='vencido').length}</div><div class="kpi-label">Excepciones críticas</div></div><div class="kpi kpi-orange"><div class="kpi-value">${alerts.filter(a=>{const d=diasHasta(a.fecha||a.vence);return d!==null&&d>=0&&d<=30}).length}</div><div class="kpi-label">Vencen en 30 días</div></div><div class="kpi kpi-blue"><div class="kpi-value">$${new Intl.NumberFormat('es-CL').format(rental+hotel+epp)}</div><div class="kpi-label">Costo operacional registrado</div></div></div>`;
+}
+const renderDashboardV81Base=renderDashboard;renderDashboard=function(){renderDashboardV81Base();ensureV81Collections();dashboardV81();};
+const renderCredV81Base=renderCredenciales;renderCredenciales=function(){renderCredV81Base();document.querySelectorAll('#cred-table tbody tr').forEach((tr,i)=>{const c=S.credenciales[i];if(c){const cell=tr.lastElementChild;cell?.insertAdjacentHTML('beforeend',` <button class="btn btn-ghost btn-sm" onclick="requestEvidenceUpdateV81('credenciales','${c.id}','Credencial renovada','${c.vence||''}')">Actualizar</button>`);}});};
+const renderIncV81Base=renderIncidentes;renderIncidentes=function(){renderIncV81Base();document.querySelectorAll('#inc-table tbody tr').forEach((tr,i)=>{const inc=S.incidentes[i];if(inc){const cell=tr.lastElementChild;cell?.insertAdjacentHTML('beforeend',` <button class="btn btn-ghost btn-sm" onclick="requestEvidenceUpdateV81('incidentes','${inc.id}','Nueva evidencia')">Agregar archivo</button>`);}});};
+const renderEmpV81Base=renderAcreditacionEmpresa;renderAcreditacionEmpresa=function(){renderEmpV81Base();ensureCompanyDocsV63().forEach(d=>{if(!Array.isArray(d.documents))d.documents=[];});document.querySelectorAll('#empresa-acred-table tbody tr').forEach((tr,i)=>{const d=ensureCompanyDocsV63()[i];if(d){const td=document.createElement('td');td.innerHTML=`${docsButtonV81('empresaDocs',d)} <button class="btn btn-ghost btn-sm" onclick="requestEvidenceUpdateV81('empresaDocs','${d.id}','${eppEsc(d.name)}','${d.vence||''}')">Nueva versión</button>`;tr.appendChild(td);}});const head=document.querySelector('#empresa-acred-table thead tr');if(head&&!head.querySelector('[data-v81]'))head.insertAdjacentHTML('beforeend','<th data-v81>Historial</th>');};
+const initSelectsV81Base=initSelects;
+initSelects=function(){initSelectsV81Base();ensureV81Collections();const opts=(label,rows)=>`<option value="">${label}</option>`+rows.map(x=>`<option value="${x.id}">${eppEsc(x.nombre)}</option>`).join('');['filt-cur-mina','filt-turno-mina'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML=opts('Todos los clientes',S.minas);});['filt-ex-contrato','filt-cur-contrato','filt-turno-contrato'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML=opts('Todos los contratos',S.contratos);});['filt-ex-proyecto','filt-cur-proyecto'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML=opts('Todos los proyectos',S.mantenciones);});};
+const snapshotStateV81Base=snapshotState;snapshotState=function(){ensureV81Collections();const data=snapshotStateV81Base();['hotelAssignmentHistory','eppReplacementRequests'].forEach(k=>data[k]=JSON.parse(JSON.stringify(S[k])));return data;};
+const applyStateV81Base=applyState;applyState=function(data){applyStateV81Base(data);['hotelAssignmentHistory','eppReplacementRequests'].forEach(k=>{if(data?.[k])S[k]=data[k];});ensureV81Collections();};
+const emptyTenantDataV81Base=emptyTenantData;emptyTenantData=function(...args){return {...emptyTenantDataV81Base(...args),hotelAssignmentHistory:[],eppReplacementRequests:[]};};
 function enhanceAccessibility() {
   document.querySelectorAll('.form-label').forEach((label,index)=>{
     if(label.htmlFor||label.querySelector('input,select,textarea'))return;
@@ -4653,6 +4759,7 @@ function applyClientTerminology(root) {
 let clientTerminologyObserver;
 function installClientTerminology(){applyClientTerminology(document.body);if(clientTerminologyObserver)return;clientTerminologyObserver=new MutationObserver(records=>records.forEach(record=>record.addedNodes.forEach(applyClientTerminology)));clientTerminologyObserver.observe(document.body,{childList:true,subtree:true});}
 function init() {
+  installV81Ui();
   enhanceAccessibility();
   installClientTerminology();
   if(window.AccesoMinaCloud?.enabled) return window.AccesoMinaCloud.init();
