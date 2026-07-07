@@ -439,8 +439,8 @@ body.private #main { display:block; }
       <button class="btn btn-secondary btn-sm" onclick="exportTenantBackup()">Respaldo</button>
       <button class="btn btn-secondary btn-sm" onclick="showCloudGuide()">Cloud</button>
       <button class="btn btn-secondary btn-sm" onclick="openModal('modal-nuevo-contrato')">+ Contrato</button>
-      <button class="btn btn-secondary btn-sm" onclick="openModal('modal-nueva-mina')">+ Minera</button>
-      <button class="btn btn-secondary btn-sm" onclick="openProyectoModal()">+ Proyecto</button>
+      <button class="btn btn-secondary btn-sm" onclick="openModal('modal-nueva-mina')">+ Minera Mandante</button>
+      <button class="btn btn-secondary btn-sm" onclick="openProyectoModal()">+ Proyecto / Mantención</button>
       <button class="btn btn-primary btn-sm" onclick="openModal('modal-nuevo-trab')">+ Trabajador</button>
       <button class="btn btn-ghost btn-sm" onclick="logoutTenant()">Salir</button>
     </div>
@@ -449,7 +449,7 @@ body.private #main { display:block; }
   <!-- PAGE: DASHBOARD -->
   <div id="page-dashboard" class="page active">
     <div class="filters">
-      <select class="filter-select" id="filt-dash-mina" onchange="renderDashboard()"><option value="">Todas las mineras</option></select>
+      <select class="filter-select" id="filt-dash-mina" onchange="renderDashboard()"><option value="">Todas las mineras mandantes</option></select>
       <select class="filter-select" id="filt-dash-contrato" onchange="renderDashboard()"><option value="">Todos los contratos</option></select>
       <select class="filter-select" id="filt-dash-mant" onchange="renderDashboard()"><option value="">Todos los proyectos / mantenciones</option></select>
     </div>
@@ -489,7 +489,8 @@ body.private #main { display:block; }
       <div><div class="section-title">🏔️ Por Minera</div><div class="section-sub">Vista consolidada por mandante</div></div>
       <div class="section-actions">
         <button class="btn btn-secondary" onclick="openModal('modal-nuevo-contrato')">+ Asociar contrato</button>
-        <button class="btn btn-primary" onclick="openModal('modal-nueva-mina')">+ Nueva Minera</button>
+        <button class="btn btn-secondary" onclick="openProyectoModal()">+ Proyecto / Mantención</button>
+        <button class="btn btn-primary" onclick="openModal('modal-nueva-mina')">+ Nueva Minera Mandante</button>
       </div>
       </div>
       <div class="grid-3" id="minas-cards" style="gap:20px;"></div>
@@ -527,7 +528,10 @@ body.private #main { display:block; }
         <option value="hotel">Hotel</option>
       </select>
       <select class="filter-select" id="filt-alerta-mina" onchange="renderAlertas()">
-        <option value="">Todas las mineras</option>
+        <option value="">Todas las mineras mandantes</option>
+      </select>
+      <select class="filter-select" id="filt-alerta-contrato" onchange="renderAlertas()">
+        <option value="">Todos los contratos</option>
       </select>
       <select class="filter-select" id="filt-alerta-mant" onchange="renderAlertas()">
         <option value="">Todos los proyectos</option>
@@ -575,7 +579,7 @@ body.private #main { display:block; }
         <option value="1">D (1-2)</option>
       </select>
       <select class="filter-select" id="filt-trab-mina" onchange="renderTrabajadores()">
-        <option value="">Minera</option>
+        <option value="">Minera mandante</option>
       </select>
       <select class="filter-select" id="filt-trab-mant" onchange="renderTrabajadores()">
         <option value="">Proyecto / mantención</option>
@@ -721,6 +725,7 @@ body.private #main { display:block; }
     <div class="section-header">
       <div><div class="section-title">📝 Contratos y Firmas</div></div>
       <div class="section-actions">
+        <button class="btn btn-secondary" onclick="document.getElementById('tpl-nombre')?.focus()">+ Documento tipo</button>
         <button class="btn btn-secondary" onclick="openModal('modal-nueva-firma')">+ Enviar a Firma</button>
         <button class="btn btn-primary" onclick="openModal('modal-generar-contrato')">+ Generar Contrato</button>
       </div>
@@ -868,7 +873,7 @@ body.private #main { display:block; }
     </div>
     <div class="filters">
       <input class="filter-input" id="filt-veh-txt" placeholder="🔍 Patente, serie, equipo..." oninput="renderVehiculos()">
-      <select class="filter-select" id="filt-veh-mina" onchange="renderVehiculos()"><option value="">Todas las mineras</option></select>
+      <select class="filter-select" id="filt-veh-mina" onchange="renderVehiculos()"><option value="">Todas las mineras mandantes</option></select>
       <select class="filter-select" id="filt-veh-est" onchange="renderVehiculos()"><option value="">Todos los estados</option><option value="ok">Vigente</option><option value="alerta">Con alertas</option><option value="vencido">Vencido/faltante</option></select>
     </div>
     <div class="kpi-grid" id="veh-kpis"></div>
@@ -882,7 +887,7 @@ body.private #main { display:block; }
       <button class="btn btn-secondary" onclick="exportAcreditacionMandante()">⬇ Exportar CSV</button>
     </div>
     <div class="filters">
-      <select class="filter-select" id="filt-mand-mina" onchange="renderAcreditacionMandante()"><option value="">Todas las mineras</option></select>
+      <select class="filter-select" id="filt-mand-mina" onchange="renderAcreditacionMandante()"><option value="">Todas las mineras mandantes</option></select>
       <select class="filter-select" id="filt-mand-tipo" onchange="renderAcreditacionMandante()"><option value="">Todos los objetos</option><option value="empresa">Empresa</option><option value="trabajador">Trabajador</option><option value="vehiculo">Vehículo/equipo</option><option value="proyecto">Proyecto/mantención</option></select>
       <select class="filter-select" id="filt-mand-estado" onchange="renderAcreditacionMandante()"><option value="">Todos los estados</option><option value="pendiente">Pendiente</option><option value="observado">Observado</option><option value="rechazado">Rechazado</option><option value="aprobado">Aprobado</option><option value="pase_emitido">Pase emitido</option></select>
     </div>
@@ -928,7 +933,7 @@ body.private #main { display:block; }
     </div>
     <div class="filters">
       <input class="filter-input" id="filt-cred-txt" placeholder="🔍 Trabajador, pase o QR..." oninput="renderCredenciales()">
-      <select class="filter-select" id="filt-cred-mina" onchange="renderCredenciales()"><option value="">Todas las mineras</option></select>
+      <select class="filter-select" id="filt-cred-mina" onchange="renderCredenciales()"><option value="">Todas las mineras mandantes</option></select>
       <select class="filter-select" id="filt-cred-est" onchange="renderCredenciales()"><option value="">Todos los estados</option><option value="vigente">Vigente</option><option value="proximo">Próximo</option><option value="vencido">Vencido</option></select>
     </div>
     <div class="kpi-grid" id="cred-kpis"></div>
@@ -958,7 +963,7 @@ body.private #main { display:block; }
     </div>
     <div class="filters">
       <select class="filter-select" id="filt-prot-tipo" onchange="renderProtocolos()"><option value="">Todos los protocolos</option><option value="hipobaria">Hipobaria</option><option value="ruido">Ruido</option><option value="silice">Sílice</option><option value="uv">Radiación UV</option><option value="psicosocial">Psicosocial</option><option value="sustancias">Sustancias peligrosas</option><option value="altura_fisica">Altura física</option><option value="alcohol_drogas">Alcohol y drogas</option></select>
-      <select class="filter-select" id="filt-prot-mina" onchange="renderProtocolos()"><option value="">Todas las mineras</option></select>
+      <select class="filter-select" id="filt-prot-mina" onchange="renderProtocolos()"><option value="">Todas las mineras mandantes</option></select>
       <select class="filter-select" id="filt-prot-est" onchange="renderProtocolos()"><option value="">Todos los estados</option><option value="vigente">Vigente</option><option value="proximo">Próximo</option><option value="vencido">Vencido</option></select>
     </div>
     <div class="kpi-grid" id="prot-kpis"></div>
@@ -3803,8 +3808,8 @@ function computeAlertas() {
   return alertas.sort((a,b)=>(ord[a.urgencia]??9)-(ord[b.urgencia]??9));
 }
 function renderAlertas() {
-  const alertas=computeAlertas(); const txt=document.getElementById('filt-alerta-txt')?.value.toLowerCase()||'', tipo=document.getElementById('filt-alerta-tipo')?.value||'', urg=document.getElementById('filt-alerta-urg')?.value||'', mina=document.getElementById('filt-alerta-mina')?.value||'', mant=document.getElementById('filt-alerta-mant')?.value||'';
-  const filtered=alertas.filter(a=>{if(txt&&!a.msg.toLowerCase().includes(txt))return false; if(tipo&&a.tipo!==tipo)return false; if(urg&&a.urgencia!==urg)return false; if(mina){const t=a.trabId?S.trabajadores.find(w=>w.id===a.trabId):null; if(a.minaId!==mina && !t?.mineras?.includes(mina)) return false;} if(mant&&a.mantId!==mant&&!(a.trabId&&workerMantIds(S.trabajadores.find(w=>w.id===a.trabId)||{}).includes(mant))) return false; return true;});
+  const alertas=computeAlertas(); const txt=document.getElementById('filt-alerta-txt')?.value.toLowerCase()||'', tipo=document.getElementById('filt-alerta-tipo')?.value||'', urg=document.getElementById('filt-alerta-urg')?.value||'', mina=document.getElementById('filt-alerta-mina')?.value||'', contrato=document.getElementById('filt-alerta-contrato')?.value||'', mant=document.getElementById('filt-alerta-mant')?.value||'';
+  const filtered=alertas.filter(a=>{if(txt&&!a.msg.toLowerCase().includes(txt))return false; if(tipo&&a.tipo!==tipo)return false; if(urg&&a.urgencia!==urg)return false; if(mina){const t=a.trabId?S.trabajadores.find(w=>w.id===a.trabId):null; if(a.minaId!==mina && !t?.mineras?.includes(mina)) return false;} if(contrato){const t=a.trabId?S.trabajadores.find(w=>w.id===a.trabId):null; if(a.contratoId!==contrato && getMantContratoId(a.mantId)!==contrato && !(t&&workerContratoIds(t).includes(contrato))) return false;} if(mant&&a.mantId!==mant&&!(a.trabId&&workerMantIds(S.trabajadores.find(w=>w.id===a.trabId)||{}).includes(mant))) return false; return true;});
   document.getElementById('alertas-sub').textContent=`${filtered.length} alertas · ${alertas.filter(a=>a.urgencia==='vencido').length} vencidas, ${alertas.filter(a=>a.urgencia==='critico').length} críticas`;
   const tipoBadge={examen:'badge-blue',curso:'badge-orange',documento:'badge-warn',doc:'badge-warn',firma:'badge-err',empresa:'badge-blue',contrato:'badge-blue',proyecto:'badge-orange',mantencion:'badge-orange'};
   document.getElementById('alertas-list').innerHTML=filtered.map(a=>`<div class="alert-item alert-${a.urgencia==='falta'?'critico':a.urgencia}"><div class="alert-dot dot-${a.urgencia==='falta'?'critico':a.urgencia}"></div><div style="flex:1;"><div style="font-size:13px;font-weight:600;">${a.msg}</div><div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;"><span class="badge ${tipoBadge[a.tipo]||'badge-na'}">${a.tipo}</span><span class="badge ${a.urgencia==='vencido'?'badge-err':a.urgencia==='critico'||a.urgencia==='falta'?'badge-crit':'badge-warn'}">${a.urgencia}</span></div></div><div style="display:flex;gap:6px;">${a.trabId?`<button class="btn btn-ghost btn-sm" onclick="openFicha('${a.trabId}')">Ficha</button><button class="btn btn-success btn-sm" onclick="notifWA('${a.trabId}','${a.msg.replace(/['"<>]/g,'')}')">WA</button>`:`<button class="btn btn-ghost btn-sm" onclick="nav('mantenciones')">Ver</button>`}</div></div>`).join('')||'<div style="color:var(--text-muted);padding:20px;text-align:center;">Sin alertas con los filtros seleccionados</div>';
@@ -4235,7 +4240,7 @@ const initSelectsV64=initSelects;
 initSelects=function(){
   initSelectsV64();
   const minaIds=['filt-veh-mina','filt-mand-mina','filt-cred-mina','filt-prot-mina'];
-  minaIds.forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">Todas las mineras</option>'+S.minas.map(m=>`<option value="${m.id}">${m.nombre}</option>`).join('');});
+  minaIds.forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">Todas las mineras mandantes</option>'+S.minas.map(m=>`<option value="${m.id}">${m.nombre}</option>`).join('');});
   const mantIds=['filt-turno-mant','filt-inc-mant'];
   mantIds.forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">Todos los proyectos</option>'+S.mantenciones.map(m=>`<option value="${m.id}">${m.nombre} · ${minaNombre(m.minaId)}</option>`).join('');});
   const subc=document.getElementById('filt-subc-contrato');
@@ -4623,7 +4628,7 @@ function initSelects() {
   ['filt-trab-mina','filt-aud-mina','filt-mant-mina','filt-ex-mina','nm-mina','nc-mina','filt-dash-mina','filt-alerta-mina','wg-mina'].forEach(id=>{
     const el=document.getElementById(id);
     if(!el) return;
-    const base = (id.startsWith('filt')||id==='wg-mina')?'<option value="">Todas las mineras</option>':'';
+    const base = (id.startsWith('filt')||id==='wg-mina')?'<option value="">Todas las mineras mandantes</option>':'';
     el.innerHTML = base+S.minas.map(m=>`<option value="${m.id}">${m.nombre}</option>`).join('');
   });
   // Worker selects
@@ -4644,7 +4649,7 @@ function initSelects() {
   // Nm contrato
   const nmCont=document.getElementById('nm-contrato');
   if(nmCont) nmCont.innerHTML='<option value="">Seleccionar...</option>'+S.contratos.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
-  ['filt-dash-contrato','filt-trab-contrato'].forEach(id=>{
+  ['filt-dash-contrato','filt-trab-contrato','filt-alerta-contrato'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.innerHTML='<option value="">Todos los contratos</option>'+S.contratos.map(c=>`<option value="${c.id}">${c.nombre} · ${minaNombre(c.minaId)}</option>`).join('');
   });
