@@ -5292,6 +5292,117 @@ const renderDashboardV86Base=renderDashboard;
 renderDashboard=function(){installV86Ui();renderDashboardV86Base();renderExecutiveDashboardV86();};
 const renderPageV86Base=renderPage;
 renderPage=function(page){renderPageV86Base(page);if(page==='operaciones-cloud')renderOperationsV86();if(page==='privacidad')renderDataGovernanceV86();};
+
+// ===================== V8.7: SCORE DE RIESGO, PORTAL TRABAJADOR Y PANELES POR PERFIL =====================
+function ensureV87Collections(){
+  ensureV86Collections();
+  if(!Array.isArray(S.workerPortalAccess))S.workerPortalAccess=[];
+  if(!Array.isArray(S.riskReviews))S.riskReviews=[];
+}
+const snapshotStateV87Base=snapshotState;
+snapshotState=function(){ensureV87Collections();return {...snapshotStateV87Base(),workerPortalAccess:S.workerPortalAccess,riskReviews:S.riskReviews};};
+const applyStateV87Base=applyState;
+applyState=function(data){applyStateV87Base(data);['workerPortalAccess','riskReviews'].forEach(k=>{if(data?.[k]!==undefined)S[k]=data[k];});ensureV87Collections();};
+const emptyTenantDataV87Base=emptyTenantData;
+emptyTenantData=function(nombre,rut,email,tel){const base=emptyTenantDataV87Base(nombre,rut,email,tel);return {...base,workerPortalAccess:[],riskReviews:[]};};
+function clampV87(value){return Math.max(0,Math.min(100,Math.round(value)));}
+function riskStatusV87(score){return score>=85?['Bajo','badge-ok']:score>=65?['Medio','badge-warn']:['Alto','badge-err'];}
+function workerRiskScoreV87(t){
+  const alerts=computeAlertas().filter(a=>a.trabId===t.id),pct=acreditacion(t);
+  const rejected=collectedDocumentsV86().filter(d=>d.entityId===t.id&&['rechazado','vencido'].includes(d.status)).length;
+  return clampV87(pct-(alerts.filter(a=>['vencido','critico','falta'].includes(a.urgencia)).length*7)-(rejected*12)+(t.calificacion||0));
+}
+function projectRiskScoreV87(m){
+  const asigs=S.asignaciones.filter(a=>a.mantId===m.id),required=Number(m.personalReq)||0,gap=Math.max(0,required-asigs.length);
+  const avg=asigs.length?asigs.reduce((n,a)=>n+workerRiskScoreV87(S.trabajadores.find(t=>t.id===a.trabId)||{}),0)/asigs.length:required?45:75;
+  const incidents=(S.incidentes||[]).filter(i=>i.mantId===m.id&&i.estado!=='cerrado').length;
+  return clampV87(avg-(gap*8)-(incidents*10));
+}
+function clientRiskScoreV87(minaId){
+  const projects=S.mantenciones.filter(m=>m.minaId===minaId),contracts=S.contratos.filter(c=>c.minaId===minaId);
+  const projectAvg=projects.length?projects.reduce((n,m)=>n+projectRiskScoreV87(m),0)/projects.length:80;
+  const contractAlerts=contracts.filter(c=>c.termino&&estadoFecha(c.termino)!=='vigente').length;
+  return clampV87(projectAvg-(contractAlerts*10));
+}
+function subcontractRiskScoreV87(s){
+  const docs=['f30','f301','cotizaciones','seguro'].filter(k=>s[k]&&estadoFecha(s[k])!=='vigente').length;
+  return clampV87(90-(docs*15)-(s.estado==='bloqueado'?35:s.estado==='observado'?15:0));
+}
+function vehicleRiskScoreV87(v){
+  const alerts=['permisoCirculacion','revisionTecnica','seguro','autorizacionMinera','certificacion','arriendoVence'].filter(k=>v[k]&&estadoFecha(v[k])!=='vigente').length;
+  return clampV87(95-(alerts*14));
+}
+function riskRowsV87(){
+  ensureV87Collections();
+  return [
+    ...S.minas.map(m=>({tipo:'Cliente',nombre:m.nombre,relacion:m.mandante||'',score:clientRiskScoreV87(m.id),accion:'Revisar contratos, proyectos y acreditación asociada'})),
+    ...S.mantenciones.map(m=>({tipo:'Proyecto/servicio',nombre:m.nombre,relacion:`${minaNombre(m.minaId)} / ${contratoNombre(m.contratoId)}`,score:projectRiskScoreV87(m),accion:'Cubrir brecha de dotación, documentos e incidentes abiertos'})),
+    ...S.trabajadores.filter(t=>!t.bloqueado).map(t=>({tipo:'Trabajador',nombre:t.nombre,relacion:`${t.rut} / ${t.tipo}`,score:workerRiskScoreV87(t),accion:'Completar documentos, cursos, exámenes o firma'})),
+    ...(S.subcontratos||[]).map(s=>({tipo:'Subcontratista',nombre:s.razon,relacion:s.rut,score:subcontractRiskScoreV87(s),accion:'Actualizar F30, F30-1, cotizaciones, seguros y contrato'})),
+    ...(S.vehiculos||[]).map(v=>({tipo:'Vehículo/equipo',nombre:v.nombre||v.patente||v.serie,relacion:v.tipo||'',score:vehicleRiskScoreV87(v),accion:'Actualizar vencimientos y respaldo de permisos/certificaciones'}))
+  ].sort((a,b)=>a.score-b.score);
+}
+function renderProfilePanelsV87(){
+  const host=document.getElementById('dash-v87-profiles');if(!host)return;
+  const rows=riskRowsV87(),high=rows.filter(r=>r.score<65),medium=rows.filter(r=>r.score>=65&&r.score<85);
+  const active=S.mantenciones.filter(m=>m.estado!=='cerrada'),openInc=(S.incidentes||[]).filter(i=>i.estado!=='cerrado').length;
+  host.innerHTML=`<div class="card-header"><div><div class="card-title">Paneles por perfil de usuario</div><div class="card-subtitle">La misma data se resume según gerencia, operación, RR.HH., prevención, acreditación y finanzas.</div></div><button class="btn btn-secondary btn-sm" onclick="exportRiskMatrixV87()">Exportar matriz</button></div>
+  <div class="grid-3" style="gap:12px;margin-top:12px;">
+    <div class="card"><div class="card-title">Gerencia</div><div class="divider"></div><b>${high.length}</b> riesgos altos · ${medium.length} medios<div class="worker-rut">Prioriza contratos, clientes y servicios críticos.</div></div>
+    <div class="card"><div class="card-title">Operación</div><div class="divider"></div><b>${active.length}</b> servicios activos<div class="worker-rut">${S.hotelAsig.filter(a=>!a.checkout||a.checkout>=hoy()).length} alojamientos · ${(S.vehiculos||[]).length} vehículos/equipos</div></div>
+    <div class="card"><div class="card-title">RR.HH.</div><div class="divider"></div><b>${S.trabajadores.filter(t=>t.tipo==='esporadico'&&!t.bloqueado).length}</b> spot · <b>${S.trabajadores.filter(t=>t.tipo==='permanente'&&!t.bloqueado).length}</b> planta<div class="worker-rut">Reclutamiento, contratos, disponibilidad y asignaciones.</div></div>
+    <div class="card"><div class="card-title">Prevención</div><div class="divider"></div><b>${openInc}</b> incidentes/NC abiertos<div class="worker-rut">Protocolos, cursos, exámenes, EPP y acciones.</div></div>
+    <div class="card"><div class="card-title">Acreditación</div><div class="divider"></div><b>${collectedDocumentsV86().filter(d=>!['aprobado','corregido'].includes(d.status)).length}</b> documentos con acción<div class="worker-rut">Observados, vencidos, rechazados o pendientes.</div></div>
+    <div class="card"><div class="card-title">Finanzas</div><div class="divider"></div><b>${clpV83((S.hotelAsig||[]).reduce((n,a)=>n+(S.hoteles.find(h=>h.id===a.hotelId)?.tarifa||0),0))}</b><div class="worker-rut">Control inicial de hotelería, EPP y arriendos.</div></div>
+  </div>`;
+}
+function renderRiskMatrixV87(){
+  const table=document.getElementById('ops-v87-risk-table');if(!table)return;
+  const rows=riskRowsV87().slice(0,80);
+  table.innerHTML=`<thead><tr><th>Tipo</th><th>Entidad</th><th>Relación</th><th>Score</th><th>Riesgo</th><th>Acción recomendada</th></tr></thead><tbody>${rows.map(r=>{const st=riskStatusV87(r.score);return `<tr><td>${eppEsc(r.tipo)}</td><td><b>${eppEsc(r.nombre)}</b></td><td>${eppEsc(r.relacion)}</td><td><b>${r.score}%</b></td><td><span class="badge ${st[1]}">${st[0]}</span></td><td>${eppEsc(r.accion)}</td></tr>`;}).join('')||'<tr><td colspan="6">Sin datos para calcular riesgo.</td></tr>'}</tbody>`;
+}
+function renderWorkerPortalV87(){
+  const worker=document.getElementById('wp-worker');
+  if(worker)worker.innerHTML='<option value="">Seleccionar trabajador...</option>'+S.trabajadores.filter(t=>!t.bloqueado).map(t=>`<option value="${t.id}">${eppEsc(t.nombre)} · ${eppEsc(t.rut)}</option>`).join('');
+  const table=document.getElementById('ops-v87-worker-portal-table');
+  if(table)table.innerHTML=`<thead><tr><th>Trabajador</th><th>Correo</th><th>Alcance</th><th>Estado</th><th>Vence</th></tr></thead><tbody>${S.workerPortalAccess.map(a=>`<tr><td>${eppEsc(trabNombre(a.workerId))}</td><td>${eppEsc(a.email)}</td><td>${(a.scopes||[]).map(x=>`<span class="badge badge-blue">${eppEsc(x)}</span>`).join(' ')}</td><td><span class="badge ${a.active?'badge-ok':'badge-na'}">${a.active?'activo':'inactivo'}</span></td><td>${a.expiresAt||'—'}</td></tr>`).join('')||'<tr><td colspan="5">Sin accesos de trabajador registrados.</td></tr>'}</tbody>`;
+}
+function saveWorkerPortalAccessV87(event){
+  event?.preventDefault?.();ensureV87Collections();
+  const workerId=document.getElementById('wp-worker')?.value||'',t=S.trabajadores.find(x=>x.id===workerId);
+  if(!t)return toast('Selecciona un trabajador','err');
+  const email=document.getElementById('wp-email')?.value.trim()||t.email||'';
+  if(!isValidEmail(email))return toast('Correo inválido','err');
+  const scopes=[...document.querySelectorAll('#wp-scopes input:checked')].map(x=>x.value);
+  if(!scopes.length)return toast('Selecciona al menos un permiso','err');
+  const row=S.workerPortalAccess.find(a=>a.workerId===workerId)||{id:'wp'+Date.now(),workerId,createdAt:new Date().toISOString()};
+  Object.assign(row,{email,scopes,active:true,expiresAt:document.getElementById('wp-exp')?.value||'',updatedAt:new Date().toISOString()});
+  if(!S.workerPortalAccess.includes(row))S.workerPortalAccess.push(row);
+  event?.target?.reset?.();persistTenant();renderWorkerPortalV87();toast('Acceso trabajador preparado');
+}
+function exportRiskMatrixV87(){
+  const rows=[['Tipo','Entidad','Relacion','Score','Riesgo','Accion recomendada']];
+  riskRowsV87().forEach(r=>rows.push([r.tipo,r.nombre,r.relacion,r.score,riskStatusV87(r.score)[0],r.accion]));
+  exportCSV(rows,`matriz_riesgo_operacional_${hoy()}.csv`);
+}
+function exportInterconnectionV87(){
+  const rows=[['Flujo','Registros','Brechas detectadas'],['Clientes a contratos',S.contratos.length,S.contratos.filter(c=>!S.minas.some(m=>m.id===c.minaId)).length],['Contratos a servicios',S.mantenciones.length,S.mantenciones.filter(m=>!S.contratos.some(c=>c.id===m.contratoId)).length],['Servicios a trabajadores',S.asignaciones.length,S.asignaciones.filter(a=>!S.trabajadores.some(t=>t.id===a.trabId)||!S.mantenciones.some(m=>m.id===a.mantId)).length],['Hotelería a servicios/personas',S.hotelAsig.length,S.hotelAsig.filter(a=>!S.trabajadores.some(t=>t.id===a.trabId)||!S.hoteles.some(h=>h.id===a.hotelId)).length],['Documentos a flujo formal',collectedDocumentsV86().length,collectedDocumentsV86().filter(d=>['requerido','observado','rechazado','vencido'].includes(d.status)).length],['Portal trabajador',S.workerPortalAccess.length,S.workerPortalAccess.filter(a=>!S.trabajadores.some(t=>t.id===a.workerId)).length]];
+  exportCSV(rows,`validacion_interconexion_${hoy()}.csv`);
+}
+function installV87Ui(){
+  ensureV87Collections();
+  const exec=document.getElementById('dash-v86-executive');
+  if(exec&&!document.getElementById('dash-v87-profiles'))exec.insertAdjacentHTML('afterend','<div class="card" id="dash-v87-profiles" style="margin-bottom:20px;"></div>');
+  const ops=document.getElementById('ops-v86-docflow-table')?.closest('.card');
+  if(ops&&!document.getElementById('ops-v87-risk-table'))ops.insertAdjacentHTML('beforebegin',`<div class="card" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Matriz de riesgo operacional</div><div class="card-subtitle">Score integrado por cliente, proyecto, trabajador, subcontrato y vehículo/equipo.</div></div><button class="btn btn-secondary btn-sm" onclick="exportRiskMatrixV87()">Exportar</button></div><div class="divider"></div><div class="table-wrap"><table id="ops-v87-risk-table"></table></div></div><div class="card" style="margin-top:16px;"><div class="card-title">Portal trabajador</div><div class="card-subtitle">Prepara accesos para que cada persona cargue documentos, vea pendientes, cursos, EPP, turnos y credencial.</div><div class="divider"></div><form class="form-grid" onsubmit="saveWorkerPortalAccessV87(event)"><div class="form-group"><label class="form-label">Trabajador</label><select class="form-select" id="wp-worker"></select></div><div class="form-group"><label class="form-label">Correo acceso</label><input class="form-input" type="email" id="wp-email" placeholder="trabajador@correo.cl"></div><div class="form-group"><label class="form-label">Acceso hasta</label><input class="form-input" type="date" id="wp-exp"></div><div class="form-group full" id="wp-scopes"><label><input type="checkbox" value="documentos" checked> Documentos</label> <label><input type="checkbox" value="cursos" checked> Cursos</label> <label><input type="checkbox" value="epp" checked> EPP</label> <label><input type="checkbox" value="turnos"> Turnos</label> <label><input type="checkbox" value="credencial"> Credencial</label></div><div class="form-group"><button class="btn btn-primary">Crear acceso</button></div></form><div class="table-wrap" style="margin-top:12px;"><table id="ops-v87-worker-portal-table"></table></div></div>`);
+  const reports=document.querySelector('#page-reportes .grid-3');
+  if(reports&&!document.getElementById('report-risk-v87'))reports.insertAdjacentHTML('beforeend','<div class="report-card" id="report-risk-v87" onclick="exportRiskMatrixV87()"><div class="report-icon">📉</div><div class="report-title">Matriz de Riesgo</div><div class="report-desc">Score por cliente, proyecto, trabajador, subcontrato y vehículo</div></div><div class="report-card" onclick="exportInterconnectionV87()"><div class="report-icon">🔗</div><div class="report-title">Interconexión de Datos</div><div class="report-desc">Valida relaciones críticas y brechas de integración</div></div>');
+  renderProfilePanelsV87();renderRiskMatrixV87();renderWorkerPortalV87();
+}
+const renderDashboardV87Base=renderDashboard;
+renderDashboard=function(){renderDashboardV87Base();installV87Ui();renderProfilePanelsV87();renderRiskMatrixV87();};
+const renderPageV87Base=renderPage;
+renderPage=function(page){renderPageV87Base(page);installV87Ui();if(page==='operaciones-cloud'){renderRiskMatrixV87();renderWorkerPortalV87();}if(page==='reportes')installV87Ui();};
 function enhanceAccessibility() {
   document.querySelectorAll('.form-label').forEach((label,index)=>{
     if(label.htmlFor||label.querySelector('input,select,textarea'))return;
