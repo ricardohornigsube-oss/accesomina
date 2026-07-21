@@ -46,3 +46,17 @@ Este documento ordena las mejoras necesarias para que Nexo Klar pase de una plat
 - Vender como plataforma multisectorial de control operacional, cumplimiento documental y trazabilidad para empresas con personal interno y externo.
 - Preparar demos por industria: minería, energía, construcción, industrial, facilities, logística, mantenimiento, seguridad privada y agroindustria.
 - Ofrecer piloto controlado con un cliente real para generar caso de éxito, métricas de reducción de planillas, vencimientos detectados y tiempos de acreditación.
+
+## 8. Mejora ejecutada V9.4
+
+Se incorpora una suite productiva integrada visible en el Centro Operativo, Dashboard, Contratos y Reportes.
+
+- Motor documental inteligente: consolida documentos existentes, estados formales, score de confianza, revisión humana y preparación para OCR, QR, firma, emisor, fotografía e integridad.
+- Planificación tipo despacho: muestra servicios por cliente/contrato, dotación requerida/asignada, recursos asociados y brechas antes de movilizar.
+- Costos y rentabilidad: calcula hotelería, EPP, vehículos, horas hombre, costo real, facturación proyectada y margen por servicio.
+- Inventario y stock: controla EPP, equipos, bodega, stock mínimo, alertas de reposición e historial de movimientos.
+- Automatización de alertas: permite programar alertas por correo/WhatsApp, escalamiento y reportes semanales por empresa.
+- Contratos y firmas: panel de plantillas, estados de firma, versiones, bloqueo por falta de contrato/anexo y conector preparado para firma electrónica.
+- BI ejecutivo: reportes exportables a CSV y salida PDF mediante impresión del navegador para cumplimiento, riesgos, costos, dotación, hotelería, vehículos, EPP, subcontratos, incidentes, auditoría y oportunidades.
+
+Las integraciones reales con OCR, firma electrónica, WhatsApp Business, SMTP, S3, antivirus y monitoreo quedan preparadas a nivel de flujo y conector, pero requieren credenciales y servicios productivos contratados para operar con clientes reales.

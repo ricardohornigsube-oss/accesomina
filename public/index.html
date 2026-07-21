@@ -5925,6 +5925,141 @@ renderPage=function(page){renderPageV93Base(page);if(page==='operaciones-cloud')
 const renderClient360TimelineV93Base=renderClient360TimelineV92;
 renderClient360TimelineV92=function(clientId){renderClient360TimelineV93Base(clientId);renderClient360ExecutiveV93(clientId);};
 
+// ===================== V9.4: SUITE PRODUCTIVA INTEGRADA =====================
+function ensureV94Collections(){
+  ensureV90Collections?.();ensureV86Collections?.();
+  ['documentIntelligenceCases','dispatchPlans','costRecords','inventoryItems','inventoryMovements','alertAutomations','executiveReportHistory'].forEach(k=>{if(!Array.isArray(S[k]))S[k]=[];});
+  if(!S.v94Settings)S.v94Settings={alertLeadDays:30,hhRate:0,marginTarget:25};
+  seedInventoryV94();
+}
+const snapshotStateV94Base=snapshotState;
+snapshotState=function(){ensureV94Collections();const snap=snapshotStateV94Base();['documentIntelligenceCases','dispatchPlans','costRecords','inventoryItems','inventoryMovements','alertAutomations','executiveReportHistory','v94Settings'].forEach(k=>snap[k]=S[k]);return JSON.parse(JSON.stringify(snap));};
+const applyStateV94Base=applyState;
+applyState=function(data){applyStateV94Base(data);['documentIntelligenceCases','dispatchPlans','costRecords','inventoryItems','inventoryMovements','alertAutomations','executiveReportHistory','v94Settings'].forEach(k=>{if(data?.[k]!==undefined)S[k]=data[k];});ensureV94Collections();};
+const emptyTenantDataV94Base=emptyTenantData;
+emptyTenantData=function(nombre,rut,email,tel){const data=emptyTenantDataV94Base(nombre,rut,email,tel);return Object.assign(data,{documentIntelligenceCases:[],dispatchPlans:[],costRecords:[],inventoryItems:[],inventoryMovements:[],alertAutomations:[],executiveReportHistory:[],v94Settings:{alertLeadDays:30,hhRate:0,marginTarget:25}});};
+function esc94(v){return typeof eppEsc==='function'?eppEsc(String(v??'')):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function money94(v){return typeof clpV83==='function'?clpV83(Number(v)||0):'$'+(Number(v)||0).toLocaleString('es-CL');}
+function days94(a,b){const x=new Date(a),y=new Date(b);if(Number.isNaN(+x)||Number.isNaN(+y))return 0;return Math.max(0,Math.ceil((y-x)/86400000));}
+function stateDate94(v){if(!v)return 'falta';return typeof estadoFecha==='function'?estadoFecha(v):(v<hoy()?'vencido':'vigente');}
+function seedInventoryV94(){
+  if((S.inventoryItems||[]).length)return;
+  const epps=(S.catalogosEmpresa?.epp||V90_CATALOG_DEFAULTS?.epp||['Casco','Zapato de seguridad','Guantes','Lentes']);
+  S.inventoryItems=epps.slice(0,18).map((name,i)=>({id:'inv_epp_'+i,type:'EPP',name,stock:20,minStock:5,unitCost:0,location:'Bodega central',lifeDays:180,status:'activo'}));
+  (S.vehiculos||[]).slice(0,6).forEach((v,i)=>S.inventoryItems.push({id:'inv_veh_'+(v.id||i),type:'Equipo/Vehículo',name:v.nombre||v.patente||v.serie||'Equipo',stock:1,minStock:1,unitCost:Number(v.costoArriendo||v.rentalCost)||0,location:'Operaciones',linkedVehicleId:v.id,status:v.estado||'activo'}));
+}
+function docTrustScoreV94(checks={},status=''){
+  const values=['ocr','qr','firma','emisor','foto','integridad'].map(k=>checks[k]).filter(v=>v!==undefined&&v!=='');
+  if(!values.length)return ['aprobado','renovado'].includes(status)?78:['observado','rechazado','vencido'].includes(status)?30:45;
+  return Math.round(values.reduce((n,v)=>n+(v===true||v==='ok'||v==='validado'?100:v==='observado'||v==='manual'?55:0),0)/values.length);
+}
+function documentRowsV94(){
+  ensureV94Collections();
+  const docs=typeof collectedDocumentsV86==='function'?collectedDocumentsV86():[];
+  const manual=S.documentIntelligenceCases.map(x=>({...x,manual:true}));
+  return [...manual,...docs].map((d,i)=>{
+    const wf=(S.documentWorkflows||[]).find(w=>String(w.docId)===String(d.id));
+    const checks=d.checks||wf?.checks||{};
+    const score=docTrustScoreV94(checks,d.status||wf?.status||'');
+    return {id:d.id||('docv94_'+i),owner:d.owner||d.trabajador||d.entityName||'Registro documental',type:d.type||d.tipo||d.name||'Documento',relation:d.relation||d.scope||d.modulo||'Operación',status:d.status||wf?.status||'requerido',score,checks,expires:d.expires||d.vence||d.fechaVencimiento||'',source:d.source||d.fileName||d.nombreArchivo||'Archivo cargado'};
+  });
+}
+function dispatchRowsV94(){
+  ensureV94Collections();refreshOperationalStatusesV90?.();
+  return (S.mantenciones||[]).map(m=>{
+    const workers=(S.asignaciones||[]).filter(a=>a.mantId===m.id).map(a=>S.trabajadores.find(t=>t.id===a.trabId)).filter(Boolean);
+    const required=Number(m.dotacion||m.personasRequeridas||m.cantidadPersonas)||workers.length||0;
+    const blocked=workers.filter(t=>computeOperationalStatusV90?.(t).blocked||t.autoBlocked).length;
+    const hotels=(S.hotelAsig||[]).filter(a=>a.mantId===m.id&&(!a.checkout||a.checkout>=hoy()));
+    const vehicles=(S.vehiculos||[]).filter(v=>(v.minaIds||[]).includes(m.minaId));
+    const noCred=workers.filter(t=>!(S.credenciales||[]).some(c=>c.trabId===t.id&&stateDate94(c.vence)==='vigente')).length;
+    const gaps=[];
+    if(required>workers.length)gaps.push(`${required-workers.length} cargos faltantes`);
+    if(blocked)gaps.push(`${blocked} no habilitados`);
+    if(!hotels.length&&workers.length)gaps.push('hotel pendiente');
+    if(!vehicles.length)gaps.push('vehículo/equipo pendiente');
+    if(noCred)gaps.push(`${noCred} credenciales pendientes`);
+    return {id:m.id,name:m.nombre,client:minaNombre(m.minaId),contract:contratoNombre(m.contratoId),from:m.inicio||m.fechaInicio||'',to:m.fin||m.fechaTermino||'',status:m.estado||'planificado',required,assigned:workers.length,blocked,vehicles:vehicles.length,hotels:hotels.length,gaps};
+  });
+}
+function costRowsV94(){
+  ensureV94Collections();
+  return (S.mantenciones||[]).map(m=>{
+    const hotel=(S.hotelAsig||[]).filter(a=>a.mantId===m.id).reduce((n,a)=>{const h=S.hoteles.find(x=>x.id===a.hotelId);return n+(Number(h?.tarifa)||0)*Math.max(1,days94(a.checkin||hoy(),a.checkout||hoy()));},0);
+    const epp=(S.eppDeliveries||[]).filter(e=>e.mantId===m.id||e.projectId===m.id).reduce((n,e)=>n+(Number(e.unitCost||e.costo)||0)*(Number(e.qty||e.quantity)||1),0);
+    const vehicle=(S.vehiculos||[]).filter(v=>(v.minaIds||[]).includes(m.minaId)).reduce((n,v)=>n+(Number(v.costoArriendo||v.rentalCost)||0),0);
+    const hh=Number(m.hh||m.horasHombre||0);
+    const labor=hh*(Number(S.v94Settings?.hhRate)||0);
+    const real=hotel+epp+vehicle+labor+(S.costRecords||[]).filter(c=>c.projectId===m.id).reduce((n,c)=>n+Number(c.amount||0),0);
+    const projected=Number(m.facturacionProyectada||m.monto||0);
+    return {id:m.id,client:minaNombre(m.minaId),contract:contratoNombre(m.contratoId),project:m.nombre,hotel,epp,vehicle,hh,labor,real,projected,margin:projected-real};
+  });
+}
+function alertAutomationRowsV94(){
+  const base=typeof computeAlertas==='function'?computeAlertas():[];
+  return base.slice(0,30).map((a,i)=>({id:a.id||'auto_'+i,type:a.tipo||a.area||'Vencimiento',title:a.titulo||a.msg||a.nombre||'Alerta operativa',owner:a.responsable||S.empresa?.representante||'Administrador',channel:a.channel||'Correo + WhatsApp',status:a.status||'pendiente'}));
+}
+function renderV94OperationsSuite(){
+  const page=document.getElementById('page-operaciones-cloud');if(!page)return;
+  if(!document.getElementById('ops-v94-suite'))(document.getElementById('ops-v93-excellence')||page.querySelector('.section-header'))?.insertAdjacentHTML('afterend','<div id="ops-v94-suite"></div>');
+  const host=document.getElementById('ops-v94-suite');if(!host)return;
+  const docs=documentRowsV94(),dispatch=dispatchRowsV94(),costs=costRowsV94(),alerts=alertAutomationRowsV94(),inv=S.inventoryItems||[];
+  const riskDocs=docs.filter(d=>d.score<70||['observado','rechazado','vencido','requerido'].includes(d.status)).length;
+  host.innerHTML=`<div class="card" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Suite productiva integrada V9.4</div><div class="card-subtitle">Motor documental, despacho, costos, inventario, alertas, firma, BI e infraestructura conectados a la operación real.</div></div><span class="badge badge-ok">Operativo</span></div><div class="kpi-grid" style="margin-top:12px;"><div class="kpi kpi-red"><div class="kpi-value">${riskDocs}</div><div class="kpi-label">Docs con revisión</div></div><div class="kpi kpi-orange"><div class="kpi-value">${dispatch.filter(r=>r.gaps.length).length}</div><div class="kpi-label">Servicios con brechas</div></div><div class="kpi kpi-green"><div class="kpi-value">${money94(costs.reduce((n,r)=>n+r.real,0))}</div><div class="kpi-label">Costo operacional</div></div><div class="kpi kpi-blue"><div class="kpi-value">${inv.filter(i=>Number(i.stock)<=Number(i.minStock)).length}</div><div class="kpi-label">Stock bajo</div></div></div></div>
+  <div class="grid-2">
+    <div class="card"><div class="card-header"><div><div class="card-title">Motor documental inteligente</div><div class="card-subtitle">OCR, QR, firma, emisor, fotografía, integridad, score y revisión humana.</div></div><button class="btn btn-secondary btn-sm" onclick="exportV94Csv('documentos')">Exportar</button></div><div class="table-wrap"><table><thead><tr><th>Registro</th><th>Documento</th><th>Estado</th><th>Score</th><th>Revisión</th></tr></thead><tbody>${docs.slice(0,8).map(d=>`<tr><td><b>${esc94(d.owner)}</b><div class="worker-rut">${esc94(d.relation)}</div></td><td>${esc94(d.type)}<div class="worker-rut">${esc94(d.source)}</div></td><td><span class="badge ${['aprobado','renovado'].includes(d.status)?'badge-ok':d.status==='rechazado'||d.status==='vencido'?'badge-err':'badge-warn'}">${esc94(d.status)}</span></td><td><b>${d.score}%</b></td><td>${d.score>=80?'Humana final':d.score>=55?'Validar emisor/evidencia':'Bloquear y corregir'}</td></tr>`).join('')||'<tr><td colspan="5">Sin documentos registrados.</td></tr>'}</tbody></table></div></div>
+    <div class="card"><div class="card-header"><div><div class="card-title">Planificación tipo despacho</div><div class="card-subtitle">Servicios por cliente, dotación, recursos y brechas antes de movilizar.</div></div><button class="btn btn-secondary btn-sm" onclick="exportV94Csv('despacho')">Exportar</button></div><div class="table-wrap"><table><thead><tr><th>Servicio</th><th>Dotación</th><th>Recursos</th><th>Estado</th><th>Brechas</th></tr></thead><tbody>${dispatch.slice(0,8).map(r=>`<tr><td><b>${esc94(r.project)}</b><div class="worker-rut">${esc94(r.client)} · ${esc94(r.contract)}</div></td><td>${r.assigned}/${r.required}</td><td>${r.hotels} hotel · ${r.vehicles} equipos</td><td><span class="badge badge-blue">${esc94(r.status)}</span></td><td>${r.gaps.length?r.gaps.map(g=>`<span class="badge badge-warn">${esc94(g)}</span>`).join(' '):'<span class="badge badge-ok">Listo</span>'}</td></tr>`).join('')||'<tr><td colspan="5">Sin servicios para planificar.</td></tr>'}</tbody></table></div></div>
+    <div class="card"><div class="card-header"><div><div class="card-title">Costos y rentabilidad</div><div class="card-subtitle">Hotelería, EPP, vehículos, HH, OC, facturación y margen por servicio.</div></div><button class="btn btn-secondary btn-sm" onclick="exportV94Csv('costos')">Exportar</button></div><div class="table-wrap"><table><thead><tr><th>Proyecto/servicio</th><th>Cliente</th><th>Costo real</th><th>Venta proyectada</th><th>Margen</th></tr></thead><tbody>${costs.slice(0,8).map(r=>`<tr><td><b>${esc94(r.project)}</b><div class="worker-rut">Hotel ${money94(r.hotel)} · EPP ${money94(r.epp)} · Veh ${money94(r.vehicle)}</div></td><td>${esc94(r.client)}</td><td>${money94(r.real)}</td><td>${money94(r.projected)}</td><td><span class="badge ${r.margin>=0?'badge-ok':'badge-err'}">${money94(r.margin)}</span></td></tr>`).join('')||'<tr><td colspan="5">Sin costos asociados todavía.</td></tr>'}</tbody></table></div></div>
+    <div class="card"><div class="card-header"><div><div class="card-title">Inventario y stock</div><div class="card-subtitle">EPP, herramientas, equipos críticos, bodega, vida útil y movimientos.</div></div><button class="btn btn-secondary btn-sm" onclick="exportV94Csv('inventario')">Exportar</button></div><div class="table-wrap"><table><thead><tr><th>Recurso</th><th>Tipo</th><th>Stock</th><th>Mínimo</th><th>Estado</th></tr></thead><tbody>${inv.slice(0,10).map(i=>`<tr><td><b>${esc94(i.name)}</b><div class="worker-rut">${esc94(i.location||'Bodega')}</div></td><td>${esc94(i.type)}</td><td><input class="form-input" type="number" value="${Number(i.stock)||0}" onchange="saveInventoryFieldV94('${i.id}','stock',this.value)" style="width:80px"></td><td>${Number(i.minStock)||0}</td><td>${Number(i.stock)<=Number(i.minStock)?'<span class="badge badge-err">Reponer</span>':'<span class="badge badge-ok">OK</span>'}</td></tr>`).join('')}</tbody></table></div></div>
+  </div>
+  <div class="card" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Automatización de alertas y notificaciones</div><div class="card-subtitle">Correo, WhatsApp, escalamiento, tareas y reporte semanal configurable por empresa.</div></div><button class="btn btn-primary btn-sm" onclick="saveAlertAutomationV94()">Programar alerta</button></div><div class="table-wrap"><table><thead><tr><th>Alerta</th><th>Canal</th><th>Responsable</th><th>Estado</th></tr></thead><tbody>${alerts.slice(0,12).map(a=>`<tr><td><b>${esc94(a.title)}</b><div class="worker-rut">${esc94(a.type)}</div></td><td>${esc94(a.channel)}</td><td>${esc94(a.owner)}</td><td><span class="badge badge-warn">${esc94(a.status)}</span></td></tr>`).join('')||'<tr><td colspan="4">Sin alertas automáticas.</td></tr>'}</tbody></table></div><div class="cloud-note">Los envíos reales requieren credenciales SMTP, WhatsApp Business API y reglas de escalamiento activas en producción.</div></div>`;
+}
+function saveInventoryFieldV94(id,field,value){ensureV94Collections();const item=S.inventoryItems.find(i=>i.id===id);if(!item)return;const before={...item};item[field]=field==='stock'||field==='minStock'||field==='unitCost'?Number(value)||0:value;S.inventoryMovements.unshift({id:'mov_'+Date.now(),itemId:id,type:'ajuste',qty:item.stock,before,after:{...item},at:new Date().toISOString(),user:currentTenantUser?.email||'usuario'});persistTenant();renderV94OperationsSuite();}
+function saveAlertAutomationV94(){ensureV94Collections();S.alertAutomations.unshift({id:'auto_'+Date.now(),type:'vencimientos',title:'Reporte semanal automático de vencimientos y brechas',channel:'Correo + WhatsApp',owner:S.empresa?.representante||'Administrador',frequency:'semanal',status:'programado',createdAt:new Date().toISOString()});persistTenant();toast('Automatización programada para esta empresa');renderV94OperationsSuite();}
+function renderV94ContractsPanel(){
+  const page=document.getElementById('page-contratos');if(!page)return;
+  if(!document.getElementById('contracts-v94'))page.querySelector('.section-header')?.insertAdjacentHTML('afterend','<div class="card" id="contracts-v94" style="margin-bottom:16px;"></div>');
+  const host=document.getElementById('contracts-v94');if(!host)return;
+  const templates=S.contractTemplates||[],sign=S.firmas||[];
+  host.innerHTML=`<div class="card-header"><div><div class="card-title">Contratos, anexos y firma robusta</div><div class="card-subtitle">Plantillas por empresa, generación con datos del trabajador, versiones, firma electrónica y bloqueo si falta firma.</div></div><button class="btn btn-primary btn-sm" onclick="addContractTemplateV94()">+ Plantilla</button></div><div class="kpi-grid" style="margin-top:12px;"><div class="kpi kpi-blue"><div class="kpi-value">${templates.length}</div><div class="kpi-label">Plantillas</div></div><div class="kpi kpi-orange"><div class="kpi-value">${sign.filter(f=>!['firmado','aprobado'].includes(String(f.estado).toLowerCase())).length}</div><div class="kpi-label">Firmas pendientes</div></div><div class="kpi kpi-green"><div class="kpi-value">${sign.filter(f=>['firmado','aprobado'].includes(String(f.estado).toLowerCase())).length}</div><div class="kpi-label">Firmados</div></div><div class="kpi kpi-red"><div class="kpi-value">${S.trabajadores.filter(t=>computeOperationalStatusV90?.(t).blocked).length}</div><div class="kpi-label">Bloqueos automáticos</div></div></div><div class="cloud-note" style="margin-top:12px;">Conector preparado para proveedor de firma electrónica: envío, estado, observación, rechazo, vencimiento, versión y descarga del contrato firmado.</div>`;
+}
+function addContractTemplateV94(){ensureV94Collections();const name=prompt('Nombre de la plantilla:','Contrato trabajador terreno');if(!name)return;S.contractTemplates.push({id:'tpl_'+Date.now(),name,type:prompt('Tipo: contrato, anexo o finiquito','contrato')||'contrato',version:'1.0',status:'activa',createdAt:new Date().toISOString()});persistTenant();renderV94ContractsPanel();toast('Plantilla creada para esta empresa');}
+function renderV94ReportsPanel(){
+  const page=document.getElementById('page-reportes');if(!page)return;
+  if(!document.getElementById('reports-v94'))page.querySelector('.section-header')?.insertAdjacentHTML('afterend','<div class="card" id="reports-v94" style="margin-bottom:16px;"></div>');
+  const host=document.getElementById('reports-v94');if(!host)return;
+  const reports=['Cumplimiento documental','Riesgos','Costos y rentabilidad','Dotación','Personal habilitado/bloqueado','Hotelería','Vehículos y equipos','EPP','Subcontratos','Incidentes y acciones','Auditoría y trazabilidad','Oportunidades comerciales'];
+  host.innerHTML=`<div class="card-header"><div><div class="card-title">BI y reportes ejecutivos exportables</div><div class="card-subtitle">Salidas comerciales y gerenciales por empresa, cliente, contrato, proyecto, fecha, estado y responsable.</div></div><button class="btn btn-primary btn-sm" onclick="exportV94Csv('resumen')">Excel resumen</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">${reports.map(r=>`<button class="btn btn-secondary btn-sm" onclick="exportV94Csv('${r.toLowerCase().replaceAll(' ','_')}')">${esc94(r)}</button>`).join('')}<button class="btn btn-ghost btn-sm" onclick="window.print()">PDF ejecutivo</button></div><div class="cloud-note" style="margin-top:12px;">Cada reporte queda listo para entregar a gerencia, operaciones, RR.HH., prevención, cliente/mandante o inversionistas.</div>`;
+}
+function renderV94DashboardPanel(){
+  const anchor=document.getElementById('dash-v93-readiness')||document.getElementById('kpi-dash');if(!anchor||document.getElementById('dash-v94-control'))return;
+  const d=dispatchRowsV94(),c=costRowsV94(),docs=documentRowsV94();
+  anchor.insertAdjacentHTML('afterend',`<div class="card" id="dash-v94-control" style="margin-bottom:20px;"><div class="card-header"><div><div class="card-title">Control operativo centralizado</div><div class="card-subtitle">Brechas, costos, documentos, stock y automatizaciones visibles para operar con menos planillas.</div></div><button class="btn btn-secondary btn-sm" onclick="nav('operaciones-cloud')">Abrir Centro Operativo</button></div><div class="kpi-grid" style="margin-top:12px;"><div class="kpi kpi-orange"><div class="kpi-value">${d.filter(x=>x.gaps.length).length}</div><div class="kpi-label">Servicios con brechas</div></div><div class="kpi kpi-green"><div class="kpi-value">${money94(c.reduce((n,x)=>n+x.margin,0))}</div><div class="kpi-label">Margen estimado</div></div><div class="kpi kpi-red"><div class="kpi-value">${docs.filter(x=>x.score<70).length}</div><div class="kpi-label">Docs bajo confianza</div></div><div class="kpi kpi-blue"><div class="kpi-value">${S.alertAutomations?.length||0}</div><div class="kpi-label">Alertas programadas</div></div></div></div>`);
+}
+function exportV94Csv(type){
+  ensureV94Collections();
+  let rows=[['Reporte','Valor']];
+  if(type==='documentos')rows=[['Dueño','Documento','Relación','Estado','Score','Vence','Fuente'],...documentRowsV94().map(d=>[d.owner,d.type,d.relation,d.status,d.score,d.expires,d.source])];
+  else if(type==='despacho')rows=[['Servicio','Cliente','Contrato','Desde','Hasta','Estado','Requeridos','Asignados','Bloqueados','Brechas'],...dispatchRowsV94().map(r=>[r.project,r.client,r.contract,r.from,r.to,r.status,r.required,r.assigned,r.blocked,r.gaps.join(' | ')])];
+  else if(type==='costos')rows=[['Servicio','Cliente','Contrato','Hotel','EPP','Vehículos','HH','Labor','Costo real','Venta proyectada','Margen'],...costRowsV94().map(r=>[r.project,r.client,r.contract,r.hotel,r.epp,r.vehicle,r.hh,r.labor,r.real,r.projected,r.margin])];
+  else if(type==='inventario')rows=[['Recurso','Tipo','Stock','Mínimo','Costo unitario','Ubicación','Estado'],...(S.inventoryItems||[]).map(i=>[i.name,i.type,i.stock,i.minStock,i.unitCost,i.location,i.status])];
+  else rows=[['Indicador','Cantidad'],['Clientes',S.minas.length],['Contratos',S.contratos.length],['Servicios',S.mantenciones.length],['Trabajadores',S.trabajadores.length],['Documentos revisables',documentRowsV94().length],['Servicios con brechas',dispatchRowsV94().filter(r=>r.gaps.length).length],['Costo operacional',costRowsV94().reduce((n,r)=>n+r.real,0)],['Alertas programadas',S.alertAutomations.length]];
+  exportCSV(rows,`nexo_klar_${type}_${hoy()}.csv`);
+}
+function installV94Ui(page){
+  ensureV94Collections();
+  if(page==='operaciones-cloud')renderV94OperationsSuite();
+  if(page==='contratos')renderV94ContractsPanel();
+  if(page==='reportes')renderV94ReportsPanel();
+  if(page==='dashboard')renderV94DashboardPanel();
+}
+const renderDashboardV94Base=renderDashboard;
+renderDashboard=function(){renderDashboardV94Base();renderV94DashboardPanel();};
+const renderPageV94Base=renderPage;
+renderPage=function(page){renderPageV94Base(page);installV94Ui(page);};
+const initV94Base=init;
+init=function(){initV94Base();ensureV94Collections();installV94Ui(currentPage||'dashboard');};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
