@@ -420,7 +420,7 @@ body.private #main { display:block; }
   <div class="nav-group-label" id="nav-admin-label" style="display:none;">Administración Nexo Klar</div>
   <div class="nav-item" id="nav-clientes" style="display:none;" onclick="nav('clientes')">🏢 Clientes</div>
   <div class="sidebar-bottom">
-    <div style="font-weight:700;color:var(--text-muted);margin-bottom:4px;">Domian Servicios Industriales SpA</div>
+    <div style="font-weight:700;color:var(--text-muted);margin-bottom:4px;">Nexo Klar / Domian Servicios Industriales SpA</div>
     <div>RUT: 78.425.213-2</div>
     <div>contacto@domian.cl</div>
     <div>+56 9 7649 0489</div>
@@ -1070,26 +1070,29 @@ body.private #main { display:block; }
   <!-- PAGE: REPORTES -->
   <div id="page-reportes" class="page">
     <div class="section-header">
-      <div><div class="section-title">📊 Reportes</div><div class="section-sub">Exporta datos reales en CSV</div></div>
+      <div><div class="section-title">📊 Reportes</div><div class="section-sub">Exporta datos reales en CSV con vista previa operativa</div></div>
+      <div class="section-actions"><button class="btn btn-primary" onclick="exportResumenEjecutivo()">📈 Resumen ejecutivo</button><button class="btn btn-secondary" onclick="exportAlertasCSV()">🚨 Alertas</button><button class="btn btn-secondary" onclick="exportNomina()">📋 Nómina</button></div>
     </div>
+    <div class="grid-4" id="report-preview-kpis" style="margin-bottom:16px;"></div>
+    <div class="card" id="report-preview-panel" style="margin-bottom:16px;"></div>
     <div class="grid-3" style="gap:20px;">
-      <div class="report-card" onclick="exportNomina()"><div class="report-icon">📋</div><div class="report-title">Nómina Completa</div><div class="report-desc">Todos los trabajadores con datos básicos y estado</div></div>
-      <div class="report-card" onclick="exportReporteMant()"><div class="report-icon">🔧</div><div class="report-title">Reporte por Mantención</div><div class="report-desc">Personal asignado y estado por mantención</div></div>
-      <div class="report-card" onclick="exportAlertasCSV()"><div class="report-icon">🚨</div><div class="report-title">Alertas Vencimiento</div><div class="report-desc">Todos los vencimientos críticos y próximos</div></div>
-      <div class="report-card" onclick="exportContratos()"><div class="report-icon">📝</div><div class="report-title">Estado Contratos y Firmas</div><div class="report-desc">Marco de contratos y estado de firmas digitales</div></div>
-      <div class="report-card" onclick="exportHoteles()"><div class="report-icon">🛏</div><div class="report-title">Alojamiento</div><div class="report-desc">Asignaciones de hotelería por mantención</div></div>
-      <div class="report-card" onclick="exportAuditoria()"><div class="report-icon">🔍</div><div class="report-title">Auditoría Acreditación</div><div class="report-desc">Porcentaje de acreditación por trabajador</div></div>
-      <div class="report-card" onclick="exportMinerasContratos()"><div class="report-icon">🏔️</div><div class="report-title">Mineras y Contratos</div><div class="report-desc">Mandantes, contratos, proyectos y vínculos</div></div>
-      <div class="report-card" onclick="exportCallouts()"><div class="report-icon">📲</div><div class="report-title">Llamados WA</div><div class="report-desc">Grupos, convocatorias y trazabilidad</div></div>
-      <div class="report-card" onclick="exportDocumentosTrabajadores()"><div class="report-icon">📄</div><div class="report-title">Documentos por Trabajador</div><div class="report-desc">Carga documental, archivos y validación</div></div>
-      <div class="report-card" onclick="exportAcreditacionMandante()"><div class="report-icon">✅</div><div class="report-title">Acreditación Mandante</div><div class="report-desc">Estado final por minera, empresa, personas, vehículos y proyectos</div></div>
-      <div class="report-card" onclick="exportVehiculos()"><div class="report-icon">🚙</div><div class="report-title">Vehículos y Equipos</div><div class="report-desc">Documentos, operador, minera, certificaciones y vencimientos</div></div>
-      <div class="report-card" onclick="exportSubcontratos()"><div class="report-icon">🏗️</div><div class="report-title">Subcontratos</div><div class="report-desc">Subcontratistas, cumplimiento laboral y dotación asociada</div></div>
-      <div class="report-card" onclick="exportTurnos()"><div class="report-icon">🕒</div><div class="report-title">Turnos y Jornada</div><div class="report-desc">Regímenes, asistencia, ingreso/salida y horas hombre reales</div></div>
-      <div class="report-card" onclick="exportCredenciales()"><div class="report-icon">🎫</div><div class="report-title">Credenciales</div><div class="report-desc">Pases mina, zonas autorizadas, QR y vencimientos</div></div>
-      <div class="report-card" onclick="exportIncidentes()"><div class="report-icon">⚠️</div><div class="report-title">Incidentes y NC</div><div class="report-desc">Hallazgos, acciones correctivas, responsables y cierres</div></div>
-      <div class="report-card" onclick="exportProtocolos()"><div class="report-icon">🩺</div><div class="report-title">Protocolos Salud</div><div class="report-desc">Hipobaria, ruido, sílice, UV, psicosocial y otros protocolos</div></div>
-      <div class="report-card" onclick="exportResumenEjecutivo()"><div class="report-icon">📈</div><div class="report-title">Resumen Ejecutivo</div><div class="report-desc">Totales, alertas, dotación, hotelería y costos operacionales</div></div>
+      <div class="report-card" onclick="exportNomina()"><div class="report-icon">📋</div><div class="report-title">Nómina Completa</div><div class="report-desc">Todos los trabajadores con datos básicos y estado</div><button class="btn btn-primary btn-sm">Descargar CSV</button></div>
+      <div class="report-card" onclick="exportReporteMant()"><div class="report-icon">🔧</div><div class="report-title">Reporte por Mantención</div><div class="report-desc">Personal asignado y estado por mantención</div><button class="btn btn-primary btn-sm">Descargar CSV</button></div>
+      <div class="report-card" onclick="exportAlertasCSV()"><div class="report-icon">🚨</div><div class="report-title">Alertas Vencimiento</div><div class="report-desc">Todos los vencimientos críticos y próximos</div><button class="btn btn-primary btn-sm">Descargar CSV</button></div>
+      <div class="report-card" onclick="exportContratos()"><div class="report-icon">📝</div><div class="report-title">Estado Contratos y Firmas</div><div class="report-desc">Marco de contratos y estado de firmas digitales</div><button class="btn btn-primary btn-sm">Descargar CSV</button></div>
+      <div class="report-card" onclick="exportHoteles()"><div class="report-icon">🛏</div><div class="report-title">Alojamiento</div><div class="report-desc">Asignaciones de hotelería por mantención</div><button class="btn btn-primary btn-sm">Descargar CSV</button></div>
+      <div class="report-card" onclick="exportAuditoria()"><div class="report-icon">🔍</div><div class="report-title">Auditoría Acreditación</div><div class="report-desc">Porcentaje de acreditación por trabajador</div><button class="btn btn-primary btn-sm">Descargar CSV</button></div>
+      <div class="report-card" onclick="exportMinerasContratos()"><div class="report-icon">🏔️</div><div class="report-title">Clientes y Contratos</div><div class="report-desc">Mandantes, contratos, proyectos y vínculos</div><button class="btn btn-primary btn-sm">Descargar CSV</button></div>
+      <div class="report-card" onclick="exportCallouts()"><div class="report-icon">📲</div><div class="report-title">Llamados WA</div><div class="report-desc">Grupos, convocatorias y trazabilidad</div><button class="btn btn-primary btn-sm">Descargar CSV</button></div>
+      <div class="report-card" onclick="exportDocumentosTrabajadores()"><div class="report-icon">📄</div><div class="report-title">Documentos por Trabajador</div><div class="report-desc">Carga documental, archivos y validación</div><button class="btn btn-primary btn-sm">Descargar CSV</button></div>
+      <div class="report-card" onclick="exportAcreditacionMandante()"><div class="report-icon">✅</div><div class="report-title">Acreditación Mandante</div><div class="report-desc">Estado final por cliente, empresa, personas, vehículos y proyectos</div><button class="btn btn-primary btn-sm">Descargar CSV</button></div>
+      <div class="report-card" onclick="exportVehiculos()"><div class="report-icon">🚙</div><div class="report-title">Vehículos y Equipos</div><div class="report-desc">Documentos, operador, cliente, certificaciones y vencimientos</div><button class="btn btn-primary btn-sm">Descargar CSV</button></div>
+      <div class="report-card" onclick="exportSubcontratos()"><div class="report-icon">🏗️</div><div class="report-title">Subcontratos</div><div class="report-desc">Subcontratistas, cumplimiento laboral y dotación asociada</div><button class="btn btn-primary btn-sm">Descargar CSV</button></div>
+      <div class="report-card" onclick="exportTurnos()"><div class="report-icon">🕒</div><div class="report-title">Turnos y Jornada</div><div class="report-desc">Regímenes, asistencia, ingreso/salida y horas hombre reales</div><button class="btn btn-primary btn-sm">Descargar CSV</button></div>
+      <div class="report-card" onclick="exportCredenciales()"><div class="report-icon">🎫</div><div class="report-title">Credenciales</div><div class="report-desc">Pases, zonas autorizadas, QR y vencimientos</div><button class="btn btn-primary btn-sm">Descargar CSV</button></div>
+      <div class="report-card" onclick="exportIncidentes()"><div class="report-icon">⚠️</div><div class="report-title">Incidentes y NC</div><div class="report-desc">Hallazgos, acciones correctivas, responsables y cierres</div><button class="btn btn-primary btn-sm">Descargar CSV</button></div>
+      <div class="report-card" onclick="exportProtocolos()"><div class="report-icon">🩺</div><div class="report-title">Protocolos Salud</div><div class="report-desc">Hipobaria, ruido, sílice, UV, psicosocial y otros protocolos</div><button class="btn btn-primary btn-sm">Descargar CSV</button></div>
+      <div class="report-card" onclick="exportResumenEjecutivo()"><div class="report-icon">📈</div><div class="report-title">Resumen Ejecutivo</div><div class="report-desc">Totales, alertas, dotación, hotelería y costos operacionales</div><button class="btn btn-primary btn-sm">Descargar CSV</button></div>
     </div>
   </div>
 
@@ -1567,7 +1570,7 @@ body.private #main { display:block; }
   </section>
 </div>
 
-<script src="/cloud-client.js?v=7.6.0"></script>
+<script src="/cloud-client.js?v=7.6.0" onerror="this.onerror=null;this.src='public/cloud-client.js?v=7.6.0';"></script>
 <script>
 const CHILE_REGIONES_COMUNAS = [
   {region:'Arica y Parinacota',comunas:['Arica','Camarones','Putre','General Lagos']},
@@ -1598,7 +1601,7 @@ function bindChileRegionComuna(regionId='min-region',comunaId='min-comuna'){ensu
 function installChileRegionComuna(){bindChileRegionComuna('min-region','min-comuna');bindChileRegionComuna('nt-region','nt-ciudad');bindChileRegionComuna('hot-region','hot-ciudad');document.querySelectorAll('input[id*="region" i],input[name*="region" i]').forEach(input=>{if(!input.list)input.setAttribute('list','chile-regiones-list');});document.querySelectorAll('input[id*="comuna" i],input[name*="comuna" i],input[id*="ciudad" i],input[name*="ciudad" i]').forEach(input=>{if(!input.list)input.setAttribute('list','chile-comunas-list');});}
 // ===================== STATE =====================
 const S = {
-  empresa: { nombre:'Domian Servicios Industriales SpA', rut:'78.425.213-2', representante:'Ricardo Hornig', email:'contacto@domian.cl', tel:'+56 9 7649 0489' },
+  empresa: { nombre:'Nexo Klar / Domian Servicios Industriales SpA', razonSocial:'Domian Servicios Industriales SpA', rut:'78.425.213-2', representante:'Ricardo Hornig', email:'contacto@domian.cl', tel:'+56 9 7649 0489' },
   minas: [
     { id:'mi1', nombre:'Minera Los Pelambres', mandante:'Antofagasta Minerals', region:'Coquimbo', altura:3200, sistema:'SIGA', contacto:'Patricio Reyes', color:'#f07d36' },
     { id:'mi2', nombre:'Minera Escondida', mandante:'BHP', region:'Antofagasta', altura:3100, sistema:'Minpass', contacto:'Sofía Castro', color:'#4db8e8' },
@@ -1642,7 +1645,12 @@ const S = {
   ],
   trabajadores: [],
   asignaciones: [],
-  hotelAsig: []
+  hotelAsig: [],
+  vehiculos: [
+    {id:'ve_demo_1',tipo:'camioneta',nombre:'Camioneta 4x4 Operaciones Norte',patente:'NK-7421',serie:'',propiedad:'propia',minaIds:['mi1'],operadorId:'t1',permisoCirculacion:'2027-03-31',revisionTecnica:'2027-01-15',seguro:'2027-03-31',autorizacionMinera:'2027-02-28',certificacion:'2027-01-31',estado:'activo',observacion:'Vehículo habilitado para traslado de supervisión.',documents:[]},
+    {id:'ve_demo_2',tipo:'camioneta',nombre:'Camioneta Arrendada Mantención Q3',patente:'NK-8832',serie:'',propiedad:'arrendada',arriendoVence:'2026-08-12',arriendoFin:'2026-08-12',rentalCost:850000,currency:'CLP',minaIds:['mi2','mi5'],operadorId:'t6',permisoCirculacion:'2027-03-31',revisionTecnica:'2026-08-15',seguro:'2026-08-10',autorizacionMinera:'2026-08-20',certificacion:'2027-01-31',estado:'activo',observacion:'Arriendo temporal para parada de planta; revisar renovación antes de movilizar.',documents:[]},
+    {id:'ve_demo_3',tipo:'manlift',nombre:'Manlift 20 m Servicio Planta',patente:'',serie:'ML-NK-2026-014',propiedad:'arrendada',arriendoVence:'2026-07-30',arriendoFin:'2026-07-30',rentalCost:1450000,currency:'CLP',minaIds:['mi3'],operadorId:'t11',permisoCirculacion:'',revisionTecnica:'2026-07-28',seguro:'2026-12-31',autorizacionMinera:'2026-07-29',certificacion:'2026-07-27',estado:'observado',observacion:'Equipo con vencimientos próximos para demostrar alertas operativas.',documents:[]}
+  ]
 };
 
 
@@ -1650,7 +1658,7 @@ let currentTenantId = 'domian';
 let bootSeedSnapshot = null;
 const ADMIN_TENANT_ID = '784252132';
 const CLIENT_REGISTRY_KEY = 'accesomina_v6_client_registry';
-function domianEmpresa() { return { nombre:'Domian Servicios Industriales SpA', rut:'78.425.213-2', representante:'Ricardo Hornig', email:'contacto@domian.cl', tel:'+56 9 7649 0489' }; }
+function domianEmpresa() { return { nombre:'Nexo Klar / Domian Servicios Industriales SpA', razonSocial:'Domian Servicios Industriales SpA', rut:'78.425.213-2', representante:'Ricardo Hornig', email:'contacto@domian.cl', tel:'+56 9 7649 0489' }; }
 function tenantKey(id) { return `accesomina_v6_tenant_${id}`; }
 function normalizeTenantId(rut) { return (rut||'domian').toLowerCase().replace(/[^0-9k]/g,'') || 'domian'; }
 function cleanRut(rut) { return String(rut||'').toLowerCase().replace(/[^0-9k]/g,''); }
@@ -1704,7 +1712,7 @@ function loadClientRegistry() {
   try { list = JSON.parse(localStorage.getItem(CLIENT_REGISTRY_KEY)||'[]'); } catch(e) { list = []; }
   const hasDomian = list.some(c=>c.id===ADMIN_TENANT_ID);
   if(!hasDomian) {
-    list.unshift({ id:ADMIN_TENANT_ID, nombre:'Domian Servicios Industriales SpA', rut:'78.425.213-2', email:'contacto@domian.cl', tel:'+56 9 7649 0489', creado:hoy(), admin:true });
+    list.unshift({ id:ADMIN_TENANT_ID, nombre:'Nexo Klar / Domian Servicios Industriales SpA', rut:'78.425.213-2', email:'contacto@domian.cl', tel:'+56 9 7649 0489', creado:hoy(), admin:true });
     saveClientRegistry(list);
   }
   return list;
@@ -4678,7 +4686,7 @@ function goOnboarding(index){onboardingVisited.add(onboardingIndex);onboardingIn
 function moveOnboarding(direction){onboardingVisited.add(onboardingIndex);if(direction>0&&onboardingIndex===ONBOARDING_STEPS.length-1){localStorage.setItem(onboardingStorageKey(),JSON.stringify({index:0,visited:ONBOARDING_STEPS.map((_,i)=>i),completed:true}));closeOnboarding();toast('Guía completada. Puedes repetirla desde Administración Empresa.');return;}onboardingIndex=Math.max(0,Math.min(onboardingIndex+direction,ONBOARDING_STEPS.length-1));renderOnboarding();}
 function openOnboardingModule(){const page=ONBOARDING_STEPS[onboardingIndex].page;onboardingVisited.add(onboardingIndex);closeOnboarding(false);nav(page);}
 function closeOnboarding(save=true){const overlay=document.getElementById('onboarding-overlay');overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');if(save)localStorage.setItem(onboardingStorageKey(),JSON.stringify({index:onboardingIndex,visited:[...onboardingVisited],completed:false}));}
-const enterPrivateOnboarding=enterPrivate;enterPrivate=function(){enterPrivateOnboarding();setTimeout(()=>{try{const state=JSON.parse(localStorage.getItem(onboardingStorageKey())||'{}');if(!state.completed&&!state.visited?.length)startOnboarding(false);}catch{}},650);};
+const enterPrivateOnboarding=enterPrivate;enterPrivate=function(){enterPrivateOnboarding();setTimeout(()=>{try{const state=JSON.parse(localStorage.getItem(onboardingStorageKey())||'{}');if(!state.completed&&!state.visited?.length&&!state.notified){localStorage.setItem(onboardingStorageKey(),JSON.stringify({...state,notified:true}));toast('Guía interactiva disponible en el menú lateral cuando quieras revisarla.');}}catch{}},650);};
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.getElementById('onboarding-overlay')?.classList.contains('open'))closeOnboarding();if(!document.getElementById('onboarding-overlay')?.classList.contains('open'))return;if(event.key==='ArrowRight')moveOnboarding(1);if(event.key==='ArrowLeft')moveOnboarding(-1);});
 
 // ===================== INIT SELECTS =====================
@@ -5479,6 +5487,22 @@ function renderFinanceV88(){
   box.innerHTML=`<div class="card-header"><div><div class="card-title">Control financiero operativo</div><div class="card-subtitle">Presupuesto y costos base para hotelería, EPP, vehículos y subcontratos.</div></div><button class="btn btn-secondary btn-sm" onclick="exportFinanceV88()">Exportar</button></div><div class="kpi-grid" style="margin:12px 0;"><div class="kpi kpi-blue"><div class="kpi-value">${clpV83(hotelActual)}</div><div class="kpi-label">Hotelería registrada</div></div><div class="kpi kpi-orange"><div class="kpi-value">${clpV83(eppActual)}</div><div class="kpi-label">EPP registrado</div></div><div class="kpi kpi-green"><div class="kpi-value">${clpV83(vehicleActual)}</div><div class="kpi-label">Arriendos vehículos</div></div><div class="kpi kpi-red"><div class="kpi-value">${clpV83((f.hotelBudget||0)+(f.eppBudget||0)+(f.vehicleBudget||0)+(f.subcontractBudget||0))}</div><div class="kpi-label">Presupuesto mensual</div></div></div><div class="form-grid"><div class="form-group"><label class="form-label">SaaS mensual</label><input class="form-input" type="number" id="fin-monthlySaas" value="${f.monthlySaas||0}"></div><div class="form-group"><label class="form-label">Setup</label><input class="form-input" type="number" id="fin-setup" value="${f.setup||0}"></div><div class="form-group"><label class="form-label">Presupuesto hotel</label><input class="form-input" type="number" id="fin-hotelBudget" value="${f.hotelBudget||0}"></div><div class="form-group"><label class="form-label">Presupuesto EPP</label><input class="form-input" type="number" id="fin-eppBudget" value="${f.eppBudget||0}"></div><div class="form-group"><label class="form-label">Presupuesto vehículos</label><input class="form-input" type="number" id="fin-vehicleBudget" value="${f.vehicleBudget||0}"></div><div class="form-group"><label class="form-label">Presupuesto subcontratos</label><input class="form-input" type="number" id="fin-subcontractBudget" value="${f.subcontractBudget||0}"></div></div><button class="btn btn-primary" onclick="saveFinancialControlsV88()">Guardar control financiero</button>`;
 }
 function renderExecutiveDashboardV88(){renderFinanceV88();renderDailyLogV88();renderCapaV88();}
+function renderReportesPreviewV89(){
+  const kpiBox=document.getElementById('report-preview-kpis'),panel=document.getElementById('report-preview-panel');
+  if(!kpiBox||!panel)return;
+  const alerts=computeAlertas(),workers=S.trabajadores||[],activeServices=(S.mantenciones||[]).filter(m=>m.estado!=='cerrada'),vehicles=S.vehiculos||[],hotels=S.hoteles||[];
+  kpiBox.innerHTML=`<div class="kpi kpi-blue"><div class="kpi-value">${workers.length}</div><div class="kpi-label">Personas</div></div><div class="kpi kpi-orange"><div class="kpi-value">${alerts.length}</div><div class="kpi-label">Alertas abiertas</div></div><div class="kpi kpi-green"><div class="kpi-value">${activeServices.length}</div><div class="kpi-label">Servicios activos</div></div><div class="kpi kpi-red"><div class="kpi-value">${vehicles.filter(v=>vehicleAlertsV78(v).length).length}</div><div class="kpi-label">Vehículos con alerta</div></div>`;
+  const recommended=[
+    {name:'Resumen Ejecutivo',use:'Gerencia y reunión semanal',action:'exportResumenEjecutivo()',metric:`${activeServices.length} servicios · ${alerts.length} alertas`},
+    {name:'Alertas Vencimiento',use:'Prevención, RR.HH. y acreditación',action:'exportAlertasCSV()',metric:`${alerts.filter(a=>['vencido','critico'].includes(a.urgencia)).length} críticas/vencidas`},
+    {name:'Nómina Completa',use:'Control de personal planta y spot',action:'exportNomina()',metric:`${workers.length} trabajadores`},
+    {name:'Vehículos y Equipos',use:'Logística, contratos de arriendo y permisos',action:'exportVehiculos()',metric:`${vehicles.length} equipos`},
+    {name:'Hotelería',use:'Administración de alojamiento y costos',action:'exportHoteles()',metric:`${hotels.length} hoteles`}
+  ];
+  panel.innerHTML=`<div class="card-header"><div><div class="card-title">Vista previa de reportes útiles</div><div class="card-subtitle">Elige el reporte según la reunión, auditoría o control operativo que necesitas responder.</div></div><button class="btn btn-secondary btn-sm" onclick="exportInterconnectionV87()">🔗 Validar interconexión</button></div><div class="divider"></div><div class="table-wrap"><table><thead><tr><th>Reporte</th><th>Uso recomendado</th><th>Dato actual</th><th>Acción</th></tr></thead><tbody>${recommended.map(r=>`<tr><td><b>${r.name}</b></td><td>${r.use}</td><td>${r.metric}</td><td><button class="btn btn-primary btn-sm" onclick="${r.action}">Descargar</button></td></tr>`).join('')}</tbody></table></div>`;
+}
+const renderPageV89Base=renderPage;
+renderPage=function(page){renderPageV89Base(page);if(page==='reportes')renderReportesPreviewV89();};
 function exportDailyLogV88(){exportCSV([['Fecha','Servicio','Título','Clima','HH','Personas','Equipos','Avance','Riesgos','Evidencia'],...S.dailyLogs.map(l=>[l.fecha,mantNombre(l.mantId),l.title,l.clima,l.hh,l.personas,l.equipos,l.avance,l.riesgos,l.fileName])],`libro_diario_servicios_${hoy()}.csv`);}
 function exportCapaV88(){exportCSV([['Acción','Origen','Causa raíz','Responsable','Plazo','Estado','Detalle'],...S.capaActions.map(a=>[a.title,a.source,a.rootCause,a.owner,a.due,a.status,a.action])],`acciones_capa_${hoy()}.csv`);}
 function exportFinanceV88(){const f=S.financialControls||{};exportCSV([['Item','Monto CLP'],['SaaS mensual',f.monthlySaas||0],['Setup',f.setup||0],['Presupuesto hotel',f.hotelBudget||0],['Presupuesto EPP',f.eppBudget||0],['Presupuesto vehículos',f.vehicleBudget||0],['Presupuesto subcontratos',f.subcontractBudget||0]],`control_financiero_${hoy()}.csv`);}
@@ -5498,6 +5522,26 @@ const renderDashboardV88Base=renderDashboard;
 renderDashboard=function(){renderDashboardV88Base();installV88Ui();renderExecutiveDashboardV88();};
 const renderPageV88Base=renderPage;
 renderPage=function(page){renderPageV88Base(page);installV88Ui();if(page==='operaciones-cloud')renderExecutiveDashboardV88();};
+function demoVehiclesV89(){
+  return [
+    {id:'ve_demo_1',tipo:'camioneta',nombre:'Camioneta 4x4 Operaciones Norte',patente:'NK-7421',serie:'',propiedad:'propia',minaIds:['mi1'],operadorId:'t1',permisoCirculacion:'2027-03-31',revisionTecnica:'2027-01-15',seguro:'2027-03-31',autorizacionMinera:'2027-02-28',certificacion:'2027-01-31',estado:'activo',observacion:'Vehículo habilitado para traslado de supervisión.',documents:[]},
+    {id:'ve_demo_2',tipo:'camioneta',nombre:'Camioneta Arrendada Mantención Q3',patente:'NK-8832',serie:'',propiedad:'arrendada',arriendoVence:'2026-08-12',arriendoFin:'2026-08-12',rentalCost:850000,currency:'CLP',minaIds:['mi2','mi5'],operadorId:'t6',permisoCirculacion:'2027-03-31',revisionTecnica:'2026-08-15',seguro:'2026-08-10',autorizacionMinera:'2026-08-20',certificacion:'2027-01-31',estado:'activo',observacion:'Arriendo temporal para parada de planta; revisar renovación antes de movilizar.',documents:[]},
+    {id:'ve_demo_3',tipo:'manlift',nombre:'Manlift 20 m Servicio Planta',patente:'',serie:'ML-NK-2026-014',propiedad:'arrendada',arriendoVence:'2026-07-30',arriendoFin:'2026-07-30',rentalCost:1450000,currency:'CLP',minaIds:['mi3'],operadorId:'t11',permisoCirculacion:'',revisionTecnica:'2026-07-28',seguro:'2026-12-31',autorizacionMinera:'2026-07-29',certificacion:'2026-07-27',estado:'observado',observacion:'Equipo con vencimientos próximos para demostrar alertas operativas.',documents:[]}
+  ];
+}
+const ensureV6CollectionsV89Base=ensureV6Collections;
+ensureV6Collections=function(){
+  ensureV6CollectionsV89Base();
+  const isAdminDemo=currentTenantId===ADMIN_TENANT_ID||normalizeTenantId(S.empresa?.rut||'')===ADMIN_TENANT_ID;
+  if(isAdminDemo&&S.empresa?.nombre==='Domian Servicios Industriales SpA'){
+    S.empresa.nombre='Nexo Klar / Domian Servicios Industriales SpA';
+    S.empresa.razonSocial='Domian Servicios Industriales SpA';
+  }
+  if(isAdminDemo&&Array.isArray(S.vehiculos)&&!S.vehiculos.length){
+    S.vehiculos=demoVehiclesV89();
+    try{persistTenant();}catch{}
+  }
+};
 function enhanceAccessibility() {
   document.querySelectorAll('.form-label').forEach((label,index)=>{
     if(label.htmlFor||label.querySelector('input,select,textarea'))return;
