@@ -6150,6 +6150,63 @@ exportV94Csv=function(type){
   return exportV94CsvV95Base(type);
 };
 
+// ===================== V9.6: SEGUIMIENTO COMERCIAL DE OPORTUNIDADES =====================
+function ensureOpportunityV96(o){if(!o)return o;if(!Array.isArray(o.followUps))o.followUps=[];if(!Array.isArray(o.history))o.history=[];return o;}
+function installOpportunityV96Ui(){
+  const rut=document.getElementById('opp-rut');
+  if(rut&&!document.getElementById('opp-region'))rut.closest('.form-group')?.insertAdjacentHTML('afterend','<div class="form-group" data-v96-opp><label class="form-label">Región</label><input class="form-input chile-region-input" id="opp-region" list="chile-regiones-list" placeholder="Buscar región..."></div><div class="form-group" data-v96-opp><label class="form-label">Comuna</label><input class="form-input chile-comuna-input" id="opp-comuna" list="chile-comunas-list" placeholder="Primero selecciona región"></div>');
+  const filters=document.querySelector('#page-oportunidades .filters');
+  if(filters&&!document.getElementById('filt-opp-region'))filters.insertAdjacentHTML('beforeend','<select class="filter-select" id="filt-opp-region" onchange="renderOpportunitiesV82()"><option value="">Todas las regiones</option></select><select class="filter-select" id="filt-opp-comuna" onchange="renderOpportunitiesV82()"><option value="">Todas las comunas</option></select>');
+  const regionFilter=document.getElementById('filt-opp-region'),comunaFilter=document.getElementById('filt-opp-comuna');
+  if(regionFilter){const current=regionFilter.value;regionFilter.innerHTML='<option value="">Todas las regiones</option>'+CHILE_REGIONES_COMUNAS.map(r=>`<option value="${esc94(r.region)}">${esc94(r.region)}</option>`).join('');regionFilter.value=current;}
+  if(comunaFilter){const current=comunaFilter.value,region=regionFilter?.value||'';const items=(findChileRegion(region)?.comunas||allChileComunas().map(x=>x.comuna));comunaFilter.innerHTML='<option value="">Todas las comunas</option>'+items.map(c=>`<option value="${esc94(c)}">${esc94(c)}</option>`).join('');comunaFilter.value=current;}
+  bindChileRegionComuna?.('opp-region','opp-comuna');
+}
+const openOpportunityV96Base=openOpportunityV82;
+openOpportunityV82=function(id=''){openOpportunityV96Base(id);installOpportunityV96Ui();const o=ensureOpportunityV96(S.opportunities.find(x=>x.id===id)||{});const region=document.getElementById('opp-region'),comuna=document.getElementById('opp-comuna');if(region)region.value=o.region||'';if(comuna)comuna.value=o.comuna||'';bindChileRegionComuna?.('opp-region','opp-comuna');};
+const saveOpportunityV96Base=saveOpportunityV82;
+saveOpportunityV82=async function(){
+  installOpportunityV96Ui();
+  const idBefore=editingOpportunityV82,idsBefore=new Set((S.opportunities||[]).map(o=>o.id)),region=document.getElementById('opp-region')?.value.trim()||'',comuna=document.getElementById('opp-comuna')?.value.trim()||'';
+  if(region&&!findChileRegion(region))return toast('Selecciona una región válida de Chile','err');
+  if(comuna&&!validateChileComuna(region,comuna))return toast('La comuna no corresponde a la región seleccionada','err');
+  await saveOpportunityV96Base();
+  if(document.getElementById('modal-oportunidad')?.classList.contains('open'))return;
+  const o=idBefore?S.opportunities.find(x=>x.id===idBefore):S.opportunities.find(x=>!idsBefore.has(x.id));
+  if(!o)return;
+  ensureOpportunityV96(o);o.region=region;o.comuna=comuna;o.location=[comuna,region].filter(Boolean).join(' · ');o.history.push({at:new Date().toISOString(),action:'actualizacion_oportunidad',stage:o.stage,amount:o.amount,region,comuna,user:currentTenantUser?.email||'usuario'});
+  persistTenant();renderOpportunitiesV82();
+};
+function opportunityFollowUpRowsV96(o){ensureOpportunityV96(o);return o.followUps.slice().sort((a,b)=>(b.date||b.at||'').localeCompare(a.date||a.at||''));}
+function openOpportunityFollowUpV96(id){
+  const o=ensureOpportunityV96(S.opportunities.find(x=>x.id===id));if(!o)return;
+  document.getElementById('v81-detail-title').textContent=`Seguimiento oportunidad · ${o.company}`;
+  document.getElementById('v81-detail-body').innerHTML=`<div class="grid-2"><div class="card"><div class="card-title">Datos comerciales</div><div class="divider"></div>${infoRow('Empresa',eppEsc(o.company))}${infoRow('RUT',eppEsc(o.rut||'—'))}${infoRow('Ubicación',eppEsc([o.comuna,o.region].filter(Boolean).join(' · ')||'—'))}${infoRow('Servicio',eppEsc(o.service||'—'))}${infoRow('Etapa',eppEsc(o.stage||'prospecto'))}${infoRow('Monto',`${Number(o.amount||0).toLocaleString('es-CL')} ${o.currency||'CLP'}`)}${infoRow('Responsable',eppEsc(o.owner||'—'))}</div><div class="card"><div class="card-title">Nueva gestión / bitácora</div><div class="form-grid" style="margin-top:10px;"><div class="form-group"><label class="form-label">Tipo</label><select class="form-select" id="opp-log-type"><option value="llamada">Llamada</option><option value="correo">Correo</option><option value="reunion">Reunión</option><option value="whatsapp">WhatsApp</option><option value="propuesta">Propuesta / cotización</option><option value="acuerdo">Acuerdo</option><option value="tarea">Tarea / próximo paso</option><option value="observacion">Observación</option></select></div><div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="opp-log-date" type="date" value="${hoy()}"></div><div class="form-group"><label class="form-label">Responsable</label><input class="form-input" id="opp-log-owner" value="${escapeAttrV62(o.owner||'')}"></div><div class="form-group"><label class="form-label">Próxima gestión</label><input class="form-input" id="opp-log-next" type="date" value="${o.nextAction||''}"></div><div class="form-group full"><label class="form-label">Detalle / acuerdo / seguimiento</label><textarea class="form-textarea" id="opp-log-detail" placeholder="Qué se conversó, acuerdo, pendiente o siguiente paso..."></textarea></div><div class="form-group full"><label class="form-label">Archivo o respaldo</label><input class="form-input" id="opp-log-file" type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"></div></div><button class="btn btn-primary btn-sm" onclick="saveOpportunityFollowUpV96('${o.id}')">Guardar bitácora</button></div></div><div class="card" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Bitácora de seguimiento</div><div class="card-subtitle">Historial comercial completo para continuidad y control de compromisos.</div></div></div><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Detalle</th><th>Responsable</th><th>Próximo paso</th><th>Archivo</th></tr></thead><tbody>${opportunityFollowUpRowsV96(o).map(l=>`<tr><td>${l.date||String(l.at||'').slice(0,10)}</td><td><span class="badge badge-blue">${eppEsc(l.type||'seguimiento')}</span></td><td><b>${eppEsc(l.detail||'')}</b></td><td>${eppEsc(l.owner||'—')}</td><td>${l.nextAction||'—'} ${l.nextAction&&l.nextAction<hoy()?'<span class="badge badge-err">Vencida</span>':''}</td><td>${(l.evidenceFiles||[]).map(f=>`<span class="badge badge-ok">${eppEsc(f.name||'Archivo')}</span>`).join(' ')||'—'}</td></tr>`).join('')||'<tr><td colspan="6">Sin gestiones registradas todavía.</td></tr>'}</tbody></table></div></div>`;
+  openModal('modal-v81-detail');
+}
+async function saveOpportunityFollowUpV96(id){
+  const o=ensureOpportunityV96(S.opportunities.find(x=>x.id===id));if(!o)return;
+  const detail=document.getElementById('opp-log-detail')?.value.trim()||'',type=document.getElementById('opp-log-type')?.value||'seguimiento',date=document.getElementById('opp-log-date')?.value||hoy(),owner=document.getElementById('opp-log-owner')?.value.trim()||o.owner||'',nextAction=document.getElementById('opp-log-next')?.value||'';
+  if(!detail)return toast('Ingresa el detalle de la gestión','err');
+  const input=document.getElementById('opp-log-file'),evidenceFiles=input?.files?.length?await captureEvidenceFilesV79(input,'opportunities',o.id):[];
+  o.followUps.unshift({id:'of_'+Date.now(),type,date,detail,owner,nextAction,evidenceFiles,at:new Date().toISOString(),user:currentTenantUser?.email||'usuario'});
+  if(nextAction)o.nextAction=nextAction;if(owner)o.owner=owner;o.updatedAt=new Date().toISOString();
+  persistTenant();renderOpportunitiesV82();openOpportunityFollowUpV96(id);toast('Bitácora de oportunidad actualizada');
+}
+const renderOpportunitiesV96Base=renderOpportunitiesV82;
+renderOpportunitiesV82=function(){
+  ensureV82Collections();installOpportunityV96Ui();
+  const txt=(document.getElementById('filt-opp-txt')?.value||'').toLowerCase(),type=document.getElementById('filt-opp-type')?.value||'',stage=document.getElementById('filt-opp-stage')?.value||'',region=document.getElementById('filt-opp-region')?.value||'',comuna=document.getElementById('filt-opp-comuna')?.value||'';
+  const list=S.opportunities.map(ensureOpportunityV96).filter(o=>(!txt||`${o.company} ${o.contact} ${o.service} ${o.rut} ${o.region} ${o.comuna}`.toLowerCase().includes(txt))&&(!type||o.type===type)&&(!stage||o.stage===stage)&&(!region||o.region===region)&&(!comuna||o.comuna===comuna));
+  const pipeline=list.filter(o=>!['ganada','perdida'].includes(o.stage)).reduce((n,o)=>n+Number(o.amount||0),0),weighted=list.filter(o=>!['ganada','perdida'].includes(o.stage)).reduce((n,o)=>n+Number(o.amount||0)*Number(o.probability||0)/100,0);
+  document.getElementById('opp-kpis').innerHTML=`<div class="kpi kpi-blue"><div class="kpi-value">${list.length}</div><div class="kpi-label">Oportunidades</div></div><div class="kpi kpi-orange"><div class="kpi-value">${pipeline.toLocaleString('es-CL')}</div><div class="kpi-label">Pipeline bruto</div></div><div class="kpi kpi-green"><div class="kpi-value">${Math.round(weighted).toLocaleString('es-CL')}</div><div class="kpi-label">Pipeline ponderado</div></div><div class="kpi kpi-red"><div class="kpi-value">${list.filter(o=>o.nextAction&&o.nextAction<hoy()&&!['ganada','perdida'].includes(o.stage)).length}</div><div class="kpi-label">Gestiones vencidas</div></div>`;
+  document.getElementById('opp-table').innerHTML=`<thead><tr><th>Empresa / oportunidad</th><th>Ubicación</th><th>Tipo</th><th>Contacto</th><th>Etapa</th><th>Monto / prob.</th><th>Próxima gestión</th><th>Seguimiento</th><th>Acciones</th></tr></thead><tbody>${list.map(o=>`<tr><td><b>${eppEsc(o.company)}</b><div class="worker-rut">${eppEsc(o.service||o.rut||'')}</div></td><td>${eppEsc([o.comuna,o.region].filter(Boolean).join(' · ')||'—')}</td><td><span class="badge badge-blue">${eppEsc(o.type)}</span></td><td>${eppEsc(o.contact||'—')}<div class="worker-rut">${eppEsc(o.email||o.phone||'')}</div></td><td><span class="badge ${o.stage==='ganada'?'badge-ok':o.stage==='perdida'?'badge-err':'badge-orange'}">${eppEsc(o.stage)}</span></td><td>${Number(o.amount||0).toLocaleString('es-CL')} ${o.currency||'CLP'}<div class="worker-rut">${o.probability||0}%</div></td><td>${o.nextAction||'—'} ${o.nextAction&&o.nextAction<hoy()&&!['ganada','perdida'].includes(o.stage)?'<span class="badge badge-err">Vencida</span>':''}</td><td><button class="btn btn-secondary btn-sm" onclick="openOpportunityFollowUpV96('${o.id}')">Bitácora (${o.followUps.length})</button><div class="worker-rut">${docsButtonV81('opportunities',o)}</div></td><td><button class="btn btn-secondary btn-sm" onclick="openOpportunityV82('${o.id}')">Editar</button> ${o.stage==='ganada'&&!o.convertedId?`<button class="btn btn-primary btn-sm" onclick="convertOpportunityV82('${o.id}')">Convertir</button>`:o.convertedId?'<span class="badge badge-ok">Convertida</span>':''}</td></tr>`).join('')||'<tr><td colspan="9">Sin oportunidades</td></tr>'}</tbody>`;
+};
+const convertOpportunityV96Base=convertOpportunityV82;
+convertOpportunityV82=function(id){convertOpportunityV96Base(id);const o=ensureOpportunityV96(S.opportunities.find(x=>x.id===id));if(!o?.convertedId)return;const c=S.minas.find(x=>x.id===o.convertedId);if(c){c.region=o.region||c.region;c.comuna=o.comuna||c.comuna;c.contacto=o.contact||c.contacto;c.email=o.email||c.email;c.tel=o.phone||c.tel;persistTenant();}};
+const installV94UiV96Base=installV94Ui;
+installV94Ui=function(page){installV94UiV96Base(page);if(page==='oportunidades')installOpportunityV96Ui();};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});

@@ -71,3 +71,15 @@ Se profundiza la operación diaria en tres frentes críticos para competir con p
 - Arquitectura productiva: migración `016_dispatch_finance_inventory.sql` con tablas normalizadas para planificación, asignaciones, costos, bodegas, inventario, movimientos, auditoría inmutable, aprobaciones de mandante y notificaciones.
 
 Con esto Nexo Klar mejora el control operacional real y no solo documental: permite planificar, movilizar, costear, controlar recursos físicos y dejar trazabilidad por cliente, contrato, proyecto, trabajador y bodega.
+
+## 10. Mejora ejecutada V9.6
+
+Se fortalece el módulo `LEAD / Oportunidades` para control comercial y seguimiento previo a cliente, contrato o proyecto.
+
+- Se agregan región y comuna con validación según la lista oficial de regiones/comunas de Chile ya utilizada por el sistema.
+- Se agregan filtros por región y comuna en el listado de oportunidades.
+- La tabla muestra ubicación, contacto, etapa, monto, próxima gestión, archivos y acceso directo a bitácora.
+- Cada oportunidad cuenta con bitácora de seguimiento para registrar llamadas, correos, reuniones, WhatsApp, propuestas, acuerdos, tareas, próximos pasos y respaldos.
+- Al convertir una oportunidad ganada en cliente, la ubicación y datos de contacto se traspasan al registro creado.
+
+Esto permite llevar continuidad comercial real: cualquier persona puede abrir una oportunidad, entender el estado, revisar el historial, ver acuerdos y continuar la gestión sin depender de correos o memoria personal.
