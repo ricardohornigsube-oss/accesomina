@@ -431,15 +431,9 @@ body.private #main { display:block; }
 <div id="main">
   <div id="topbar">
     <button class="btn btn-secondary btn-sm mobile-menu-button" type="button" aria-label="Abrir menú principal" aria-controls="sidebar" aria-expanded="false" onclick="toggleMobileMenu(this)">☰</button>
-    <div>
-      <div class="topbar-title" id="topbar-title">Dashboard</div>
-      <div class="topbar-subtitle" id="topbar-sub">Resumen operativo · Nexo Klar</div>
-    </div>
     <div class="topbar-right">
       <span class="private-client-pill" id="tenant-pill">Nexo Klar</span>
       <span class="private-client-pill" id="user-pill">Administrador</span>
-      <button class="btn btn-secondary btn-sm" onclick="exportTenantBackup()">Respaldo</button>
-      <button class="btn btn-secondary btn-sm" onclick="showCloudGuide()">Cloud</button>
       <button class="btn btn-secondary btn-sm" onclick="openModal('modal-nuevo-contrato')">+ Contrato</button>
       <button class="btn btn-secondary btn-sm" onclick="openModal('modal-nueva-mina')">+ Cliente Mandante</button>
       <button class="btn btn-secondary btn-sm" onclick="openProyectoModal()">+ Proyecto / Mantención</button>
@@ -2138,8 +2132,8 @@ function nav(page) {
   document.querySelectorAll('.nav-item').forEach(n=>{
     if(n.getAttribute('onclick')===`nav('${page}')`) n.classList.add('active');
   });
-  document.getElementById('topbar-title').textContent = pageLabels[page]||page;
-  document.getElementById('topbar-sub').textContent = pageSubs[page]||'';
+  const titleEl=document.getElementById('topbar-title'); if(titleEl) titleEl.textContent = pageLabels[page]||page;
+  const subEl=document.getElementById('topbar-sub'); if(subEl) subEl.textContent = pageSubs[page]||'';
   currentPage = page;
   renderPage(page);
   closeMobileMenu();
@@ -5685,8 +5679,6 @@ function opStatusBadgeV90(status){
 }
 function installV90Ui(){
   ensureV90Collections();
-  const topbar=document.querySelector('.topbar-right');
-  if(topbar&&!document.getElementById('global-search-v90'))topbar.insertAdjacentHTML('afterbegin','<input class="filter-input" id="global-search-v90" placeholder="Buscar RUT, contrato, patente..." oninput="renderGlobalSearchV90()" style="width:230px;"><button class="btn btn-secondary btn-sm" onclick="toggleViewModeV90()">Vista: <span id="view-mode-v90">Operativo</span></button>');
   if(!document.getElementById('modal-global-search-v90'))document.body.insertAdjacentHTML('beforeend',`<div class="modal-overlay" id="modal-global-search-v90"><div class="modal modal-wide"><div class="modal-header"><div class="modal-title">Búsqueda global</div><button class="modal-close" onclick="closeModal('modal-global-search-v90')">✕</button></div><div class="modal-body" id="global-search-results-v90"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-global-search-v90')">Cerrar</button></div></div></div>`);
   const cfg=document.querySelector('#page-configuracion .grid-2');
   if(cfg&&!document.getElementById('cfg-v90-catalogs'))cfg.insertAdjacentHTML('beforeend',`<div class="card" id="cfg-v90-catalogs"><div class="card-header"><div><div class="card-title">Catálogos parametrizables</div><div class="card-subtitle">Valores propios de esta empresa: cargos, especialidades, EPP, documentos, cursos, turnos y centros de costo.</div></div><button class="btn btn-primary btn-sm" onclick="saveCatalogsV90()">Guardar</button></div><div class="divider"></div><div class="form-grid">${Object.keys(V90_CATALOG_DEFAULTS).map(k=>`<div class="form-group full"><label class="form-label">${v90Text(k)}</label><textarea class="form-textarea" id="cat-v90-${k}" style="min-height:70px;"></textarea></div>`).join('')}</div></div><div class="card" id="cfg-v90-requirements"><div class="card-header"><div><div class="card-title">Matriz de requisitos por cliente, contrato, proyecto y cargo</div><div class="card-subtitle">Define documentos críticos distintos por mandante, servicio, tipo de trabajador o especialidad.</div></div><button class="btn btn-primary btn-sm" onclick="addRequirementRuleV90()">+ Requisito</button></div><div class="divider"></div><div id="req-matrix-v90"></div></div>`);
