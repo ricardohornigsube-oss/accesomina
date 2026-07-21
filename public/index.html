@@ -5403,6 +5403,100 @@ const renderDashboardV87Base=renderDashboard;
 renderDashboard=function(){renderDashboardV87Base();installV87Ui();renderProfilePanelsV87();renderRiskMatrixV87();};
 const renderPageV87Base=renderPage;
 renderPage=function(page){renderPageV87Base(page);installV87Ui();if(page==='operaciones-cloud'){renderRiskMatrixV87();renderWorkerPortalV87();}if(page==='reportes')installV87Ui();};
+
+// ===================== V8.8: LIBRO DIARIO, CAPA, FINANZAS E IA PRODUCTIVA =====================
+const PRODUCTIVE_READINESS_V88=[
+  ['aws','AWS productivo, RDS PostgreSQL, S3 privado y HTTPS configurados'],
+  ['backup','Backups automáticos y restauración probada con evidencia'],
+  ['monitoring','Monitoreo, logs centralizados y alertas de caída activas'],
+  ['security','MFA/SSO, WAF, secretos en vault y prueba de seguridad externa'],
+  ['ai','Proveedor OCR/firma/QR conectado y revisión humana auditada'],
+  ['mobile','PWA móvil/offline validada en terreno con fotos y sincronización']
+];
+function ensureV88Collections(){
+  ensureV87Collections();
+  if(!Array.isArray(S.dailyLogs))S.dailyLogs=[];
+  if(!Array.isArray(S.capaActions))S.capaActions=[];
+  if(!S.aiDocumentConfig)S.aiDocumentConfig={provider:'',endpoint:'',enabled:false,ocr:true,signature:true,qr:true,issuer:true,tamper:true,reviewRequired:true};
+  if(!S.productionReadiness)S.productionReadiness={};
+  if(!S.financialControls)S.financialControls={monthlySaas:0,setup:0,hotelBudget:0,eppBudget:0,vehicleBudget:0,subcontractBudget:0};
+}
+const snapshotStateV88Base=snapshotState;
+snapshotState=function(){ensureV88Collections();return {...snapshotStateV88Base(),dailyLogs:S.dailyLogs,capaActions:S.capaActions,aiDocumentConfig:S.aiDocumentConfig,productionReadiness:S.productionReadiness,financialControls:S.financialControls};};
+const applyStateV88Base=applyState;
+applyState=function(data){applyStateV88Base(data);['dailyLogs','capaActions','aiDocumentConfig','productionReadiness','financialControls'].forEach(k=>{if(data?.[k]!==undefined)S[k]=data[k];});ensureV88Collections();};
+const emptyTenantDataV88Base=emptyTenantData;
+emptyTenantData=function(nombre,rut,email,tel){const base=emptyTenantDataV88Base(nombre,rut,email,tel);return {...base,dailyLogs:[],capaActions:[],aiDocumentConfig:{provider:'',endpoint:'',enabled:false,ocr:true,signature:true,qr:true,issuer:true,tamper:true,reviewRequired:true},productionReadiness:{},financialControls:{monthlySaas:0,setup:0,hotelBudget:0,eppBudget:0,vehicleBudget:0,subcontractBudget:0}};};
+function saveDailyLogV88(event){
+  event?.preventDefault?.();ensureV88Collections();
+  const mantId=document.getElementById('dl-mant')?.value||'',title=document.getElementById('dl-title')?.value.trim()||'Registro diario';
+  if(!mantId)return toast('Selecciona un servicio o proyecto','err');
+  S.dailyLogs.push({id:'dl'+Date.now(),mantId,title,fecha:document.getElementById('dl-date')?.value||hoy(),clima:document.getElementById('dl-weather')?.value.trim()||'',hh:Number(document.getElementById('dl-hh')?.value)||0,personas:Number(document.getElementById('dl-people')?.value)||0,equipos:document.getElementById('dl-equipment')?.value.trim()||'',avance:document.getElementById('dl-progress')?.value.trim()||'',riesgos:document.getElementById('dl-risk')?.value.trim()||'',fileName:document.getElementById('dl-file')?.files?.[0]?.name||'',createdAt:new Date().toISOString()});
+  event?.target?.reset?.();persistTenant();renderDailyLogV88();renderExecutiveDashboardV88();toast('Libro diario guardado');
+}
+function saveCapaActionV88(event){
+  event?.preventDefault?.();ensureV88Collections();
+  const source=document.getElementById('capa-source')?.value||'',title=document.getElementById('capa-title')?.value.trim()||'Acción correctiva';
+  S.capaActions.push({id:'ca'+Date.now(),source,title,owner:document.getElementById('capa-owner')?.value.trim()||'',due:document.getElementById('capa-due')?.value||'',rootCause:document.getElementById('capa-root')?.value.trim()||'',action:document.getElementById('capa-action')?.value.trim()||'',status:'abierta',createdAt:new Date().toISOString()});
+  event?.target?.reset?.();persistTenant();renderCapaV88();renderExecutiveDashboardV88();toast('Acción CAPA creada');
+}
+function saveAiConfigV88(){
+  ensureV88Collections();
+  S.aiDocumentConfig={provider:document.getElementById('ai-provider')?.value.trim()||'',endpoint:document.getElementById('ai-endpoint')?.value.trim()||'',enabled:document.getElementById('ai-enabled')?.checked||false,ocr:document.getElementById('ai-ocr')?.checked||false,signature:document.getElementById('ai-signature')?.checked||false,qr:document.getElementById('ai-qr')?.checked||false,issuer:document.getElementById('ai-issuer')?.checked||false,tamper:document.getElementById('ai-tamper')?.checked||false,reviewRequired:document.getElementById('ai-human')?.checked!==false};
+  persistTenant();renderAiConfigV88();toast('Configuración IA documental guardada');
+}
+function saveFinancialControlsV88(){
+  ensureV88Collections();
+  ['monthlySaas','setup','hotelBudget','eppBudget','vehicleBudget','subcontractBudget'].forEach(k=>S.financialControls[k]=Number(document.getElementById(`fin-${k}`)?.value)||0);
+  persistTenant();renderExecutiveDashboardV88();toast('Control financiero actualizado');
+}
+function toggleReadinessV88(key,checked){ensureV88Collections();S.productionReadiness[key]=checked;persistTenant();renderReadinessV88();}
+function renderDailyLogV88(){
+  const mant=document.getElementById('dl-mant');if(mant)mant.innerHTML='<option value="">Seleccionar servicio...</option>'+S.mantenciones.map(m=>`<option value="${m.id}">${eppEsc(m.nombre)}</option>`).join('');
+  const table=document.getElementById('ops-v88-daily-table');if(!table)return;
+  table.innerHTML=`<thead><tr><th>Fecha</th><th>Servicio</th><th>HH / dotación</th><th>Avance</th><th>Riesgos</th><th>Evidencia</th></tr></thead><tbody>${S.dailyLogs.slice(-20).reverse().map(l=>`<tr><td>${l.fecha}<div class="worker-rut">${eppEsc(l.title)}</div></td><td>${eppEsc(mantNombre(l.mantId))}<div class="worker-rut">${eppEsc(l.clima||'sin clima')}</div></td><td>${l.hh} HH · ${l.personas} pers.<div class="worker-rut">${eppEsc(l.equipos||'sin equipos')}</div></td><td>${eppEsc(l.avance||'—')}</td><td>${eppEsc(l.riesgos||'—')}</td><td>${eppEsc(l.fileName||'—')}</td></tr>`).join('')||'<tr><td colspan="6">Sin registros diarios.</td></tr>'}</tbody>`;
+}
+function renderCapaV88(){
+  const source=document.getElementById('capa-source');
+  if(source)source.innerHTML='<option value="">Sin origen</option>'+(S.incidentes||[]).map(i=>`<option value="${i.id}">${eppEsc(i.tipo)} · ${eppEsc(mantNombre(i.mantId))}</option>`).join('');
+  const table=document.getElementById('ops-v88-capa-table');if(!table)return;
+  table.innerHTML=`<thead><tr><th>Acción</th><th>Origen</th><th>Causa raíz</th><th>Responsable</th><th>Plazo</th><th>Estado</th></tr></thead><tbody>${S.capaActions.map(a=>`<tr><td><b>${eppEsc(a.title)}</b><div class="worker-rut">${eppEsc(a.action||'')}</div></td><td>${eppEsc(a.source||'—')}</td><td>${eppEsc(a.rootCause||'—')}</td><td>${eppEsc(a.owner||'—')}</td><td>${a.due||'—'}</td><td><select class="form-select" onchange="updateCapaStatusV88('${a.id}',this.value)">${['abierta','en_proceso','verificacion','cerrada'].map(s=>`<option value="${s}" ${a.status===s?'selected':''}>${s}</option>`).join('')}</select></td></tr>`).join('')||'<tr><td colspan="6">Sin acciones CAPA.</td></tr>'}</tbody>`;
+}
+function updateCapaStatusV88(id,status){const row=S.capaActions.find(x=>x.id===id);if(row){row.status=status;row.updatedAt=new Date().toISOString();persistTenant();renderCapaV88();renderExecutiveDashboardV88();}}
+function renderAiConfigV88(){
+  const box=document.getElementById('ops-v88-ai-config');if(!box)return;
+  const c=S.aiDocumentConfig||{},configured=c.enabled&&c.provider&&c.endpoint;
+  box.innerHTML=`<div class="card-header"><div><div class="card-title">IA documental productiva</div><div class="card-subtitle">Conector para OCR, firma, QR, emisor, alteraciones y revisión humana.</div></div><span class="badge ${configured?'badge-ok':'badge-warn'}">${configured?'Conectado':'Pendiente proveedor'}</span></div><div class="divider"></div><div class="form-grid"><div class="form-group"><label class="form-label">Proveedor</label><input class="form-input" id="ai-provider" value="${escapeAttrV62(c.provider||'')}" placeholder="AWS Textract / Azure / proveedor firma"></div><div class="form-group"><label class="form-label">Endpoint privado</label><input class="form-input" id="ai-endpoint" value="${escapeAttrV62(c.endpoint||'')}" placeholder="https://..."></div><div class="form-group full"><label><input type="checkbox" id="ai-enabled" ${c.enabled?'checked':''}> Activar cuando exista proveedor configurado</label></div><div class="form-group full" style="display:flex;gap:14px;flex-wrap:wrap;"><label><input type="checkbox" id="ai-ocr" ${c.ocr?'checked':''}> OCR</label><label><input type="checkbox" id="ai-signature" ${c.signature?'checked':''}> Firma</label><label><input type="checkbox" id="ai-qr" ${c.qr?'checked':''}> QR</label><label><input type="checkbox" id="ai-issuer" ${c.issuer?'checked':''}> Emisor</label><label><input type="checkbox" id="ai-tamper" ${c.tamper?'checked':''}> Alteración</label><label><input type="checkbox" id="ai-human" ${c.reviewRequired!==false?'checked':''}> Revisión humana final</label></div></div><button class="btn btn-primary" onclick="saveAiConfigV88()">Guardar IA documental</button>`;
+}
+function renderReadinessV88(){
+  const table=document.getElementById('ops-v88-ready-table');if(!table)return;
+  table.innerHTML=`<thead><tr><th>Requisito productivo</th><th>Estado</th><th>Uso</th></tr></thead><tbody>${PRODUCTIVE_READINESS_V88.map(([k,label])=>`<tr><td>${eppEsc(label)}</td><td><label><input type="checkbox" ${S.productionReadiness[k]?'checked':''} onchange="toggleReadinessV88('${k}',this.checked)"> Validado</label></td><td>${k==='ai'?'Activa auditoría documental inteligente real':k==='mobile'?'Permite operación de terreno sin planillas':'Reduce riesgo operativo antes de vender'}</td></tr>`).join('')}</tbody>`;
+}
+function renderFinanceV88(){
+  const box=document.getElementById('dash-v88-finance');if(!box)return;
+  const f=S.financialControls||{},hotelActual=(S.hotelAsig||[]).reduce((n,a)=>n+(S.hoteles.find(h=>h.id===a.hotelId)?.tarifa||0),0),eppActual=(S.eppDeliveries||[]).reduce((n,e)=>n+(Number(e.unitCost)||0)*(Number(e.qty||e.quantity)||1),0),vehicleActual=(S.vehiculos||[]).reduce((n,v)=>n+(Number(v.arriendoCosto)||Number(v.costoArriendo)||0),0);
+  box.innerHTML=`<div class="card-header"><div><div class="card-title">Control financiero operativo</div><div class="card-subtitle">Presupuesto y costos base para hotelería, EPP, vehículos y subcontratos.</div></div><button class="btn btn-secondary btn-sm" onclick="exportFinanceV88()">Exportar</button></div><div class="kpi-grid" style="margin:12px 0;"><div class="kpi kpi-blue"><div class="kpi-value">${clpV83(hotelActual)}</div><div class="kpi-label">Hotelería registrada</div></div><div class="kpi kpi-orange"><div class="kpi-value">${clpV83(eppActual)}</div><div class="kpi-label">EPP registrado</div></div><div class="kpi kpi-green"><div class="kpi-value">${clpV83(vehicleActual)}</div><div class="kpi-label">Arriendos vehículos</div></div><div class="kpi kpi-red"><div class="kpi-value">${clpV83((f.hotelBudget||0)+(f.eppBudget||0)+(f.vehicleBudget||0)+(f.subcontractBudget||0))}</div><div class="kpi-label">Presupuesto mensual</div></div></div><div class="form-grid"><div class="form-group"><label class="form-label">SaaS mensual</label><input class="form-input" type="number" id="fin-monthlySaas" value="${f.monthlySaas||0}"></div><div class="form-group"><label class="form-label">Setup</label><input class="form-input" type="number" id="fin-setup" value="${f.setup||0}"></div><div class="form-group"><label class="form-label">Presupuesto hotel</label><input class="form-input" type="number" id="fin-hotelBudget" value="${f.hotelBudget||0}"></div><div class="form-group"><label class="form-label">Presupuesto EPP</label><input class="form-input" type="number" id="fin-eppBudget" value="${f.eppBudget||0}"></div><div class="form-group"><label class="form-label">Presupuesto vehículos</label><input class="form-input" type="number" id="fin-vehicleBudget" value="${f.vehicleBudget||0}"></div><div class="form-group"><label class="form-label">Presupuesto subcontratos</label><input class="form-input" type="number" id="fin-subcontractBudget" value="${f.subcontractBudget||0}"></div></div><button class="btn btn-primary" onclick="saveFinancialControlsV88()">Guardar control financiero</button>`;
+}
+function renderExecutiveDashboardV88(){renderFinanceV88();renderDailyLogV88();renderCapaV88();}
+function exportDailyLogV88(){exportCSV([['Fecha','Servicio','Título','Clima','HH','Personas','Equipos','Avance','Riesgos','Evidencia'],...S.dailyLogs.map(l=>[l.fecha,mantNombre(l.mantId),l.title,l.clima,l.hh,l.personas,l.equipos,l.avance,l.riesgos,l.fileName])],`libro_diario_servicios_${hoy()}.csv`);}
+function exportCapaV88(){exportCSV([['Acción','Origen','Causa raíz','Responsable','Plazo','Estado','Detalle'],...S.capaActions.map(a=>[a.title,a.source,a.rootCause,a.owner,a.due,a.status,a.action])],`acciones_capa_${hoy()}.csv`);}
+function exportFinanceV88(){const f=S.financialControls||{};exportCSV([['Item','Monto CLP'],['SaaS mensual',f.monthlySaas||0],['Setup',f.setup||0],['Presupuesto hotel',f.hotelBudget||0],['Presupuesto EPP',f.eppBudget||0],['Presupuesto vehículos',f.vehicleBudget||0],['Presupuesto subcontratos',f.subcontractBudget||0]],`control_financiero_${hoy()}.csv`);}
+function installV88Ui(){
+  ensureV88Collections();
+  const profiles=document.getElementById('dash-v87-profiles');
+  if(profiles&&!document.getElementById('dash-v88-finance'))profiles.insertAdjacentHTML('afterend','<div class="card" id="dash-v88-finance" style="margin-bottom:20px;"></div>');
+  const ops=document.getElementById('ops-v87-risk-table')?.closest('.card');
+  if(ops&&!document.getElementById('ops-v88-daily-table'))ops.insertAdjacentHTML('afterend',`<div class="card" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Libro diario por servicio</div><div class="card-subtitle">Controla avances, HH, dotación, equipos, clima, riesgos y evidencia diaria.</div></div><button class="btn btn-secondary btn-sm" onclick="exportDailyLogV88()">Exportar</button></div><div class="divider"></div><form class="form-grid" onsubmit="saveDailyLogV88(event)"><div class="form-group"><label class="form-label">Servicio</label><select class="form-select" id="dl-mant"></select></div><div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="dl-date" type="date" value="${hoy()}"></div><div class="form-group"><label class="form-label">Título</label><input class="form-input" id="dl-title"></div><div class="form-group"><label class="form-label">Clima / condición</label><input class="form-input" id="dl-weather"></div><div class="form-group"><label class="form-label">HH reales</label><input class="form-input" id="dl-hh" type="number"></div><div class="form-group"><label class="form-label">Personas</label><input class="form-input" id="dl-people" type="number"></div><div class="form-group full"><label class="form-label">Equipos usados</label><input class="form-input" id="dl-equipment"></div><div class="form-group full"><label class="form-label">Avance del día</label><textarea class="form-textarea" id="dl-progress"></textarea></div><div class="form-group full"><label class="form-label">Riesgos / restricciones</label><textarea class="form-textarea" id="dl-risk"></textarea></div><div class="form-group"><label class="form-label">Evidencia</label><input class="form-input" id="dl-file" type="file" accept=".pdf,.jpg,.jpeg,.png"></div><div class="form-group"><button class="btn btn-primary">Guardar libro diario</button></div></form><div class="table-wrap" style="margin-top:12px;"><table id="ops-v88-daily-table"></table></div></div><div class="card" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Acciones correctivas CAPA</div><div class="card-subtitle">Causa raíz, acción, responsable, plazo y cierre con trazabilidad.</div></div><button class="btn btn-secondary btn-sm" onclick="exportCapaV88()">Exportar</button></div><div class="divider"></div><form class="form-grid" onsubmit="saveCapaActionV88(event)"><div class="form-group"><label class="form-label">Origen incidente/NC</label><select class="form-select" id="capa-source"></select></div><div class="form-group"><label class="form-label">Título acción</label><input class="form-input" id="capa-title"></div><div class="form-group"><label class="form-label">Responsable</label><input class="form-input" id="capa-owner"></div><div class="form-group"><label class="form-label">Plazo</label><input class="form-input" id="capa-due" type="date"></div><div class="form-group full"><label class="form-label">Causa raíz</label><textarea class="form-textarea" id="capa-root"></textarea></div><div class="form-group full"><label class="form-label">Acción comprometida</label><textarea class="form-textarea" id="capa-action"></textarea></div><div class="form-group"><button class="btn btn-primary">Crear acción</button></div></form><div class="table-wrap" style="margin-top:12px;"><table id="ops-v88-capa-table"></table></div></div>`);
+  const aiAnchor=document.getElementById('ops-v86-docflow-table')?.closest('.card');
+  if(aiAnchor&&!document.getElementById('ops-v88-ai-config'))aiAnchor.insertAdjacentHTML('beforebegin','<div class="card" id="ops-v88-ai-config" style="margin-top:16px;"></div><div class="card" style="margin-top:16px;"><div class="card-title">Checklist producción y venta</div><div class="card-subtitle">Control mínimo para vender a clientes con información sensible.</div><div class="divider"></div><div class="table-wrap"><table id="ops-v88-ready-table"></table></div></div>');
+  const reports=document.querySelector('#page-reportes .grid-3');
+  if(reports&&!document.getElementById('report-daily-v88'))reports.insertAdjacentHTML('beforeend','<div class="report-card" id="report-daily-v88" onclick="exportDailyLogV88()"><div class="report-icon">📓</div><div class="report-title">Libro Diario</div><div class="report-desc">Avance, HH, equipos, clima, riesgos y evidencias por servicio</div></div><div class="report-card" onclick="exportCapaV88()"><div class="report-icon">✅</div><div class="report-title">CAPA</div><div class="report-desc">Acciones correctivas, causa raíz, responsable y cierre</div></div><div class="report-card" onclick="exportFinanceV88()"><div class="report-icon">💰</div><div class="report-title">Control Financiero</div><div class="report-desc">Presupuestos y costos operativos base</div></div>');
+  renderAiConfigV88();renderReadinessV88();renderDailyLogV88();renderCapaV88();renderFinanceV88();
+}
+const renderDashboardV88Base=renderDashboard;
+renderDashboard=function(){renderDashboardV88Base();installV88Ui();renderExecutiveDashboardV88();};
+const renderPageV88Base=renderPage;
+renderPage=function(page){renderPageV88Base(page);installV88Ui();if(page==='operaciones-cloud')renderExecutiveDashboardV88();};
 function enhanceAccessibility() {
   document.querySelectorAll('.form-label').forEach((label,index)=>{
     if(label.htmlFor||label.querySelector('input,select,textarea'))return;
