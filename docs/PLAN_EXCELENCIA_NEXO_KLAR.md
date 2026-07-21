@@ -60,3 +60,14 @@ Se incorpora una suite productiva integrada visible en el Centro Operativo, Dash
 - BI ejecutivo: reportes exportables a CSV y salida PDF mediante impresión del navegador para cumplimiento, riesgos, costos, dotación, hotelería, vehículos, EPP, subcontratos, incidentes, auditoría y oportunidades.
 
 Las integraciones reales con OCR, firma electrónica, WhatsApp Business, SMTP, S3, antivirus y monitoreo quedan preparadas a nivel de flujo y conector, pero requieren credenciales y servicios productivos contratados para operar con clientes reales.
+
+## 9. Mejora ejecutada V9.5
+
+Se profundiza la operación diaria en tres frentes críticos para competir con plataformas de field service, contractor management y control operacional.
+
+- Despacho visual: calendario por día, semana y mes; tarjetas movibles por servicio; vista por zona; estado de movilización; disponibilidad por especialidad; brechas visibles; reasignación rápida de trabajadores, vehículos y hotel.
+- Costos y rentabilidad: presupuesto inicial por servicio, OC asociadas, horas hombre reales, tarifa HH, costo de hotelería, EPP, EPP por vida útil, vehículos, venta proyectada, desviación de presupuesto, margen y export contable/ERP.
+- Inventario real: bodegas múltiples, stock por ubicación, reposición, entrega, devolución, pérdida, daño, firma/respaldo, vida útil, costo unitario, costeo por proyecto e historial por trabajador.
+- Arquitectura productiva: migración `016_dispatch_finance_inventory.sql` con tablas normalizadas para planificación, asignaciones, costos, bodegas, inventario, movimientos, auditoría inmutable, aprobaciones de mandante y notificaciones.
+
+Con esto Nexo Klar mejora el control operacional real y no solo documental: permite planificar, movilizar, costear, controlar recursos físicos y dejar trazabilidad por cliente, contrato, proyecto, trabajador y bodega.
