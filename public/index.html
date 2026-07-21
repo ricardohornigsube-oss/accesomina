@@ -5868,6 +5868,63 @@ function init() {
   if(audMina) audMina.innerHTML='<option value="">Todos los clientes</option>'+S.minas.map(m=>`<option value="${m.id}">${m.nombre}</option>`).join('');
 }
 
+// ===================== V9.3: EXCELENCIA PRODUCTIVA Y COMERCIAL =====================
+function readinessScoreV93(){
+  ensureV90Collections?.();ensureV86Collections?.();
+  const docs=typeof collectedDocumentsV86==='function'?collectedDocumentsV86():[];
+  const withWorkflow=docs.filter(d=>d.status&&d.status!=='cargado').length;
+  const criticalDocs=docs.filter(d=>['vencido','rechazado','observado','requerido'].includes(d.status)).length;
+  const connectedServices=S.mantenciones.filter(m=>S.contratos.some(c=>c.id===m.contratoId&&c.minaId===m.minaId)).length;
+  const connectedClients=S.minas.filter(m=>S.contratos.some(c=>c.minaId===m.id)||S.mantenciones.some(s=>s.minaId===m.id)).length;
+  const workersLinked=[...new Set(S.asignaciones.map(a=>a.trabId))].length;
+  const catalogDepth=Object.values(S.catalogosEmpresa||{}).reduce((n,a)=>n+(Array.isArray(a)?a.length:0),0);
+  const scores=[
+    {id:'data',label:'Datos normalizados',score:S.requirementMatrix?.length&&catalogDepth>30?85:60,detail:'Catálogos, matriz de requisitos e historial por entidad'},
+    {id:'interconnection',label:'Interconexión operativa',score:S.mantenciones.length?Math.round((connectedServices/Math.max(1,S.mantenciones.length))*100):70,detail:`${connectedServices}/${S.mantenciones.length} servicios conectados a cliente y contrato`},
+    {id:'access',label:'Acceso y multiempresa',score:window.AccesoMinaCloud?.enabled?92:72,detail:window.AccesoMinaCloud?.enabled?'Sesión cloud activa con aislamiento por empresa':'Modo local/demo; producción requiere API cloud activa'},
+    {id:'documents',label:'Flujo documental',score:docs.length?Math.max(45,Math.round((withWorkflow/Math.max(1,docs.length))*100)-(criticalDocs*2)):65,detail:`${docs.length} documentos / ${criticalDocs} con acción requerida`},
+    {id:'dashboard',label:'Paneles ejecutivos',score:82,detail:'KPIs, riesgo, alertas, árbol operativo y centro de reclutamiento'},
+    {id:'security',label:'Seguridad y gobierno',score:window.AccesoMinaCloud?.enabled?88:68,detail:'MFA, RLS, privacidad, auditoría y retención preparados para cloud'},
+    {id:'integration',label:'Integraciones reales',score:window.AccesoMinaCloud?.enabled?72:48,detail:'Conectores listos; falta credencial productiva de firma, OCR, WhatsApp, SMTP y almacenamiento'},
+    {id:'mobile',label:'Uso terreno / móvil',score:75,detail:'Modo terreno, evidencias, eventos y check-in listos para reforzar con PWA/app'}
+  ];
+  const total=Math.round(scores.reduce((n,s)=>n+s.score,0)/scores.length);
+  return {total,scores,connectedClients,workersLinked,criticalDocs};
+}
+function renderReadinessPanelV93(){
+  const anchor=document.getElementById('kpi-dash');if(!anchor)return;
+  let host=document.getElementById('dash-v93-readiness');
+  if(!host){anchor.insertAdjacentHTML('afterend','<div class="card" id="dash-v93-readiness" style="margin-bottom:20px;"></div>');host=document.getElementById('dash-v93-readiness');}
+  const r=readinessScoreV93(),cls=r.total>=80?'badge-ok':r.total>=65?'badge-warn':'badge-err';
+  host.innerHTML=`<div class="card-header"><div><div class="card-title">Nivel de preparación comercial y productiva</div><div class="card-subtitle">Evalúa si la plataforma está lista para demo, piloto o producción con clientes reales.</div></div><span class="badge ${cls}">${r.total}% listo</span></div><div class="kpi-grid" style="margin-top:12px;"><div class="kpi kpi-blue"><div class="kpi-value">${r.connectedClients}</div><div class="kpi-label">Clientes conectados</div></div><div class="kpi kpi-green"><div class="kpi-value">${r.workersLinked}</div><div class="kpi-label">Personas asignadas</div></div><div class="kpi kpi-red"><div class="kpi-value">${r.criticalDocs}</div><div class="kpi-label">Documentos con acción</div></div><div class="kpi kpi-orange"><div class="kpi-value">${S.requirementMatrix?.length||0}</div><div class="kpi-label">Reglas de requisitos</div></div></div><div class="table-wrap" style="margin-top:12px;"><table><thead><tr><th>Frente</th><th>Estado</th><th>Detalle</th><th>Siguiente acción</th></tr></thead><tbody>${r.scores.map(s=>`<tr><td><b>${eppEsc(s.label)}</b></td><td><span class="badge ${s.score>=80?'badge-ok':s.score>=65?'badge-warn':'badge-err'}">${s.score}%</span></td><td>${eppEsc(s.detail)}</td><td>${s.score>=80?'Mantener y probar con cliente piloto':s.id==='integration'?'Configurar proveedor real y credenciales':'Completar parametrización y validar con QA operativo'}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function renderOpsExcellenceV93(){
+  const page=document.getElementById('page-operaciones-cloud');if(!page)return;
+  if(!document.getElementById('ops-v93-excellence'))page.querySelector('.section-header')?.insertAdjacentHTML('afterend','<div class="card" id="ops-v93-excellence" style="margin-bottom:16px;"></div>');
+  const host=document.getElementById('ops-v93-excellence');if(!host)return;
+  const r=readinessScoreV93();
+  const rows=[
+    ['Modelo de datos productivo','Separar entidades críticas en tablas/API: personas, contratos, proyectos, documentos, EPP, hoteles, vehículos, turnos, credenciales e incidentes.',S.mantenciones.length&&S.trabajadores.length?'En uso funcional + migraciones listas':'Requiere carga base'],
+    ['Documental inteligente','OCR, firma, QR, fotografía, emisor, integridad, score y revisión humana final.',window.AccesoMinaCloud?.enabled?'Conector API disponible':'Pendiente proveedor productivo'],
+    ['Portal mandante','Acceso restringido para revisar, observar, aprobar y consultar reportes por cliente.',document.getElementById('ops-portal-form')?'Administración habilitada':'Pendiente interfaz'],
+    ['Dashboard ejecutivo','Riesgo, cumplimiento, dotación, vencimientos, costos, hotelería, EPP y recursos por cliente/contrato/proyecto.',r.scores.find(x=>x.id==='dashboard')?.score>=80?'Operativo':'Mejorar indicadores'],
+    ['Seguridad Ley 21.719','Retención, bloqueo legal, derechos de titulares, auditoría, MFA, RLS y separación por empresa.',S.dataGovernance?.lastReview?'Configurado por empresa':'Parametrizar responsable'],
+    ['Experiencia móvil terreno','Carga de evidencia, check-in/out, incidentes, EPP, permisos y observaciones rápidas.',S.fieldEvents?.length?'Con eventos registrados':'Disponible para uso']
+  ];
+  host.innerHTML=`<div class="card-header"><div><div class="card-title">Plan de excelencia para venta y producción</div><div class="card-subtitle">Brechas convertidas en controles operativos visibles para equipo interno, cliente piloto e inversionistas.</div></div><span class="badge ${r.total>=80?'badge-ok':'badge-warn'}">${r.total}% preparación</span></div><div class="table-wrap" style="margin-top:12px;"><table><thead><tr><th>Área clave</th><th>Qué debe cubrir</th><th>Estado actual</th></tr></thead><tbody>${rows.map(row=>`<tr><td><b>${row[0]}</b></td><td>${row[1]}</td><td>${row[2]}</td></tr>`).join('')}</tbody></table></div><div class="cloud-note" style="margin-top:12px;">Para producción real se debe operar con PostgreSQL/S3/HTTPS/MFA, correo, WhatsApp Business, proveedor de firma, proveedor OCR/documental, monitoreo, respaldos y prueba de seguridad.</div>`;
+}
+function renderClient360ExecutiveV93(clientId){
+  const d=typeof client360DataV92==='function'?client360DataV92(clientId):null,host=document.getElementById('client360-tables-v92');if(!d||!host||document.getElementById('client360-v93-executive'))return;
+  const docs=d.timeline.filter(x=>x.type==='documento').length,openTasks=d.timeline.filter(x=>x.due&&x.due>=hoy()).length,lateTasks=d.timeline.filter(x=>x.due&&x.due<hoy()).length,activeContracts=d.contracts.filter(c=>!['cerrado','finalizado','rechazado'].includes(String(c.estado||'').toLowerCase())).length;
+  host.insertAdjacentHTML('afterbegin',`<div class="card" id="client360-v93-executive" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Resumen ejecutivo 360</div><div class="card-subtitle">Contexto comercial, operativo y documental del cliente en una sola lectura.</div></div></div><div class="kpi-grid"><div class="kpi kpi-blue"><div class="kpi-value">${activeContracts}</div><div class="kpi-label">Contratos activos</div></div><div class="kpi kpi-orange"><div class="kpi-value">${d.projects.length}</div><div class="kpi-label">Proyectos/servicios</div></div><div class="kpi kpi-green"><div class="kpi-value">${docs}</div><div class="kpi-label">Documentos trazados</div></div><div class="kpi kpi-red"><div class="kpi-value">${lateTasks}</div><div class="kpi-label">Compromisos vencidos</div></div></div><div class="cloud-note" style="margin-top:10px;">Compromisos abiertos: ${openTasks}. Recursos conectados: ${d.vehicles.length} equipos, ${d.subcontracts.length} subcontratos, ${d.incidents.length} incidentes/NC.</div></div>`);
+}
+const renderDashboardV93Base=renderDashboard;
+renderDashboard=function(){renderDashboardV93Base();renderReadinessPanelV93();};
+const renderPageV93Base=renderPage;
+renderPage=function(page){renderPageV93Base(page);if(page==='operaciones-cloud')renderOpsExcellenceV93();if(page==='dashboard')renderReadinessPanelV93();};
+const renderClient360TimelineV93Base=renderClient360TimelineV92;
+renderClient360TimelineV92=function(clientId){renderClient360TimelineV93Base(clientId);renderClient360ExecutiveV93(clientId);};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
