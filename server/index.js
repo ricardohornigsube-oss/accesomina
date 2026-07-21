@@ -51,6 +51,6 @@ app.use((req,res,next)=>req.method==='GET'?res.sendFile(path.resolve(__dirname,'
 app.use(errorHandler);
 
 const stopJobs=startJobRunner();
-const server=app.listen(config.port,()=>console.log(`AccesoMina cloud listening on :${config.port}`));
+const server=app.listen(config.port,()=>console.log(`Nexo Klar cloud listening on :${config.port}`));
 async function shutdown(signal){console.log(`${signal}: shutting down`);stopJobs();server.close(async()=>{await closeDatabase();process.exit(0)});setTimeout(()=>process.exit(1),10_000).unref();}
 process.on('SIGTERM',()=>shutdown('SIGTERM'));process.on('SIGINT',()=>shutdown('SIGINT'));

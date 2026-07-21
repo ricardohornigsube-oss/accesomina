@@ -384,7 +384,7 @@ body.private #main { display:block; }
   <div class="nav-group-label">Vista General</div>
   <div class="nav-item active" onclick="nav('dashboard')">🏠 Dashboard</div>
   <div class="nav-item" onclick="nav('reclutamiento')">📋 Centro Reclutamiento</div>
-  <div class="nav-item" onclick="nav('mineras')">🏔️ Por Minera</div>
+  <div class="nav-item" onclick="nav('mineras')">🏔️ Por Cliente</div>
   <div class="nav-item" onclick="nav('alertas')">🔔 Alertas <span class="nav-badge" id="badge-alertas">0</span></div>
   <div class="nav-group-label">Personal</div>
   <div class="nav-item" onclick="nav('trabajadores')">👷 Trabajadores</div>
@@ -441,7 +441,7 @@ body.private #main { display:block; }
       <button class="btn btn-secondary btn-sm" onclick="exportTenantBackup()">Respaldo</button>
       <button class="btn btn-secondary btn-sm" onclick="showCloudGuide()">Cloud</button>
       <button class="btn btn-secondary btn-sm" onclick="openModal('modal-nuevo-contrato')">+ Contrato</button>
-      <button class="btn btn-secondary btn-sm" onclick="openModal('modal-nueva-mina')">+ Minera Mandante</button>
+      <button class="btn btn-secondary btn-sm" onclick="openModal('modal-nueva-mina')">+ Cliente Mandante</button>
       <button class="btn btn-secondary btn-sm" onclick="openProyectoModal()">+ Proyecto / Mantención</button>
       <button class="btn btn-primary btn-sm" onclick="openModal('modal-nuevo-trab')">+ Trabajador</button>
       <button class="btn btn-ghost btn-sm" onclick="logoutTenant()">Salir</button>
@@ -451,7 +451,7 @@ body.private #main { display:block; }
   <!-- PAGE: DASHBOARD -->
   <div id="page-dashboard" class="page active">
     <div class="filters">
-      <select class="filter-select" id="filt-dash-mina" onchange="renderDashboard()"><option value="">Todas las mineras mandantes</option></select>
+      <select class="filter-select" id="filt-dash-mina" onchange="renderDashboard()"><option value="">Todos los clientes</option></select>
       <select class="filter-select" id="filt-dash-contrato" onchange="renderDashboard()"><option value="">Todos los contratos</option></select>
       <select class="filter-select" id="filt-dash-mant" onchange="renderDashboard()"><option value="">Todos los proyectos / mantenciones</option></select>
     </div>
@@ -489,17 +489,17 @@ body.private #main { display:block; }
   <div id="page-mineras" class="page">
     <div id="mineras-grid-view">
       <div class="section-header">
-      <div><div class="section-title">🏔️ Por Minera</div><div class="section-sub">Vista consolidada por mandante</div></div>
+      <div><div class="section-title">🏔️ Por Cliente</div><div class="section-sub">Vista consolidada por mandante</div></div>
       <div class="section-actions">
         <button class="btn btn-secondary" onclick="openModal('modal-nuevo-contrato')">+ Asociar contrato</button>
         <button class="btn btn-secondary" onclick="openProyectoModal()">+ Proyecto / Mantención</button>
-        <button class="btn btn-primary" onclick="openModal('modal-nueva-mina')">+ Nueva Minera Mandante</button>
+        <button class="btn btn-primary" onclick="openModal('modal-nueva-mina')">+ Nueva Cliente Mandante</button>
       </div>
       </div>
       <div class="grid-3" id="minas-cards" style="gap:20px;"></div>
     </div>
     <div id="mina-detalle-view" style="display:none;">
-      <div class="back-btn" onclick="closeMinaDetalle()">← Volver a Por Minera</div>
+      <div class="back-btn" onclick="closeMinaDetalle()">← Volver a Por Cliente</div>
       <div id="mina-detalle-content"></div>
     </div>
   </div>
@@ -531,7 +531,7 @@ body.private #main { display:block; }
         <option value="hotel">Hotel</option>
       </select>
       <select class="filter-select" id="filt-alerta-mina" onchange="renderAlertas()">
-        <option value="">Todas las mineras mandantes</option>
+        <option value="">Todos los clientes</option>
       </select>
       <select class="filter-select" id="filt-alerta-contrato" onchange="renderAlertas()">
         <option value="">Todos los contratos</option>
@@ -647,7 +647,7 @@ body.private #main { display:block; }
     <div class="filters">
       <input class="filter-input" placeholder="🔍 Nombre..." id="filt-aud-txt" oninput="renderAuditoria()" style="width:200px;">
       <select class="filter-select" id="filt-aud-mina" onchange="renderAuditoria()">
-        <option value="">Todas las minas</option>
+        <option value="">Todos los clientes</option>
       </select>
       <select class="filter-select" id="filt-aud-est" onchange="renderAuditoria()">
         <option value="">Todos los estados</option>
@@ -703,7 +703,7 @@ body.private #main { display:block; }
     <div class="filters">
       <input class="filter-input" placeholder="🔍 Buscar..." id="filt-mant-txt" oninput="renderMantenciones()" style="width:180px;">
       <select class="filter-select" id="filt-mant-mina" onchange="renderMantenciones()">
-        <option value="">Todas las minas</option>
+        <option value="">Todos los clientes</option>
       </select>
       <select class="filter-select" id="filt-mant-est" onchange="renderMantenciones()">
         <option value="">Todos los estados</option>
@@ -909,7 +909,7 @@ body.private #main { display:block; }
     </div>
     <div class="filters">
       <input class="filter-input" id="filt-veh-txt" placeholder="🔍 Patente, serie, equipo..." oninput="renderVehiculos()">
-      <select class="filter-select" id="filt-veh-mina" onchange="renderVehiculos()"><option value="">Todas las mineras mandantes</option></select>
+      <select class="filter-select" id="filt-veh-mina" onchange="renderVehiculos()"><option value="">Todos los clientes</option></select>
       <select class="filter-select" id="filt-veh-est" onchange="renderVehiculos()"><option value="">Todos los estados</option><option value="ok">Vigente</option><option value="alerta">Con alertas</option><option value="vencido">Vencido/faltante</option></select>
     </div>
     <div class="kpi-grid" id="veh-kpis"></div>
@@ -923,7 +923,7 @@ body.private #main { display:block; }
       <button class="btn btn-secondary" onclick="exportAcreditacionMandante()">⬇ Exportar CSV</button>
     </div>
     <div class="filters">
-      <select class="filter-select" id="filt-mand-mina" onchange="renderAcreditacionMandante()"><option value="">Todas las mineras mandantes</option></select>
+      <select class="filter-select" id="filt-mand-mina" onchange="renderAcreditacionMandante()"><option value="">Todos los clientes</option></select>
       <select class="filter-select" id="filt-mand-tipo" onchange="renderAcreditacionMandante()"><option value="">Todos los objetos</option><option value="empresa">Empresa</option><option value="trabajador">Trabajador</option><option value="vehiculo">Vehículo/equipo</option><option value="proyecto">Proyecto/mantención</option></select>
       <select class="filter-select" id="filt-mand-estado" onchange="renderAcreditacionMandante()"><option value="">Todos los estados</option><option value="pendiente">Pendiente</option><option value="observado">Observado</option><option value="rechazado">Rechazado</option><option value="aprobado">Aprobado</option><option value="pase_emitido">Pase emitido</option></select>
     </div>
@@ -969,7 +969,7 @@ body.private #main { display:block; }
     </div>
     <div class="filters">
       <input class="filter-input" id="filt-cred-txt" placeholder="🔍 Trabajador, pase o QR..." oninput="renderCredenciales()">
-      <select class="filter-select" id="filt-cred-mina" onchange="renderCredenciales()"><option value="">Todas las mineras mandantes</option></select>
+      <select class="filter-select" id="filt-cred-mina" onchange="renderCredenciales()"><option value="">Todos los clientes</option></select>
       <select class="filter-select" id="filt-cred-est" onchange="renderCredenciales()"><option value="">Todos los estados</option><option value="vigente">Vigente</option><option value="proximo">Próximo</option><option value="vencido">Vencido</option></select>
     </div>
     <div class="kpi-grid" id="cred-kpis"></div>
@@ -999,7 +999,7 @@ body.private #main { display:block; }
     </div>
     <div class="filters">
       <select class="filter-select" id="filt-prot-tipo" onchange="renderProtocolos()"><option value="">Todos los protocolos</option><option value="hipobaria">Hipobaria</option><option value="ruido">Ruido</option><option value="silice">Sílice</option><option value="uv">Radiación UV</option><option value="psicosocial">Psicosocial</option><option value="sustancias">Sustancias peligrosas</option><option value="altura_fisica">Altura física</option><option value="alcohol_drogas">Alcohol y drogas</option></select>
-      <select class="filter-select" id="filt-prot-mina" onchange="renderProtocolos()"><option value="">Todas las mineras mandantes</option></select>
+      <select class="filter-select" id="filt-prot-mina" onchange="renderProtocolos()"><option value="">Todos los clientes</option></select>
       <select class="filter-select" id="filt-prot-est" onchange="renderProtocolos()"><option value="">Todos los estados</option><option value="vigente">Vigente</option><option value="proximo">Próximo</option><option value="vencido">Vencido</option></select>
     </div>
     <div class="kpi-grid" id="prot-kpis"></div>
@@ -1031,7 +1031,7 @@ body.private #main { display:block; }
         <option value="vencido">Vencido</option>
       </select>
       <select class="filter-select" id="filt-ex-mina" onchange="renderExamenes()">
-        <option value="">Todas las minas</option>
+        <option value="">Todos los clientes</option>
       </select>
     </div>
     <div class="card"><div class="table-wrap"><table id="ex-table"></table></div></div>
@@ -1437,7 +1437,7 @@ body.private #main { display:block; }
 
 
 <!-- Modal: Nueva Minera -->
-<div class="modal-overlay" id="modal-nueva-mina"><div class="modal"><div class="modal-header"><div class="modal-title">+ Nueva Minera / Mandante</div><button class="modal-close" onclick="closeModal('modal-nueva-mina')">✕</button></div><div class="modal-body"><div class="form-grid"><div class="form-group full"><label class="form-label">Nombre minera/faena</label><input class="form-input" id="min-nombre" placeholder="Minera..."></div><div class="form-group"><label class="form-label">Mandante</label><input class="form-input" id="min-mandante"></div><div class="form-group"><label class="form-label">Región</label><input class="form-input chile-region-input" id="min-region" list="chile-regiones-list" placeholder="Buscar región..."></div><div class="form-group"><label class="form-label">Comuna</label><input class="form-input chile-comuna-input" id="min-comuna" list="chile-comunas-list" placeholder="Primero selecciona región"></div><div class="form-group"><label class="form-label">Altura msnm</label><input class="form-input" type="number" id="min-altura"></div><div class="form-group"><label class="form-label">Sistema acceso</label><input class="form-input" id="min-sistema" placeholder="SIGA / Minpass / Propio"></div><div class="form-group"><label class="form-label">Contacto mandante</label><input class="form-input" id="min-contacto"></div><div class="form-group"><label class="form-label">Color</label><input class="form-input" type="color" id="min-color" value="#f07d36"></div></div></div><div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-nueva-mina')">Cancelar</button><button class="btn btn-primary" onclick="saveNuevaMina()">Guardar</button></div></div></div>
+<div class="modal-overlay" id="modal-nueva-mina"><div class="modal"><div class="modal-header"><div class="modal-title">+ Nuevo Cliente / Mandante</div><button class="modal-close" onclick="closeModal('modal-nueva-mina')">✕</button></div><div class="modal-body"><div class="form-grid"><div class="form-group full"><label class="form-label">Nombre cliente/faena</label><input class="form-input" id="min-nombre" placeholder="Minera..."></div><div class="form-group"><label class="form-label">Mandante</label><input class="form-input" id="min-mandante"></div><div class="form-group"><label class="form-label">Región</label><input class="form-input chile-region-input" id="min-region" list="chile-regiones-list" placeholder="Buscar región..."></div><div class="form-group"><label class="form-label">Comuna</label><input class="form-input chile-comuna-input" id="min-comuna" list="chile-comunas-list" placeholder="Primero selecciona región"></div><div class="form-group"><label class="form-label">Altura msnm</label><input class="form-input" type="number" id="min-altura"></div><div class="form-group"><label class="form-label">Sistema acceso</label><input class="form-input" id="min-sistema" placeholder="SIGA / Minpass / Propio"></div><div class="form-group"><label class="form-label">Contacto mandante</label><input class="form-input" id="min-contacto"></div><div class="form-group"><label class="form-label">Color</label><input class="form-input" type="color" id="min-color" value="#f07d36"></div></div></div><div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-nueva-mina')">Cancelar</button><button class="btn btn-primary" onclick="saveNuevaMina()">Guardar</button></div></div></div>
 <!-- Modal: Nuevo Contrato Marco -->
 <div class="modal-overlay" id="modal-nuevo-contrato">
   <div class="modal">
@@ -1446,7 +1446,7 @@ body.private #main { display:block; }
       <div class="form-grid">
         <div class="form-group full"><label class="form-label">Nombre contrato</label><input class="form-input" id="nc-nombre" placeholder="Ej: Servicio mantención mecánica 2026"></div>
         <div class="form-group"><label class="form-label">Número contrato</label><input class="form-input" id="nc-numero" placeholder="CTR-2026-001"></div>
-        <div class="form-group"><label class="form-label">Minera / mandante</label><select class="form-select" id="nc-mina"></select></div>
+        <div class="form-group"><label class="form-label">Cliente / mandante</label><select class="form-select" id="nc-mina"></select></div>
         <div class="form-group"><label class="form-label">Tipo</label><select class="form-select" id="nc-tipo"><option value="permanente">Permanente / planta</option><option value="esporadico">Esporádico / por proyecto</option><option value="mixto">Mixto</option></select></div>
         <div class="form-group"><label class="form-label">Inicio</label><input class="form-input" type="date" id="nc-inicio"></div>
         <div class="form-group"><label class="form-label">Término</label><input class="form-input" type="date" id="nc-termino"></div>
@@ -2108,7 +2108,7 @@ function updateBadges() {
 // ===================== NAVIGATION =====================
 let currentPage = 'dashboard';
 const pageLabels = {
-  dashboard:'Dashboard','mineras':'Por Minera',alertas:'Alertas',trabajadores:'Trabajadores',
+  dashboard:'Dashboard','mineras':'Por Cliente',alertas:'Alertas',trabajadores:'Trabajadores',
   bloqueados:'Bloqueados',auditoria:'Auditoría Documental',mantenciones:'Mantenciones',
   contratos:'Contratos y Firmas',hoteleria:'Hotelería',llamados:'Llamados WA',
   examenes:'Exámenes Médicos',cursos:'Cursos',reportes:'Reportes',clientes:'Clientes Nexo Klar'
@@ -4316,7 +4316,7 @@ const initSelectsV64=initSelects;
 initSelects=function(){
   initSelectsV64();
   const minaIds=['filt-veh-mina','filt-mand-mina','filt-cred-mina','filt-prot-mina'];
-  minaIds.forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">Todas las mineras mandantes</option>'+S.minas.map(m=>`<option value="${m.id}">${m.nombre}</option>`).join('');});
+  minaIds.forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">Todos los clientes</option>'+S.minas.map(m=>`<option value="${m.id}">${m.nombre}</option>`).join('');});
   const mantIds=['filt-turno-mant','filt-inc-mant'];
   mantIds.forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">Todos los proyectos</option>'+S.mantenciones.map(m=>`<option value="${m.id}">${m.nombre} · ${minaNombre(m.minaId)}</option>`).join('');});
   const subc=document.getElementById('filt-subc-contrato');
@@ -4704,7 +4704,7 @@ function initSelects() {
   ['filt-trab-mina','filt-aud-mina','filt-mant-mina','filt-ex-mina','nm-mina','nc-mina','filt-dash-mina','filt-alerta-mina','wg-mina'].forEach(id=>{
     const el=document.getElementById(id);
     if(!el) return;
-    const base = (id.startsWith('filt')||id==='wg-mina')?'<option value="">Todas las mineras mandantes</option>':'';
+    const base = (id.startsWith('filt')||id==='wg-mina')?'<option value="">Todos los clientes</option>':'';
     el.innerHTML = base+S.minas.map(m=>`<option value="${m.id}">${m.nombre}</option>`).join('');
   });
   // Worker selects
@@ -5578,6 +5578,228 @@ function applyClientTerminology(root) {
 }
 let clientTerminologyObserver;
 function installClientTerminology(){applyClientTerminology(document.body);if(clientTerminologyObserver)return;clientTerminologyObserver=new MutationObserver(records=>records.forEach(record=>record.addedNodes.forEach(applyClientTerminology)));clientTerminologyObserver.observe(document.body,{childList:true,subtree:true});}
+
+// ===================== V9.0: PRODUCTO OPERATIVO 360 =====================
+const V90_CATALOG_DEFAULTS={
+  cargos:['Administrador de contrato','Supervisor terreno','Prevencionista de riesgos','Jefe de cuadrilla','Mecánico mantenedor','Eléctrico SEC','Instrumentista','Soldador','Rigger','Operador equipo','Conductor','Ayudante','Bodeguero','Control documental'],
+  especialidades:['Mecánica','Eléctrica','Instrumentación','Soldadura','Andamios','Izaje','Operación equipo','Conducción','Prevención de riesgos','Calidad','Logística','Administración'],
+  epp:['Casco con barbiquejo','Lentes de seguridad','Guantes anticorte','Guantes dieléctricos','Protección auditiva','Respirador','Arnés de seguridad','Zapato de seguridad','Polera ignífuga','Pantalón cargo','Chaleco reflectante','Bloqueador solar'],
+  documentos:['Cédula de identidad','Contrato de trabajo','Anexo de faena','Certificado AFP','Certificado salud','Finiquito anterior si aplica','Certificado antecedentes','Licencia de conducir','Hoja de vida conductor','ODI','Reglamento interno'],
+  examenes:['Preocupacional','Altura geográfica','Altura física','Psicosensométrico','Audiometría','Espirometría','Alcohol y drogas','Ruido','Sílice','Radiación UV'],
+  cursos:['Inducción mandante','ODI','LOTO','Trabajo en altura','Espacios confinados','Trabajo en caliente','Izaje','Manejo defensivo','Uso extintores','Primeros auxilios'],
+  turnos:['5x2 día','4x3 día','7x7 día','7x7 noche','14x14','Turno especial'],
+  contratos:['Marco','Obra o faena','Servicio permanente','Servicio spot','Subcontrato','Arriendo equipo'],
+  centrosCosto:['Administración','Operaciones','Mantención','Proyectos','Prevención','Logística']
+};
+const V90_REQ_DEFAULTS=[
+  {id:'req_v90_ci',scope:'global',type:'documento',name:'Cédula de identidad',critical:true,appliesTo:'todos',source:'Identificación trabajador'},
+  {id:'req_v90_contrato',scope:'global',type:'contrato',name:'Contrato de trabajo o anexo vigente',critical:true,appliesTo:'todos',source:'Relación laboral'},
+  {id:'req_v90_afp',scope:'global',type:'documento',name:'Certificado AFP',critical:true,appliesTo:'todos',source:'Cumplimiento laboral'},
+  {id:'req_v90_salud',scope:'global',type:'documento',name:'Certificado salud',critical:true,appliesTo:'todos',source:'Cumplimiento laboral'},
+  {id:'req_v90_preoc',scope:'global',type:'examen',name:'Examen preocupacional',critical:true,appliesTo:'todos',source:'Salud ocupacional'},
+  {id:'req_v90_odi',scope:'global',type:'curso',name:'ODI / Derecho a saber',critical:true,appliesTo:'todos',source:'Prevención'},
+  {id:'req_v90_altura',scope:'cargo',cargo:'Trabajo en altura',type:'curso',name:'Trabajo en altura física',critical:true,appliesTo:'cargo/especialidad',source:'Riesgo crítico'},
+  {id:'req_v90_loto',scope:'cargo',cargo:'Eléctrica',type:'curso',name:'LOTO / bloqueo de energías',critical:true,appliesTo:'cargo/especialidad',source:'Riesgo crítico'},
+  {id:'req_v90_izaje',scope:'cargo',cargo:'Rigger',type:'certificacion',name:'Certificación rigger / izaje',critical:true,appliesTo:'cargo/especialidad',source:'Operación crítica'}
+];
+function ensureV90Collections(){
+  if(!S.catalogosEmpresa)S.catalogosEmpresa=JSON.parse(JSON.stringify(V90_CATALOG_DEFAULTS));
+  Object.entries(V90_CATALOG_DEFAULTS).forEach(([k,v])=>{if(!Array.isArray(S.catalogosEmpresa[k]))S.catalogosEmpresa[k]=[...v];});
+  if(!Array.isArray(S.requirementMatrix)||!S.requirementMatrix.length)S.requirementMatrix=V90_REQ_DEFAULTS.map(x=>({...x}));
+  if(!Array.isArray(S.entityHistory))S.entityHistory=[];
+  if(!S.productViewMode)S.productViewMode='operativo';
+  S.trabajadores?.forEach(t=>{if(!t.operationalStatus)t.operationalStatus=t.disponibilidad==='asignado'?'en_validacion':'disponible';});
+}
+const ensureV6CollectionsV90Base=ensureV6Collections;
+ensureV6Collections=function(){ensureV6CollectionsV90Base();ensureV90Collections();};
+const snapshotStateV90Base=snapshotState;
+snapshotState=function(){ensureV90Collections();return {...snapshotStateV90Base(),catalogosEmpresa:S.catalogosEmpresa,requirementMatrix:S.requirementMatrix,entityHistory:S.entityHistory,productViewMode:S.productViewMode};};
+const applyStateV90Base=applyState;
+applyState=function(data){applyStateV90Base(data);['catalogosEmpresa','requirementMatrix','entityHistory','productViewMode'].forEach(k=>{if(data?.[k]!==undefined)S[k]=data[k];});ensureV90Collections();};
+function v90Text(v){return eppEsc(String(v??''));}
+function v90Now(){return new Date().toISOString();}
+function v90EntityName(type,id){
+  const map={trabajador:S.trabajadores,cliente:S.minas,contrato:S.contratos,servicio:S.mantenciones,hotel:S.hoteles,vehiculo:S.vehiculos,subcontrato:S.subcontratos};
+  const row=(map[type]||[]).find(x=>String(x.id)===String(id));
+  return row?.nombre||row?.razon||row?.patente||row?.serie||id||'—';
+}
+function recordHistoryV90(type,id,action,before={},after={},reason='Actualización operacional',evidence=''){
+  ensureV90Collections();
+  S.entityHistory.unshift({id:'hist_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),type,id,entity:v90EntityName(type,id),action,reason,before,after,evidence,at:v90Now(),user:currentTenantUser?.email||'usuario local'});
+  S.entityHistory=S.entityHistory.slice(0,500);
+}
+function historyRowsV90(type,id){
+  ensureV90Collections();
+  return S.entityHistory.filter(h=>h.type===type&&String(h.id)===String(id)).slice(0,20);
+}
+function renderHistoryV90(type,id){
+  const rows=historyRowsV90(type,id);
+  return `<div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Motivo</th><th>Evidencia</th></tr></thead><tbody>${rows.map(h=>`<tr><td>${(h.at||'').slice(0,16).replace('T',' ')}</td><td>${v90Text(h.user)}</td><td><b>${v90Text(h.action)}</b></td><td>${v90Text(h.reason)}</td><td>${v90Text(h.evidence||'—')}</td></tr>`).join('')||'<tr><td colspan="5">Sin cambios registrados todavía.</td></tr>'}</tbody></table></div>`;
+}
+function rulesForWorkerV90(t){
+  ensureV90Collections();
+  const relations=workerRelationsV81(t.id),text=`${t.cargo||''} ${t.rol||''} ${t.especialidad||''}`.toLowerCase();
+  return S.requirementMatrix.filter(r=>{
+    if(r.clientId&&!relations.clientIds.includes(r.clientId))return false;
+    if(r.contractId&&!relations.contractIds.includes(r.contractId))return false;
+    if(r.projectId&&!relations.projectIds.includes(r.projectId))return false;
+    if(r.workerType&&r.workerType!==t.tipo)return false;
+    if(r.cargo&&!text.includes(String(r.cargo).toLowerCase()))return false;
+    return true;
+  }).map(r=>({type:r.type||'documento',name:r.name,critical:r.critical!==false,source:r.source||'Matriz empresa'}));
+}
+const getRequiredItemsForWorkerV90Base=getRequiredItemsForWorker;
+getRequiredItemsForWorker=function(t){
+  const base=getRequiredItemsForWorkerV90Base(t)||[];
+  const extra=rulesForWorkerV90(t);
+  const seen=new Set();
+  return [...base,...extra].filter(r=>{const key=`${r.type}|${String(r.name).toLowerCase()}`;if(seen.has(key))return false;seen.add(key);return true;});
+};
+function workerBlockReasonsV90(t){
+  const missing=getRequiredItemsForWorker(t).filter(r=>r.critical!==false&&!reqStatus(t,r).ok).map(r=>r.name);
+  const active=S.asignaciones.filter(a=>a.trabId===t.id&&!['baja','cerrado','cancelado'].includes(a.estado));
+  const needsSignature=active.some(a=>!S.firmas.some(f=>f.trabId===t.id&&f.mantId===a.mantId&&['firmado','aprobado'].includes(String(f.estado).toLowerCase())));
+  if(needsSignature)missing.push('Contrato o anexo firmado');
+  return [...new Set(missing)];
+}
+function computeOperationalStatusV90(t){
+  const assign=S.asignaciones.find(a=>a.trabId===t.id&&!['baja','cerrado','cancelado'].includes(a.estado));
+  const block=workerBlockReasonsV90(t);
+  if(block.length)return {status:'no_habilitado',blocked:true,reasons:block};
+  if(!assign)return {status:t.disponibilidad==='vacaciones'?'finalizado':'disponible',blocked:false,reasons:[]};
+  const stage=assign.recruitmentStage||'en_validacion';
+  const map={reclutamiento:'convocado',disponible_confirmado:'convocado',validar_examenes_induccion:'en_validacion',confirma_trabajo:'en_validacion',contrato_generado:'contrato_enviado',contrato_firmado:'contrato_firmado',acreditacion_cliente:'acreditacion_enviada'};
+  if(assign.estado==='confirmado'&&stage==='acreditacion_cliente')return {status:'aprobado',blocked:false,reasons:[]};
+  return {status:map[stage]||'en_validacion',blocked:false,reasons:[]};
+}
+function refreshOperationalStatusesV90(){
+  ensureV90Collections();
+  S.trabajadores.forEach(t=>{const st=computeOperationalStatusV90(t);t.operationalStatus=st.status;t.autoBlocked=st.blocked;t.autoBlockReasons=st.reasons;});
+}
+function opStatusBadgeV90(status){
+  const labels={disponible:'Disponible',convocado:'Convocado',en_validacion:'En validación',contrato_enviado:'Contrato enviado',contrato_firmado:'Contrato firmado',acreditacion_enviada:'Acreditación enviada',aprobado:'Aprobado',rechazado:'Rechazado',en_faena:'En faena',finalizado:'Finalizado',no_habilitado:'No habilitado'};
+  const cls=status==='aprobado'||status==='en_faena'||status==='disponible'?'badge-ok':status==='no_habilitado'||status==='rechazado'?'badge-err':'badge-warn';
+  return `<span class="badge ${cls}">${labels[status]||status||'Sin estado'}</span>`;
+}
+function installV90Ui(){
+  ensureV90Collections();
+  const topbar=document.querySelector('.topbar-right');
+  if(topbar&&!document.getElementById('global-search-v90'))topbar.insertAdjacentHTML('afterbegin','<input class="filter-input" id="global-search-v90" placeholder="Buscar RUT, contrato, patente..." oninput="renderGlobalSearchV90()" style="width:230px;"><button class="btn btn-secondary btn-sm" onclick="toggleViewModeV90()">Vista: <span id="view-mode-v90">Operativo</span></button>');
+  if(!document.getElementById('modal-global-search-v90'))document.body.insertAdjacentHTML('beforeend',`<div class="modal-overlay" id="modal-global-search-v90"><div class="modal modal-wide"><div class="modal-header"><div class="modal-title">Búsqueda global</div><button class="modal-close" onclick="closeModal('modal-global-search-v90')">✕</button></div><div class="modal-body" id="global-search-results-v90"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-global-search-v90')">Cerrar</button></div></div></div>`);
+  const cfg=document.querySelector('#page-configuracion .grid-2');
+  if(cfg&&!document.getElementById('cfg-v90-catalogs'))cfg.insertAdjacentHTML('beforeend',`<div class="card" id="cfg-v90-catalogs"><div class="card-header"><div><div class="card-title">Catálogos parametrizables</div><div class="card-subtitle">Valores propios de esta empresa: cargos, especialidades, EPP, documentos, cursos, turnos y centros de costo.</div></div><button class="btn btn-primary btn-sm" onclick="saveCatalogsV90()">Guardar</button></div><div class="divider"></div><div class="form-grid">${Object.keys(V90_CATALOG_DEFAULTS).map(k=>`<div class="form-group full"><label class="form-label">${v90Text(k)}</label><textarea class="form-textarea" id="cat-v90-${k}" style="min-height:70px;"></textarea></div>`).join('')}</div></div><div class="card" id="cfg-v90-requirements"><div class="card-header"><div><div class="card-title">Matriz de requisitos por cliente, contrato, proyecto y cargo</div><div class="card-subtitle">Define documentos críticos distintos por mandante, servicio, tipo de trabajador o especialidad.</div></div><button class="btn btn-primary btn-sm" onclick="addRequirementRuleV90()">+ Requisito</button></div><div class="divider"></div><div id="req-matrix-v90"></div></div>`);
+  const dash=document.getElementById('dash-recruitment-center');
+  if(dash&&!document.getElementById('dash-v90-tree'))dash.insertAdjacentHTML('afterend','<div class="card" id="dash-v90-tree" style="margin-bottom:20px;"></div>');
+  const ops=document.querySelector('#page-operaciones-cloud .grid-2');
+  if(ops&&!document.getElementById('ops-v90-architecture'))ops.insertAdjacentHTML('beforebegin','<div class="card" id="ops-v90-architecture" style="margin-bottom:16px;"></div>');
+  renderCatalogsV90();renderRequirementMatrixV90();renderOperationalTreeV90();renderArchitectureV90();updateModeLabelV90();
+}
+function renderCatalogsV90(){
+  Object.keys(V90_CATALOG_DEFAULTS).forEach(k=>{const el=document.getElementById(`cat-v90-${k}`);if(el)el.value=(S.catalogosEmpresa?.[k]||[]).join('\\n');});
+}
+function saveCatalogsV90(){
+  const before=JSON.parse(JSON.stringify(S.catalogosEmpresa||{}));
+  Object.keys(V90_CATALOG_DEFAULTS).forEach(k=>{S.catalogosEmpresa[k]=String(document.getElementById(`cat-v90-${k}`)?.value||'').split(/\n|,/).map(x=>x.trim()).filter(Boolean).slice(0,150);});
+  if(S.catalogosEmpresa.especialidades?.length)S.ESPECIALIDADES=[...new Set([...S.catalogosEmpresa.especialidades,...(S.ESPECIALIDADES||[])])];
+  recordHistoryV90('empresa',S.empresa?.rut||currentTenantId,'Catálogos actualizados',before,S.catalogosEmpresa,'Parametrización por empresa');
+  persistTenant();initSelects();toast('Catálogos guardados para esta empresa');
+}
+function renderRequirementMatrixV90(){
+  const host=document.getElementById('req-matrix-v90');if(!host)return;
+  host.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Ámbito</th><th>Aplica</th><th>Tipo</th><th>Requisito</th><th>Crítico</th><th>Fuente</th><th></th></tr></thead><tbody>${S.requirementMatrix.map(r=>`<tr><td>${v90Text(r.scope||'global')}</td><td>${v90Text([r.workerType,r.cargo,r.clientId?minaNombre(r.clientId):'',r.contractId?contratoNombre(r.contractId):'',r.projectId?mantNombre(r.projectId):''].filter(Boolean).join(' · ')||'Todos')}</td><td>${v90Text(r.type)}</td><td><b>${v90Text(r.name)}</b></td><td>${r.critical!==false?'<span class="badge badge-err">Sí</span>':'<span class="badge badge-na">No</span>'}</td><td>${v90Text(r.source||'')}</td><td><button class="btn btn-danger btn-sm" onclick="deleteRequirementRuleV90('${r.id}')">Eliminar</button></td></tr>`).join('')}</tbody></table></div>`;
+}
+function addRequirementRuleV90(){
+  ensureV90Collections();
+  const name=prompt('Nombre del requisito/documento requerido:');if(!name)return;
+  const type=prompt('Tipo: documento, examen, curso, certificacion o contrato','documento')||'documento';
+  const cargo=prompt('Cargo/especialidad a la que aplica. Dejar vacío para todos','')||'';
+  S.requirementMatrix.push({id:'req_'+Date.now(),scope:cargo?'cargo':'global',cargo,type,name,critical:true,appliesTo:cargo||'todos',source:'Regla empresa'});
+  recordHistoryV90('empresa',S.empresa?.rut||currentTenantId,'Requisito agregado',{}, {type,name,cargo},'Matriz documental');
+  persistTenant();renderRequirementMatrixV90();toast('Requisito agregado a la matriz');
+}
+function deleteRequirementRuleV90(id){
+  const row=S.requirementMatrix.find(r=>r.id===id);if(!row)return;
+  if(!confirm('¿Eliminar este requisito de la matriz?'))return;
+  S.requirementMatrix=S.requirementMatrix.filter(r=>r.id!==id);
+  recordHistoryV90('empresa',S.empresa?.rut||currentTenantId,'Requisito eliminado',row,{},'Matriz documental');
+  persistTenant();renderRequirementMatrixV90();renderCurrentPageSoft();
+}
+function renderOperationalTreeV90(){
+  const host=document.getElementById('dash-v90-tree');if(!host)return;
+  refreshOperationalStatusesV90();
+  const clientes=S.minas.slice(0,6);
+  host.innerHTML=`<div class="card-header"><div><div class="card-title">Árbol operativo cliente → contrato → servicio → recursos</div><div class="card-subtitle">Vista conectada para demostrar que la información no queda aislada por módulo.</div></div><button class="btn btn-secondary btn-sm" onclick="exportInterconnectionV87()">Exportar interconexión</button></div><div class="divider"></div>${clientes.map(cliente=>{const contratos=S.contratos.filter(c=>c.minaId===cliente.id),servicios=S.mantenciones.filter(m=>m.minaId===cliente.id),personas=[...new Set(servicios.flatMap(m=>S.asignaciones.filter(a=>a.mantId===m.id).map(a=>a.trabId)))],veh=(S.vehiculos||[]).filter(v=>(v.minaIds||[]).includes(cliente.id));return `<div style="padding:12px 0;border-bottom:1px solid var(--border);"><div style="display:flex;justify-content:space-between;gap:12px;"><div><b>${v90Text(cliente.nombre)}</b><div class="worker-rut">${v90Text(cliente.mandante||'Mandante')} · ${v90Text(cliente.region||'')}</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;"><span class="badge badge-blue">${contratos.length} contratos</span><span class="badge badge-orange">${servicios.length} servicios</span><span class="badge badge-ok">${personas.length} personas</span><span class="badge badge-na">${veh.length} equipos</span></div></div><div style="margin-top:8px;">${servicios.slice(0,4).map(m=>{const as=S.asignaciones.filter(a=>a.mantId===m.id),blocked=as.filter(a=>S.trabajadores.find(t=>t.id===a.trabId)?.autoBlocked).length;return `<button class="btn btn-ghost btn-sm" onclick="openMantDetalle('${m.id}')">${v90Text(m.nombre)} · ${as.length} pers. · ${blocked} bloqueos</button>`;}).join(' ')||'<span class="worker-rut">Sin servicios asociados todavía.</span>'}</div></div>`;}).join('')||'<div class="empty">Crea clientes para ver el árbol operativo.</div>'}`;
+}
+function renderArchitectureV90(){
+  const host=document.getElementById('ops-v90-architecture');if(!host)return;
+  host.innerHTML=`<div class="card-header"><div><div class="card-title">Arquitectura productiva preparada</div><div class="card-subtitle">Modelo normalizado para crecer: entidades críticas, vínculos, catálogos, matriz de requisitos e historial.</div></div><span class="badge badge-ok">V9.0</span></div><div class="grid-4" style="margin-top:12px;"><div class="kpi kpi-blue"><div class="kpi-value">15</div><div class="kpi-label">Migraciones SQL</div></div><div class="kpi kpi-green"><div class="kpi-value">${Object.keys(S.catalogosEmpresa||{}).length}</div><div class="kpi-label">Catálogos empresa</div></div><div class="kpi kpi-orange"><div class="kpi-value">${S.requirementMatrix.length}</div><div class="kpi-label">Reglas documentales</div></div><div class="kpi kpi-red"><div class="kpi-value">${S.trabajadores.filter(t=>computeOperationalStatusV90(t).blocked).length}</div><div class="kpi-label">No habilitados</div></div></div>`;
+}
+function renderGlobalSearchV90(){
+  const q=String(document.getElementById('global-search-v90')?.value||'').trim().toLowerCase();
+  const host=document.getElementById('global-search-results-v90');if(!q||q.length<2){closeModal('modal-global-search-v90');return;}
+  const rows=[];
+  S.trabajadores.forEach(t=>{if(`${t.nombre} ${t.rut} ${t.cargo} ${t.especialidad}`.toLowerCase().includes(q))rows.push(['Trabajador',t.nombre,t.rut,`openFicha('${t.id}')`]);});
+  S.contratos.forEach(c=>{if(`${c.nombre} ${c.numero} ${minaNombre(c.minaId)}`.toLowerCase().includes(q))rows.push(['Contrato',c.nombre,c.numero,`openContractDetailV78('${c.id}')`]);});
+  S.mantenciones.forEach(m=>{if(`${m.nombre} ${m.area} ${minaNombre(m.minaId)} ${contratoNombre(m.contratoId)}`.toLowerCase().includes(q))rows.push(['Servicio',m.nombre,minaNombre(m.minaId),`openMantDetalle('${m.id}')`]);});
+  (S.vehiculos||[]).forEach(v=>{if(`${v.nombre} ${v.patente} ${v.serie}`.toLowerCase().includes(q))rows.push(['Vehículo/equipo',v.nombre||v.patente,v.patente||v.serie,`openVehicleDetailV90('${v.id}')`]);});
+  (S.hoteles||[]).forEach(h=>{if(`${h.nombre} ${h.direccion} ${h.ciudad}`.toLowerCase().includes(q))rows.push(['Hotel',h.nombre,h.ciudad,`openHotelV82('${h.id}')`]);});
+  (S.subcontratos||[]).forEach(s=>{if(`${s.razon} ${s.rut} ${s.servicios}`.toLowerCase().includes(q))rows.push(['Subcontrato',s.razon,s.rut,`openSubcontractV82('${s.id}')`]);});
+  host.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Resultado</th><th>Dato</th><th></th></tr></thead><tbody>${rows.slice(0,40).map(r=>`<tr><td>${r[0]}</td><td><b>${v90Text(r[1])}</b></td><td>${v90Text(r[2])}</td><td><button class="btn btn-primary btn-sm" onclick="closeModal('modal-global-search-v90');${r[3]}">Abrir</button></td></tr>`).join('')||'<tr><td colspan="4">Sin resultados.</td></tr>'}</tbody></table></div>`;
+  openModal('modal-global-search-v90');
+}
+function toggleViewModeV90(){S.productViewMode=S.productViewMode==='ejecutivo'?'operativo':'ejecutivo';persistTenant();updateModeLabelV90();renderDashboard();}
+function updateModeLabelV90(){const el=document.getElementById('view-mode-v90');if(el)el.textContent=S.productViewMode==='ejecutivo'?'Ejecutivo':'Operativo';}
+const openFichaV90Base=openFicha;
+openFicha=function(id){
+  openFichaV90Base(id);
+  const t=S.trabajadores.find(w=>w.id===id);if(!t)return;
+  const status=computeOperationalStatusV90(t);
+  const datos=document.getElementById('ficha-tab-datos'),hist=document.getElementById('ficha-tab-hist');
+  if(datos&&!document.getElementById('worker-v90-status'))datos.insertAdjacentHTML('afterbegin',`<div class="card" id="worker-v90-status" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Estado operativo único</div><div class="card-subtitle">Resume si la persona puede ser usada en un servicio, según documentos, firma, asignaciones y acreditación.</div></div>${opStatusBadgeV90(status.status)}</div>${status.reasons.length?`<div class="cloud-note" style="margin-top:10px;">Bloqueo automático: ${status.reasons.map(v90Text).join(', ')}</div>`:'<div class="cloud-note" style="margin-top:10px;">Persona sin bloqueos críticos detectados para sus reglas actuales.</div>'}</div>`);
+  if(hist&&!document.getElementById('worker-v90-history'))hist.insertAdjacentHTML('beforeend',`<div class="card" id="worker-v90-history" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Historial de cambios de la ficha</div><div class="card-subtitle">Quién cambió qué, cuándo, motivo y evidencia.</div></div></div>${renderHistoryV90('trabajador',t.id)}</div>`);
+};
+const saveFichaDatosV90Base=saveFichaDatos;
+saveFichaDatos=function(){
+  const before=currentFichaTrab?JSON.parse(JSON.stringify(currentFichaTrab)):null;
+  saveFichaDatosV90Base();
+  if(before&&currentFichaTrab)recordHistoryV90('trabajador',currentFichaTrab.id,'Ficha trabajador actualizada',before,currentFichaTrab,'Actualización desde ficha 360');
+};
+const assignFichaToMantV90Base=assignFichaToMant;
+assignFichaToMant=function(){const before=currentFichaTrab?JSON.parse(JSON.stringify(currentFichaTrab)):null;assignFichaToMantV90Base();if(before&&currentFichaTrab)recordHistoryV90('trabajador',currentFichaTrab.id,'Asignación a servicio',before,currentFichaTrab,'Movimiento operativo');};
+const deleteAssignmentFromFichaV90Base=deleteAssignmentFromFicha;
+deleteAssignmentFromFicha=function(mantId){const before=currentFichaTrab?JSON.parse(JSON.stringify(currentFichaTrab)):null;deleteAssignmentFromFichaV90Base(mantId);if(before&&currentFichaTrab)recordHistoryV90('trabajador',currentFichaTrab.id,'Salida de servicio',before,currentFichaTrab,'Reasignación o baja operacional');};
+const openMantDetalleV90Base=openMantDetalle;
+openMantDetalle=function(mantId){
+  openMantDetalleV90Base(mantId);
+  const m=S.mantenciones.find(x=>x.id===mantId);if(!m)return;
+  const people=S.asignaciones.filter(a=>a.mantId===m.id).map(a=>S.trabajadores.find(t=>t.id===a.trabId)).filter(Boolean),vehicles=(S.vehiculos||[]).filter(v=>(v.minaIds||[]).includes(m.minaId)),hotel=S.hotelAsig.filter(a=>a.mantId===m.id),inc=(S.incidentes||[]).filter(i=>i.mantId===m.id),sub=(S.subcontratos||[]).filter(s=>s.contratoId===m.contratoId),blocked=people.filter(t=>computeOperationalStatusV90(t).blocked);
+  const docs=document.getElementById('mant-tab-docs'),timeline=document.getElementById('mant-tab-timeline');
+  if(docs&&!document.getElementById('mant-v90-360'))docs.insertAdjacentHTML('afterbegin',`<div class="card" id="mant-v90-360" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Ficha 360 del servicio</div><div class="card-subtitle">Personal, vehículos, hotelería, subcontratos, incidentes, documentos y bloqueos conectados.</div></div><button class="btn btn-primary btn-sm" onclick="openRecruitmentForMantV85('${m.id}')">Coordinar personal</button></div><div class="kpi-grid" style="margin-top:12px;"><div class="kpi kpi-blue"><div class="kpi-value">${people.length}</div><div class="kpi-label">Personas</div></div><div class="kpi kpi-green"><div class="kpi-value">${vehicles.length}</div><div class="kpi-label">Equipos disponibles cliente</div></div><div class="kpi kpi-orange"><div class="kpi-value">${hotel.length}</div><div class="kpi-label">Alojamientos</div></div><div class="kpi kpi-red"><div class="kpi-value">${blocked.length}</div><div class="kpi-label">No habilitados</div></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><button class="btn btn-secondary btn-sm" onclick="openAsignarPersonalDirect('${m.id}')">Agregar/quitar personas</button><button class="btn btn-secondary btn-sm" onclick="openModal('modal-hotel-asignar')">Asignar hotel</button><button class="btn btn-secondary btn-sm" onclick="addVehiculo()">Agregar vehículo</button><button class="btn btn-secondary btn-sm" onclick="addSubcontrato()">Agregar subcontrato</button></div><div class="cloud-note" style="margin-top:12px;">Subcontratos asociados: ${sub.map(s=>v90Text(s.razon)).join(', ')||'sin subcontratos'} · Incidentes/NC: ${inc.length}</div></div>`);
+  if(timeline&&!document.getElementById('mant-v90-history'))timeline.insertAdjacentHTML('beforeend',`<div class="card" id="mant-v90-history" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Historial de cambios del servicio</div><div class="card-subtitle">Cambios operativos y evidencia asociados al proyecto o mantención.</div></div></div>${renderHistoryV90('servicio',m.id)}</div>`);
+};
+function openVehicleDetailV90(id){
+  const v=(S.vehiculos||[]).find(x=>x.id===id);if(!v)return;
+  document.getElementById('v81-detail-title').textContent=`Ficha vehículo/equipo · ${v.nombre||v.patente||v.serie}`;
+  document.getElementById('v81-detail-body').innerHTML=`<div class="grid-2"><div class="card"><div class="card-title">Datos operativos</div><div class="divider"></div>${infoRow('Tipo',v.tipo||'—')}${infoRow('Patente / serie',[v.patente,v.serie].filter(Boolean).join(' / ')||'—')}${infoRow('Propiedad',v.propiedad||'—')}${infoRow('Costo arriendo',clpV83(v.rentalCost||v.costoArriendo||0))}${infoRow('Operador',trabNombre(v.operadorId))}${infoRow('Clientes',(v.minaIds||[]).map(minaNombre).join(', ')||'—')}</div><div class="card"><div class="card-title">Alertas</div><div class="divider"></div>${vehicleAlertsV78(v).map(a=>`<div class="alert-item alert-${a.urgencia||'critico'}"><div>${v90Text(a.msg||a)}</div></div>`).join('')||'<span class="badge badge-ok">Sin alertas críticas</span>'}</div></div><div class="card" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Historial documental</div></div><button class="btn btn-secondary btn-sm" onclick="requestEvidenceUpdateV81('vehiculos','${v.id}','Documento vehículo')">Cargar archivo</button></div>${renderHistoryV90('vehiculo',v.id)}</div>`;
+  openModal('modal-v81-detail');
+}
+function renderClientTreeV90(id){
+  const c=S.minas.find(x=>x.id===id);if(!c)return;
+  document.getElementById('v81-detail-title').textContent=`Cliente · ${c.nombre}`;
+  const contratos=S.contratos.filter(x=>x.minaId===id),servicios=S.mantenciones.filter(x=>x.minaId===id),people=[...new Set(servicios.flatMap(m=>S.asignaciones.filter(a=>a.mantId===m.id).map(a=>a.trabId)))];
+  document.getElementById('v81-detail-body').innerHTML=`<div class="kpi-grid"><div class="kpi kpi-blue"><div class="kpi-value">${contratos.length}</div><div class="kpi-label">Contratos</div></div><div class="kpi kpi-orange"><div class="kpi-value">${servicios.length}</div><div class="kpi-label">Servicios</div></div><div class="kpi kpi-green"><div class="kpi-value">${people.length}</div><div class="kpi-label">Personas vinculadas</div></div><div class="kpi kpi-red"><div class="kpi-value">${computeAlertas().filter(a=>people.includes(a.trabId)).length}</div><div class="kpi-label">Alertas personas</div></div></div><div class="card" style="margin-top:16px;"><div class="card-title">Árbol operacional</div><div class="divider"></div>${contratos.map(ct=>`<div style="padding:10px 0;border-bottom:1px solid var(--border);"><b>${v90Text(ct.nombre)}</b><div class="worker-rut">${v90Text(ct.numero||'sin número')} · ${v90Text(ct.inicio||'?')} → ${v90Text(ct.termino||'?')}</div>${servicios.filter(s=>s.contratoId===ct.id).map(s=>`<button class="btn btn-ghost btn-sm" onclick="openMantDetalle('${s.id}')">${v90Text(s.nombre)} · ${S.asignaciones.filter(a=>a.mantId===s.id).length} personas</button>`).join(' ')||'<div class="worker-rut">Sin servicios en este contrato.</div>'}</div>`).join('')||'<div class="empty">Sin contratos asociados.</div>'}</div><div class="card" style="margin-top:16px;"><div class="card-title">Historial cliente</div><div class="divider"></div>${renderHistoryV90('cliente',id)}</div>`;
+  openModal('modal-v81-detail');
+}
+const renderMinerasV90Base=renderMineras;
+renderMineras=function(){renderMinerasV90Base();document.querySelectorAll('#page-mineras .mina-card,#page-mineras .card').forEach((card,i)=>{const c=S.minas[i];if(c&&!card.querySelector('[data-v90-client]'))card.insertAdjacentHTML('beforeend',`<button data-v90-client class="btn btn-secondary btn-sm" onclick="renderClientTreeV90('${c.id}')">Ficha 360 cliente</button>`);});};
+const renderTrabajadoresV90Base=renderTrabajadores;
+renderTrabajadores=function(){refreshOperationalStatusesV90();renderTrabajadoresV90Base();document.querySelectorAll('#trab-table thead tr').forEach(tr=>{if(!tr.querySelector('[data-v90]'))tr.insertAdjacentHTML('beforeend','<th data-v90>Estado operativo</th>');});document.querySelectorAll('#trab-table tbody tr').forEach((tr,i)=>{const list=[...S.trabajadores].filter(t=>{if(currentTrabTab==='planta')return t.tipo==='permanente'&&!t.bloqueado;if(currentTrabTab==='esporadico')return t.tipo==='esporadico'&&!t.bloqueado;if(currentTrabTab==='bloqueado')return t.bloqueado;return true;});const t=list[i];if(t&&!tr.querySelector('[data-v90]'))tr.insertAdjacentHTML('beforeend',`<td data-v90>${opStatusBadgeV90(t.operationalStatus)}${t.autoBlockReasons?.length?`<div class="worker-rut">${t.autoBlockReasons.length} bloqueo(s)</div>`:''}</td>`);});};
+const renderDashboardV90Base=renderDashboard;
+renderDashboard=function(){refreshOperationalStatusesV90();renderDashboardV90Base();renderOperationalTreeV90();if(S.productViewMode==='ejecutivo'){const k=document.getElementById('kpi-dash');if(k&&!document.getElementById('dash-v90-executive-note'))k.insertAdjacentHTML('afterend','<div class="cloud-note" id="dash-v90-executive-note" style="margin-bottom:16px;">Modo ejecutivo: prioriza KPIs, vencimientos, dotación, costos y riesgos para revisión gerencial.</div>');}};
+const renderPageV90Base=renderPage;
+renderPage=function(page){renderPageV90Base(page);installV90Ui();if(page==='configuracion'){renderCatalogsV90();renderRequirementMatrixV90();}if(page==='operaciones-cloud')renderArchitectureV90();};
+const initV90Base=init;
+init=function(){initV90Base();installV90Ui();refreshOperationalStatusesV90();renderOperationalTreeV90();};
 function init() {
   installV81Ui();
   enhanceAccessibility();
@@ -5600,7 +5822,7 @@ function init() {
   updateBadges();
   renderDashboard();
   const audMina = document.getElementById('filt-aud-mina');
-  if(audMina) audMina.innerHTML='<option value="">Todas las minas</option>'+S.minas.map(m=>`<option value="${m.id}">${m.nombre}</option>`).join('');
+  if(audMina) audMina.innerHTML='<option value="">Todos los clientes</option>'+S.minas.map(m=>`<option value="${m.id}">${m.nombre}</option>`).join('');
 }
 
 // Close modal on ESC

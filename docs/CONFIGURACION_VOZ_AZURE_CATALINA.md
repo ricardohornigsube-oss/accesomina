@@ -1,6 +1,6 @@
-# Configuracion voz chilena para videos Domian Nexo
+# Configuracion voz chilena para videos Nexo Klar
 
-Desde esta version, todos los videos comerciales y tutoriales de Domian Nexo deben usar la voz:
+Desde esta version, todos los videos comerciales y tutoriales de Nexo Klar deben usar la voz:
 
 - Proveedor: Microsoft Azure Speech
 - Voz: `es-CL-CatalinaNeural`

@@ -1,4 +1,4 @@
-# Arquitectura cloud de AccesoMina
+# Arquitectura cloud de Nexo Klar
 
 ## Límites de confianza
 
