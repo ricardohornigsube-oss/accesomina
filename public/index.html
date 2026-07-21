@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AccesoMina v6 · Domian SpA</title>
+<title>Nexo Klar · Plataforma de gestión operativa</title>
 <style>
 :root {
   --bg: #1c1c1e;
@@ -343,8 +343,8 @@ body.private #main { display:block; }
 <!-- PUBLIC SITE / DOMIAN ACCESS -->
 <section id="public-site" class="public-shell">
   <nav class="public-nav">
-    <div class="public-brand"><div class="logo-mark">D</div><div>Domian <small>Smart Business · Gestión Empresarial</small></div></div>
-    <div class="public-nav-links"><a href="#solucion">La plataforma</a><a href="#capacidades">Qué puedes controlar</a><a href="#privacidad">Privacidad</a></div>
+    <div class="public-brand"><div class="logo-mark">N</div><div>Nexo Klar <small>Datos claros · Operación conectada</small></div></div>
+    <div class="public-nav-links"><a href="#solucion">La plataforma</a><a href="#vision">Visión</a><a href="#capacidades">Qué puedes controlar</a><a href="#privacidad">Privacidad</a></div>
     <div style="display:flex;gap:10px;align-items:center;"><a class="btn btn-ghost btn-sm" href="mailto:contacto@domian.cl">contacto@domian.cl</a><button class="btn btn-primary btn-sm" onclick="scrollToAccess()">Acceso privado</button></div>
   </nav>
   <div class="public-hero">
@@ -352,33 +352,34 @@ body.private #main { display:block; }
       <div class="hero-kicker">Control operativo para empresas de servicios</div>
       <h1 class="hero-title">Toda tu operación, conectada y <span>bajo control</span>.</h1>
       <p class="hero-copy">Reúne personas, contratos, proyectos, servicios y documentos en una plataforma privada. Tu equipo sabe qué está vigente, qué falta y qué requiere atención, sin depender de planillas, carpetas o mensajes dispersos.</p>
-      <div class="hero-actions"><a class="btn btn-primary" href="#solucion">Conocer la plataforma</a><a class="btn btn-secondary" href="mailto:contacto@domian.cl?subject=Solicitud%20de%20demostraci%C3%B3n%20Domian">Solicitar demostración</a></div>
+      <div class="hero-actions"><a class="btn btn-primary" href="#solucion">Conocer la plataforma</a><a class="btn btn-secondary" href="mailto:contacto@domian.cl?subject=Solicitud%20de%20demostraci%C3%B3n%20Nexo%20Klar">Solicitar demostración</a></div>
       <div class="hero-points"><div class="hero-point"><b>Menos tareas manuales</b><span>La información operativa queda ordenada y disponible para las áreas autorizadas.</span></div><div class="hero-point"><b>Alertas a tiempo</b><span>Identifica vencimientos, faltantes y observaciones antes de que afecten el servicio.</span></div><div class="hero-point"><b>Decisiones con respaldo</b><span>Consulta estados, documentos e historial desde una única fuente de información.</span></div></div>
     </div>
     <div class="access-panel" id="access-panel">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;"><div class="logo-mark">D</div><div><div style="font-weight:900;font-size:20px;">Domian Gestión</div><div style="color:var(--text-muted);font-size:12px;">Plataforma privada de gestión empresarial</div></div></div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;"><div class="logo-mark">N</div><div><div style="font-weight:900;font-size:20px;">Nexo Klar</div><div style="color:var(--text-muted);font-size:12px;">Plataforma privada de gestión empresarial</div></div></div>
       <div class="access-tabs"><button class="access-tab active" id="tab-login" onclick="showAccessTab('login')">Acceso</button><button class="access-tab" id="tab-registro" onclick="showAccessTab('registro')">Nuevo cliente</button></div>
       <div class="access-view active" id="access-login"><div class="form-group" style="margin-bottom:12px;"><label class="form-label">Empresa / RUT</label><input class="form-input" id="login-rut" placeholder="76.123.456-7" autocomplete="organization" onblur="this.value=formatRut(this.value)"></div><div class="form-group" style="margin-bottom:12px;"><label class="form-label">Correo personal autorizado</label><input class="form-input" id="login-email" type="email" placeholder="persona@empresa.cl" autocomplete="username"></div><div class="form-group" style="margin-bottom:14px;"><label class="form-label">Contraseña</label><input class="form-input" id="login-password" type="password" autocomplete="current-password" placeholder="Contraseña segura"></div><button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="loginTenant()">Ingresar al sitio privado</button><div style="color:var(--text-dim);font-size:11px;line-height:1.45;margin-top:12px;">En cloud, la sesión usa cookie segura y los datos se consultan exclusivamente desde la empresa autenticada.</div></div>
-      <div class="access-view" id="access-registro"><div class="form-group" style="margin-bottom:10px;"><label class="form-label">Nombre empresa</label><input class="form-input" id="reg-empresa" placeholder="Ej: Servicios Mineros Norte SpA"></div><div class="form-grid" style="grid-template-columns:1fr 1fr;margin-bottom:10px;"><div class="form-group"><label class="form-label">RUT empresa</label><input class="form-input" id="reg-rut" placeholder="76.123.456-7" onblur="this.value=formatRut(this.value)"></div><div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="reg-tel" placeholder="+56 9..."></div></div><div class="form-group" style="margin-bottom:10px;"><label class="form-label">Nombre administrador</label><input class="form-input" id="reg-admin-name" placeholder="Nombre y apellido"></div><div class="form-group" style="margin-bottom:10px;"><label class="form-label">Correo administrador</label><input class="form-input" id="reg-email" type="email" placeholder="admin@empresa.cl"></div><div class="form-grid" style="grid-template-columns:1fr 1fr;margin-bottom:14px;"><div class="form-group"><label class="form-label">Contraseña</label><input class="form-input" id="reg-password" type="password" autocomplete="new-password" placeholder="12+ caracteres"></div><div class="form-group"><label class="form-label">Código de invitación</label><input class="form-input" id="reg-invite" type="password" placeholder="Entregado por Domian"></div></div><button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="registerTenant()">Crear sitio privado vacío</button><div style="color:var(--text-dim);font-size:11px;line-height:1.45;margin-top:12px;">El alta requiere invitación de Domian. Cada empresa parte con una base independiente y un administrador propio.</div></div>
+      <div class="access-view" id="access-registro"><div class="form-group" style="margin-bottom:10px;"><label class="form-label">Nombre empresa</label><input class="form-input" id="reg-empresa" placeholder="Ej: Servicios Mineros Norte SpA"></div><div class="form-grid" style="grid-template-columns:1fr 1fr;margin-bottom:10px;"><div class="form-group"><label class="form-label">RUT empresa</label><input class="form-input" id="reg-rut" placeholder="76.123.456-7" onblur="this.value=formatRut(this.value)"></div><div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="reg-tel" placeholder="+56 9..."></div></div><div class="form-group" style="margin-bottom:10px;"><label class="form-label">Nombre administrador</label><input class="form-input" id="reg-admin-name" placeholder="Nombre y apellido"></div><div class="form-group" style="margin-bottom:10px;"><label class="form-label">Correo administrador</label><input class="form-input" id="reg-email" type="email" placeholder="admin@empresa.cl"></div><div class="form-grid" style="grid-template-columns:1fr 1fr;margin-bottom:14px;"><div class="form-group"><label class="form-label">Contraseña</label><input class="form-input" id="reg-password" type="password" autocomplete="new-password" placeholder="12+ caracteres"></div><div class="form-group"><label class="form-label">Código de invitación</label><input class="form-input" id="reg-invite" type="password" placeholder="Entregado por Nexo Klar"></div></div><button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="registerTenant()">Crear sitio privado vacío</button><div style="color:var(--text-dim);font-size:11px;line-height:1.45;margin-top:12px;">El alta requiere invitación de Nexo Klar. Cada empresa parte con una base independiente y un administrador propio.</div></div>
     </div>
   </div>
   <div class="audience-strip"><span>Empresas de servicios</span><span>Contratistas y subcontratistas</span><span>Operaciones en terreno</span><span>Mantención y proyectos</span><span>RR.HH. y prevención</span></div>
   <section class="public-band" id="solucion"><div class="public-inner solution-layout">
-    <div><div class="public-eyebrow">Una visión completa</div><h2 class="public-heading">Deja de buscar información. Empieza a gestionar.</h2><p class="public-lead">Domian conecta la información que normalmente vive separada entre Excel, correos, carpetas y teléfonos. Cada dato queda asociado a la empresa, contrato, proyecto, servicio y persona que corresponde.</p><div class="value-list"><div class="value-item"><div class="value-num">01</div><div><b>Todo relacionado</b><span>Visualiza responsables, trabajadores asignados, documentos, alojamientos, turnos y recursos desde el contexto correcto.</span></div></div><div class="value-item"><div class="value-num">02</div><div><b>Control diario más simple</b><span>Los paneles y filtros permiten detectar rápidamente pendientes, vencimientos y necesidades de la operación.</span></div></div><div class="value-item"><div class="value-num">03</div><div><b>Historial para responder</b><span>Mantén evidencia organizada para revisiones internas, clientes, auditorías y nuevos trabajos.</span></div></div></div></div>
-    <div class="product-view" aria-label="Vista de la plataforma Domian"><div class="product-top"><span class="product-dot"></span><span class="product-dot"></span><span class="product-dot"></span><span style="margin-left:8px;">Domian · Panel de control</span></div><div class="product-body"><div class="product-menu"><span class="active">Dashboard</span><span>Empresas y clientes</span><span>Contratos</span><span>Proyectos y servicios</span><span>Personas</span><span>Documentos</span><span>Alertas</span><span>Reportes</span></div><div class="product-content"><div style="font-weight:800;">Resumen de la operación</div><div style="color:var(--text-muted);font-size:11px;margin-top:4px;">Información centralizada y actualizada</div><div class="product-kpis"><div class="product-kpi"><strong>12</strong><small>Servicios activos</small></div><div class="product-kpi"><strong>86%</strong><small>Documentación vigente</small></div><div class="product-kpi"><strong style="color:var(--orange);">7</strong><small>Alertas por atender</small></div></div><div class="product-row"><b>Operación</b><b>Responsable</b><b>Estado</b></div><div class="product-row"><span>Servicio en terreno</span><span>Equipo Operaciones</span><span class="product-status">Al día</span></div><div class="product-row"><span>Proyecto de instalación</span><span>Equipo Proyectos</span><span class="product-status">En curso</span></div><div class="product-row"><span>Mantención programada</span><span>Equipo Técnico</span><span style="color:var(--yellow);font-weight:800;">Revisar</span></div></div></div></div>
+    <div><div class="public-eyebrow">Una visión completa</div><h2 class="public-heading">Deja de buscar información. Empieza a gestionar.</h2><p class="public-lead">Nexo Klar simplifica, unifica y estructura la información que normalmente vive dispersa entre Excel, correos, carpetas y teléfonos. La data crítica permanece dentro de la compañía, asociada a la empresa, contrato, proyecto, servicio y persona que corresponde.</p><div class="value-list"><div class="value-item"><div class="value-num">01</div><div><b>Todo relacionado</b><span>Visualiza responsables, trabajadores asignados, documentos, alojamientos, turnos y recursos desde el contexto correcto.</span></div></div><div class="value-item"><div class="value-num">02</div><div><b>Control diario más simple</b><span>Los paneles y filtros permiten detectar rápidamente pendientes, vencimientos y necesidades de la operación.</span></div></div><div class="value-item"><div class="value-num">03</div><div><b>Historial para responder</b><span>Mantén evidencia organizada para revisiones internas, clientes, auditorías y nuevos trabajos.</span></div></div></div></div>
+    <div class="product-view" aria-label="Vista de la plataforma Nexo Klar"><div class="product-top"><span class="product-dot"></span><span class="product-dot"></span><span class="product-dot"></span><span style="margin-left:8px;">Nexo Klar · Panel de control</span></div><div class="product-body"><div class="product-menu"><span class="active">Dashboard</span><span>Empresas y clientes</span><span>Contratos</span><span>Proyectos y servicios</span><span>Personas</span><span>Documentos</span><span>Alertas</span><span>Reportes</span></div><div class="product-content"><div style="font-weight:800;">Resumen de la operación</div><div style="color:var(--text-muted);font-size:11px;margin-top:4px;">Información centralizada y actualizada</div><div class="product-kpis"><div class="product-kpi"><strong>12</strong><small>Servicios activos</small></div><div class="product-kpi"><strong>86%</strong><small>Documentación vigente</small></div><div class="product-kpi"><strong style="color:var(--orange);">7</strong><small>Alertas por atender</small></div></div><div class="product-row"><b>Operación</b><b>Responsable</b><b>Estado</b></div><div class="product-row"><span>Servicio en terreno</span><span>Equipo Operaciones</span><span class="product-status">Al día</span></div><div class="product-row"><span>Proyecto de instalación</span><span>Equipo Proyectos</span><span class="product-status">En curso</span></div><div class="product-row"><span>Mantención programada</span><span>Equipo Técnico</span><span style="color:var(--yellow);font-weight:800;">Revisar</span></div></div></div></div>
   </div></section>
-  <section class="public-band real-product-band"><div class="public-inner"><div class="public-eyebrow">Producto real</div><h2 class="public-heading">Así se ve el control diario de tu operación.</h2><p class="public-lead">Un panel único permite revisar dotación, proyectos, pendientes y alertas, y luego entrar al detalle de cada persona, contrato o servicio.</p><img class="real-product-shot" src="assets/dashboard-demo.png" alt="Dashboard real de Domian con dotación, proyectos y alertas operativas"><div class="real-product-caption">Vista real del software con información demostrativa. Cada empresa utiliza su propia configuración, marca y datos privados.</div></div></section>
+  <section class="public-band" id="vision" style="background:var(--bg4);"><div class="public-inner"><div class="public-eyebrow">Visión, misión y valores</div><h2 class="public-heading">Información clara, conectada y bajo control.</h2><div class="grid-2" style="margin-top:18px;"><div class="card"><div class="card-title">Visión</div><p class="public-lead" style="font-size:16px;margin-top:10px;">Ser la plataforma que ayuda a las empresas a simplificar, unificar y controlar su información operativa, manteniendo la data crítica dentro de la compañía y no dispersa en personas, planillas o correos.</p></div><div class="card"><div class="card-title">Misión</div><p class="public-lead" style="font-size:16px;margin-top:10px;">Conectar personas, documentos, contratos, procesos y operaciones en un sistema fácil de usar, con data clara, estructurada y trazable, para gestionar mejor, reducir riesgos y tomar decisiones con mayor control.</p></div></div><div class="capability-grid" style="margin-top:20px;"><div class="capability"><small>01</small><h3>Claridad</h3><p>Ordenamos la información para que sea fácil de entender, seguir y gestionar.</p></div><div class="capability"><small>02</small><h3>Conexión</h3><p>Unificamos áreas, personas, documentos y procesos en una sola plataforma.</p></div><div class="capability"><small>03</small><h3>Control</h3><p>Ayudamos a mantener la data segura, actualizada y dentro de la compañía.</p></div><div class="capability"><small>04</small><h3>Simplicidad</h3><p>Diseñamos una herramienta práctica, amigable y pensada para el uso diario.</p></div><div class="capability"><small>05</small><h3>Trazabilidad</h3><p>Cada dato, documento y vencimiento queda registrado para auditorías, seguimiento y decisiones.</p></div><div class="capability"><small>06</small><h3>Continuidad</h3><p>La información permanece en la empresa, aunque cambien las personas o los equipos de trabajo.</p></div></div></div></section>
+  <section class="public-band real-product-band"><div class="public-inner"><div class="public-eyebrow">Producto real</div><h2 class="public-heading">Así se ve el control diario de tu operación.</h2><p class="public-lead">Un panel único permite revisar dotación, proyectos, pendientes y alertas, y luego entrar al detalle de cada persona, contrato o servicio.</p><img class="real-product-shot" src="assets/dashboard-demo.png" alt="Dashboard real de Nexo Klar con dotación, proyectos y alertas operativas"><div class="real-product-caption">Vista real del software con información demostrativa. Cada empresa utiliza su propia configuración, marca y datos privados.</div></div></section>
   <section class="public-band" id="capacidades"><div class="public-inner"><div class="public-eyebrow">Control centralizado</div><h2 class="public-heading">Lo esencial para administrar servicios, personas y cumplimiento.</h2><p class="public-lead">Activa la información que necesita tu empresa y conserva una visión común entre administración, operaciones, RR.HH. y prevención.</p><div class="capability-grid"><div class="capability"><small>01</small><h3>Clientes y contratos</h3><p>Registra empresas, vigencias, alcance, responsables y servicios asociados a cada relación comercial.</p></div><div class="capability"><small>02</small><h3>Proyectos y servicios</h3><p>Organiza trabajos permanentes, operaciones, proyectos y mantenciones con su personal y recursos.</p></div><div class="capability"><small>03</small><h3>Personas y asignaciones</h3><p>Administra personal de planta y equipos temporales, cargos, turnos, datos de contacto y asignaciones.</p></div><div class="capability"><small>04</small><h3>Documentos y vencimientos</h3><p>Centraliza antecedentes, revisa estados y recibe alertas sobre documentos faltantes o próximos a vencer.</p></div><div class="capability"><small>05</small><h3>Seguridad y recursos</h3><p>Controla EPP, exámenes, cursos, permisos, vehículos, equipos, credenciales e incidentes.</p></div><div class="capability"><small>06</small><h3>Comunicación y reportes</h3><p>Segmenta equipos, prepara comunicaciones y genera reportes por cliente, contrato, servicio o persona.</p></div></div></div></section>
   <section class="public-band" style="background:var(--bg4);"><div class="public-inner"><div class="public-eyebrow">Puesta en marcha simple</div><h2 class="public-heading">Ordena tu operación en tres pasos.</h2><div class="steps"><div class="step"><b>PASO 1</b><h3>Configura tu empresa</h3><p>Crea clientes, contratos, proyectos, servicios y los requisitos que necesitas controlar.</p></div><div class="step"><b>PASO 2</b><h3>Incorpora tu información</h3><p>Registra personas y recursos de forma individual o utiliza la importación masiva para comenzar más rápido.</p></div><div class="step"><b>PASO 3</b><h3>Gestiona desde el panel</h3><p>Asigna responsables, revisa alertas, actualiza documentos y consulta el avance desde una sola vista.</p></div></div></div></section>
   <section class="public-band privacy-band" id="privacidad"><div class="public-inner privacy-layout"><div><div class="public-eyebrow" style="color:var(--blue);">Tu información es de tu empresa</div><h2 class="public-heading">Un espacio privado para trabajar con confianza.</h2><p class="public-lead">Cada cliente opera en un entorno independiente. La administración define quién puede ingresar y qué puede hacer cada integrante, manteniendo la información separada entre empresas.</p></div><div class="privacy-points"><div class="privacy-point"><b>Acceso individual</b><span>Cada integrante utiliza su propia cuenta autorizada.</span></div><div class="privacy-point"><b>Roles y permisos</b><span>Configura administración, edición o consulta según responsabilidades.</span></div><div class="privacy-point"><b>Datos separados</b><span>La información de una empresa no se mezcla con la de otra.</span></div><div class="privacy-point"><b>Respaldo y trazabilidad</b><span>Conserva registros para revisar cambios, estados y antecedentes.</span></div></div></div></section>
-  <section class="final-cta"><div class="public-eyebrow">Conversemos</div><h2 class="public-heading">Descubre cómo Domian puede ordenar tu operación.</h2><p class="public-lead">Revisamos contigo tus procesos, tipos de personal, contratos y servicios para definir la configuración que realmente necesita tu empresa.</p><div class="final-actions"><a class="btn btn-primary" href="mailto:contacto@domian.cl?subject=Solicitud%20de%20demostraci%C3%B3n%20Domian">Solicitar demostración</a><button class="btn btn-secondary" onclick="scrollToAccess()">Ingresar al sitio privado</button></div></section>
-  <footer class="public-footer"><span>Domian Smart Business · Gestión empresarial y operacional</span><a href="mailto:contacto@domian.cl">contacto@domian.cl</a></footer>
+  <section class="final-cta"><div class="public-eyebrow">Conversemos</div><h2 class="public-heading">Descubre cómo Nexo Klar puede ordenar tu operación.</h2><p class="public-lead">Revisamos contigo tus procesos, tipos de personal, contratos y servicios para definir la configuración que realmente necesita tu empresa.</p><div class="final-actions"><a class="btn btn-primary" href="mailto:contacto@domian.cl?subject=Solicitud%20de%20demostraci%C3%B3n%20Nexo%20Klar">Solicitar demostración</a><button class="btn btn-secondary" onclick="scrollToAccess()">Ingresar al sitio privado</button></div></section>
+  <footer class="public-footer"><span>Nexo Klar · Gestión operativa, datos y cumplimiento</span><a href="mailto:contacto@domian.cl">contacto@domian.cl</a></footer>
 </section>
 
 <!-- SIDEBAR -->
 <div id="sidebar">
   <div class="sidebar-logo">
-    <div style="display:flex;align-items:center;gap:10px;"><div class="logo-mark" style="width:34px;height:34px;border-radius:10px;">D</div><div><div class="sidebar-logo-title">AccesoMina</div><div class="sidebar-logo-sub">Domian · Sitio privado</div></div></div>
+    <div style="display:flex;align-items:center;gap:10px;"><div class="logo-mark" style="width:34px;height:34px;border-radius:10px;">N</div><div><div class="sidebar-logo-title">Nexo Klar</div><div class="sidebar-logo-sub">Sitio privado · Datos claros</div></div></div>
   </div>
   <div class="nav-group-label">Vista General</div>
   <div class="nav-item active" onclick="nav('dashboard')">🏠 Dashboard</div>
@@ -416,7 +417,7 @@ body.private #main { display:block; }
   <div class="nav-item" onclick="nav('bitacora')">🧾 Bitácora de Cambios</div>
   <div class="nav-item" onclick="nav('privacidad')">🛡️ Privacidad y Datos</div>
   <div class="nav-item" onclick="nav('oportunidades')">💼 LEAD / Oportunidades</div>
-  <div class="nav-group-label" id="nav-admin-label" style="display:none;">Administración Domian</div>
+  <div class="nav-group-label" id="nav-admin-label" style="display:none;">Administración Nexo Klar</div>
   <div class="nav-item" id="nav-clientes" style="display:none;" onclick="nav('clientes')">🏢 Clientes</div>
   <div class="sidebar-bottom">
     <div style="font-weight:700;color:var(--text-muted);margin-bottom:4px;">Domian Servicios Industriales SpA</div>
@@ -432,10 +433,10 @@ body.private #main { display:block; }
     <button class="btn btn-secondary btn-sm mobile-menu-button" type="button" aria-label="Abrir menú principal" aria-controls="sidebar" aria-expanded="false" onclick="toggleMobileMenu(this)">☰</button>
     <div>
       <div class="topbar-title" id="topbar-title">Dashboard</div>
-      <div class="topbar-subtitle" id="topbar-sub">Resumen operativo · Domian SpA</div>
+      <div class="topbar-subtitle" id="topbar-sub">Resumen operativo · Nexo Klar</div>
     </div>
     <div class="topbar-right">
-      <span class="private-client-pill" id="tenant-pill">Domian</span>
+      <span class="private-client-pill" id="tenant-pill">Nexo Klar</span>
       <span class="private-client-pill" id="user-pill">Administrador</span>
       <button class="btn btn-secondary btn-sm" onclick="exportTenantBackup()">Respaldo</button>
       <button class="btn btn-secondary btn-sm" onclick="showCloudGuide()">Cloud</button>
@@ -1095,7 +1096,7 @@ body.private #main { display:block; }
   <!-- PAGE: CLIENTES DOMIAN -->
   <div id="page-clientes" class="page">
     <div class="section-header">
-      <div><div class="section-title">🏢 Clientes Domian</div><div class="section-sub" id="clientes-sub">Administración de sitios privados creados</div></div>
+      <div><div class="section-title">🏢 Clientes Nexo Klar</div><div class="section-sub" id="clientes-sub">Administración de sitios privados creados</div></div>
       <div class="section-actions"><button class="btn btn-secondary" onclick="exportClientsRegistry()">Exportar clientes</button></div>
     </div>
     <div class="card">
@@ -1473,7 +1474,7 @@ body.private #main { display:block; }
         <div class="form-group"><label class="form-label">Minera</label><select class="form-select" id="wg-mina"></select></div>
         <div class="form-group full"><label class="form-label">Personas del grupo</label><div id="wg-personas" style="max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;background:var(--bg3);"></div></div>
         <div class="form-group full"><label class="form-label">Mensaje inicial</label><textarea class="form-textarea" id="wg-msg" placeholder="Mensaje para copiar a WhatsApp"></textarea></div>
-        <div class="form-group full"><label class="form-label">Enlace del grupo WhatsApp (opcional)</label><input class="form-input" id="wg-link" placeholder="https://chat.whatsapp.com/..."><div style="font-size:11px;color:var(--text-muted);margin-top:5px;">Si el grupo ya existe, pega su enlace. Si no existe, AccesoMina prepara la lista de participantes para crearlo en WhatsApp.</div></div>
+        <div class="form-group full"><label class="form-label">Enlace del grupo WhatsApp (opcional)</label><input class="form-input" id="wg-link" placeholder="https://chat.whatsapp.com/..."><div style="font-size:11px;color:var(--text-muted);margin-top:5px;">Si el grupo ya existe, pega su enlace. Si no existe, Nexo Klar prepara la lista de participantes para crearlo en WhatsApp.</div></div>
       </div>
     </div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-wa-grupo')">Cancelar</button><button class="btn btn-primary" onclick="saveWaGroup()">Crear grupo / abrir WA</button></div>
@@ -1560,7 +1561,7 @@ body.private #main { display:block; }
 
 <div class="onboarding-overlay" id="onboarding-overlay" aria-hidden="true">
   <section class="onboarding-panel" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
-    <header class="onboarding-head"><div><div class="onboarding-kicker">Primeros pasos · Domian Gestión</div><h2 class="onboarding-title" id="onboarding-title">Conoce tu plataforma</h2></div><button class="onboarding-close" type="button" onclick="closeOnboarding()" aria-label="Cerrar guía">×</button></header>
+    <header class="onboarding-head"><div><div class="onboarding-kicker">Primeros pasos · Nexo Klar</div><h2 class="onboarding-title" id="onboarding-title">Conoce tu plataforma</h2></div><button class="onboarding-close" type="button" onclick="closeOnboarding()" aria-label="Cerrar guía">×</button></header>
     <div class="onboarding-body"><nav class="onboarding-steps" id="onboarding-steps" aria-label="Etapas del recorrido"></nav><article class="onboarding-content" id="onboarding-content"></article></div>
     <footer class="onboarding-foot"><div class="onboarding-progress" id="onboarding-progress"></div><div class="onboarding-actions"><button class="btn btn-ghost" type="button" id="onboarding-prev" onclick="moveOnboarding(-1)">← Anterior</button><button class="btn btn-secondary" type="button" id="onboarding-open" onclick="openOnboardingModule()">Abrir módulo</button><button class="btn btn-primary" type="button" id="onboarding-next" onclick="moveOnboarding(1)">Siguiente →</button></div></footer>
   </section>
@@ -1770,7 +1771,7 @@ function registerTenant() {
   if(!isValidPhoneCL(tel)) { alert('Teléfono inválido. Usa formato chileno, por ejemplo +56 9 7649 0489.'); return; }
   const rut = formatRut(rutRaw);
   const newTenantId = normalizeTenantId(rut);
-  if(newTenantId===ADMIN_TENANT_ID) { alert('El RUT de Domian corresponde a la cuenta administradora. Usa Acceso.'); showAccessTab('login'); return; }
+  if(newTenantId===ADMIN_TENANT_ID) { alert('El RUT de Nexo Klar corresponde a la cuenta administradora. Usa Acceso.'); showAccessTab('login'); return; }
   if(localStorage.getItem(tenantKey(newTenantId)) && !confirm('Este cliente ya existe. ¿Deseas actualizar sus datos de contacto?')) return;
   const data = emptyTenantData(nombre,rut,email,tel);
   localStorage.setItem(tenantKey(newTenantId), JSON.stringify(data));
@@ -1800,7 +1801,7 @@ function renderClientes() {
   if(!isAdminTenant()) { nav('dashboard'); return; }
   const list = loadClientRegistry();
   const table = document.getElementById('clientes-table');
-  document.getElementById('clientes-sub').textContent = `${list.filter(c=>!c.admin).length} clientes creados · solo Domian puede eliminar clientes`;
+  document.getElementById('clientes-sub').textContent = `${list.filter(c=>!c.admin).length} clientes creados · solo Nexo Klar puede eliminar clientes`;
   table.innerHTML = `<thead><tr><th>Empresa</th><th>RUT</th><th>Contacto</th><th>Creado</th><th>Actualizado</th><th>Estado</th><th></th></tr></thead><tbody>${list.map(c=>`
     <tr>
       <td><div style="font-weight:700;">${c.nombre}</div><div style="font-size:11px;color:var(--text-muted);">ID: ${c.id}</div></td>
@@ -1808,12 +1809,12 @@ function renderClientes() {
       <td style="font-size:12px;color:var(--text-muted);">${c.email||'—'}<br>${c.tel||'—'}</td>
       <td>${c.creado||'—'}</td>
       <td>${c.actualizado||'—'}</td>
-      <td><span class="badge ${c.admin?'badge-orange':'badge-blue'}">${c.admin?'Administrador Domian':'Cliente'}</span></td>
+      <td><span class="badge ${c.admin?'badge-orange':'badge-blue'}">${c.admin?'Administrador Nexo Klar':'Cliente'}</span></td>
       <td>${c.admin?'—':`<button class="btn btn-danger btn-sm" onclick="deleteClientTenant('${c.id}')">Eliminar cliente</button>`}</td>
     </tr>`).join('')}</tbody>`;
 }
 function deleteClientTenant(id) {
-  if(!isAdminTenant()) { alert('Solo Domian puede eliminar clientes.'); return; }
+  if(!isAdminTenant()) { alert('Solo Nexo Klar puede eliminar clientes.'); return; }
   const list = loadClientRegistry();
   const c = list.find(x=>x.id===id);
   if(!c || c.admin) return;
@@ -2102,10 +2103,10 @@ const pageLabels = {
   dashboard:'Dashboard','mineras':'Por Minera',alertas:'Alertas',trabajadores:'Trabajadores',
   bloqueados:'Bloqueados',auditoria:'Auditoría Documental',mantenciones:'Mantenciones',
   contratos:'Contratos y Firmas',hoteleria:'Hotelería',llamados:'Llamados WA',
-  examenes:'Exámenes Médicos',cursos:'Cursos',reportes:'Reportes',clientes:'Clientes Domian'
+  examenes:'Exámenes Médicos',cursos:'Cursos',reportes:'Reportes',clientes:'Clientes Nexo Klar'
 };
 const pageSubs = {
-  dashboard:'Resumen operativo · Domian SpA',
+  dashboard:'Resumen operativo · Nexo Klar',
   mineras:'Vista consolidada por mandante',
   alertas:'Documentos y certificaciones próximos a vencer',
   trabajadores:'Gestión de personal y acreditación',
@@ -2410,7 +2411,7 @@ function notifWA(trabId, msg) {
   const t = S.trabajadores.find(w=>w.id===trabId);
   if(!t) return;
   const tel = t.tel.replace(/\D/g,'');
-  const texto = encodeURIComponent(`Estimado ${t.nombre}, le informamos que tiene documentación pendiente: ${msg}. Por favor contáctenos para regularizar. Domian SpA.`);
+  const texto = encodeURIComponent(`Estimado ${t.nombre}, le informamos que tiene documentación pendiente: ${msg}. Por favor contáctenos para regularizar. Nexo Klar.`);
   window.open(`https://wa.me/${tel}?text=${texto}`,'_blank');
   toast(`Abriendo WhatsApp para ${t.nombre}`);
 }
@@ -3065,7 +3066,7 @@ function openFicha(id) {
   const waBtn = document.getElementById('ficha-wa-btn');
   waBtn.onclick = () => {
     const tel=(t.tel||'').replace(/\D/g,'');
-    window.open(`https://wa.me/${tel}?text=${encodeURIComponent(`Hola ${t.nombre.split(' ')[0]}, le contacta Domian SpA. ¿Disponible para coordinar?`)}`, '_blank');
+    window.open(`https://wa.me/${tel}?text=${encodeURIComponent(`Hola ${t.nombre.split(' ')[0]}, le contacta Nexo Klar. ¿Disponible para coordinar?`)}`, '_blank');
   };
   openModal('modal-ficha');
 }
@@ -3288,7 +3289,7 @@ function previewContrato(trabId, mantId, tipo, rem, turno) {
       <div class="clause"><div class="clause-title">TERCERO — REMUNERACIÓN</div><p>El Empleador pagará al Trabajador una remuneración de <b>${remStr}</b>, la que incluye gratificación legal y será pagada dentro de los primeros cinco días del mes siguiente al trabajado, previa realización de los descuentos legales.</p></div>
       <div class="clause"><div class="clause-title">CUARTO — JORNADA</div><p>El Trabajador cumplirá turno <b>${turno||'—'}</b>, en régimen de trabajo en faena minera, con descanso conforme a la normativa vigente. Las horas extraordinarias, de existir, se compensarán según lo dispuesto en el Código del Trabajo.</p></div>
       <div class="clause"><div class="clause-title">QUINTO — PLAZO</div><p>El presente contrato tendrá una duración desde el <b>${mn?.inicio||'—'}</b> hasta el <b>${mn?.termino||'—'}</b>, correspondiente a la duración de la actividad de ${mn?.nombre||'la mantención'}.</p></div>
-      <div class="clause"><div class="clause-title">SEXTO — SEGURIDAD</div><p>El Trabajador deberá cumplir con todos los estándares de seguridad establecidos por el D.S. 132, los reglamentos internos de ${mina?.nombre||'la minera'} y Domian SpA, en particular uso correcto de EPP y cumplimiento de protocolos ODI y LOTO.</p></div>
+      <div class="clause"><div class="clause-title">SEXTO — SEGURIDAD</div><p>El Trabajador deberá cumplir con todos los estándares de seguridad establecidos por el D.S. 132, los reglamentos internos de ${mina?.nombre||'la minera'} y Nexo Klar, en particular uso correcto de EPP y cumplimiento de protocolos ODI y LOTO.</p></div>
       <div class="sigs">
         <div><div class="sig-line"><b>${S.empresa?.nombre||'Empresa contratista'}</b><br>RUT ${S.empresa?.rut||'—'}<br>${S.empresa?.representante||'Representante legal'}<br>Representante Legal</div></div>
         <div><div class="sig-line"><b>${t?.nombre||'Trabajador'}</b><br>RUT ${t?.rut||'—'}<br>Firma y Timbre</div></div>
@@ -3699,7 +3700,7 @@ function openFicha(id) {
   document.getElementById('ficha-tab-cur').innerHTML = document.getElementById('ficha-tab-docs').innerHTML;
   document.getElementById('ficha-tab-hist').innerHTML = `<div class="card"><div class="card-title">Historial operativo</div><div class="divider"></div>${asigs.length?asigs.map(a=>{const mn=S.mantenciones.find(m=>m.id===a.mantId);return `<div style="padding:10px 0;border-bottom:1px solid var(--border);"><b>${mn?.nombre||a.mantId}</b><div style="font-size:12px;color:var(--text-muted);">${mn?.inicio||'?'} a ${mn?.termino||'?'} · ${mn?minaNombre(mn.minaId):''} · ${a.estado}</div></div>`}).join(''):'Sin historial de proyectos.'}</div>`;
   const waBtn=document.getElementById('ficha-wa-btn');
-  waBtn.onclick=()=>{const tel=(t.tel||'').replace(/\D/g,''); window.open(`https://wa.me/${tel}?text=${encodeURIComponent(`Hola ${t.nombre.split(' ')[0]}, le contacta Domian SpA. ¿Disponible para coordinar?`)}`,'_blank');};
+  waBtn.onclick=()=>{const tel=(t.tel||'').replace(/\D/g,''); window.open(`https://wa.me/${tel}?text=${encodeURIComponent(`Hola ${t.nombre.split(' ')[0]}, le contacta Nexo Klar. ¿Disponible para coordinar?`)}`,'_blank');};
   openModal('modal-ficha');
 }
 function renderAuditoria() {
@@ -4417,8 +4418,8 @@ function ensureTenantUsersV66() {
     S.empresa={...(S.empresa||{}),...domianEmpresa()};
     const adminEmail='contacto@domian.cl';
     let admin=S.tenantUsers.find(u=>String(u.email||'').trim().toLowerCase()===adminEmail);
-    if(!admin){admin={id:'usr_domian_admin',nombre:'Administrador Domian',email:adminEmail,rol:'admin',activo:true,creado:hoy()};S.tenantUsers.unshift(admin);}
-    Object.assign(admin,{nombre:admin.nombre||'Administrador Domian',email:adminEmail,rol:'admin',activo:true});
+    if(!admin){admin={id:'usr_domian_admin',nombre:'Administrador Nexo Klar',email:adminEmail,rol:'admin',activo:true,creado:hoy()};S.tenantUsers.unshift(admin);}
+    Object.assign(admin,{nombre:admin.nombre||'Administrador Nexo Klar',email:adminEmail,rol:'admin',activo:true});
   }
   const ownerEmail=String(S.empresa?.email||'').trim().toLowerCase();
   if(ownerEmail && !S.tenantUsers.some(u=>u.email===ownerEmail)) S.tenantUsers.unshift({id:'usr_owner',nombre:S.empresa?.representante||'Administrador',email:ownerEmail,rol:'admin',activo:true,creado:hoy()});
@@ -4501,7 +4502,7 @@ saveWaGroup=function(){
 function prepareWaGroupV66(id){const g=S.waGroups.find(x=>x.id===id);if(!g)return;if(g.inviteUrl){window.open(g.inviteUrl,'_blank');return;}const people=(g.trabIds||[]).map(id=>S.trabajadores.find(t=>t.id===id)).filter(Boolean),text=`${g.nombre}\nParticipantes:\n${people.map(t=>`${t.nombre}: ${t.tel||'sin teléfono'}`).join('\n')}\n\nMensaje: ${g.msg||''}`;navigator.clipboard?.writeText(text);const first=people.find(t=>t.tel);if(first)window.open(`https://wa.me/${first.tel.replace(/\D/g,'')}?text=${encodeURIComponent(g.msg||g.nombre)}`,'_blank');toast('Lista copiada. Crea el grupo en WhatsApp y pega los participantes.');}
 openSavedWaGroup=function(id){prepareWaGroupV66(id);};
 const renderLlamadosV66=renderLlamados;
-renderLlamados=function(){renderLlamadosV66();const groups=S.waGroups||[];document.querySelectorAll('#callout-table tbody tr').forEach((tr,i)=>{const g=groups[i];if(!g)return;const people=(g.trabIds||[]).slice(0,6).map(id=>{const t=S.trabajadores.find(w=>w.id===id);return t?`<button class="btn btn-ghost btn-sm" onclick="openWaIndividual('${t.id}')">${t.nombre.split(' ')[0]}</button>`:''}).join(' ');tr.children[3].innerHTML=`${people}<div style="font-size:11px;color:var(--text-muted);margin-top:5px;">${g.inviteUrl?'Enlace de grupo disponible':'Grupo preparado en AccesoMina'}</div>`;tr.lastElementChild.innerHTML=`<button class="btn btn-blue btn-sm" onclick="prepareWaGroupV66('${g.id}')">${g.inviteUrl?'Abrir grupo':'Preparar grupo'}</button>`;});};
+renderLlamados=function(){renderLlamadosV66();const groups=S.waGroups||[];document.querySelectorAll('#callout-table tbody tr').forEach((tr,i)=>{const g=groups[i];if(!g)return;const people=(g.trabIds||[]).slice(0,6).map(id=>{const t=S.trabajadores.find(w=>w.id===id);return t?`<button class="btn btn-ghost btn-sm" onclick="openWaIndividual('${t.id}')">${t.nombre.split(' ')[0]}</button>`:''}).join(' ');tr.children[3].innerHTML=`${people}<div style="font-size:11px;color:var(--text-muted);margin-top:5px;">${g.inviteUrl?'Enlace de grupo disponible':'Grupo preparado en Nexo Klar'}</div>`;tr.lastElementChild.innerHTML=`<button class="btn btn-blue btn-sm" onclick="prepareWaGroupV66('${g.id}')">${g.inviteUrl?'Abrir grupo':'Preparar grupo'}</button>`;});};
 window.addEventListener('storage',e=>{if(!currentTenantId||e.key!==tenantKey(currentTenantId)||!e.newValue)return;try{applyState(JSON.parse(e.newValue));renderCurrentPageSoft();toast('Datos actualizados desde otra sesión de esta empresa');}catch(err){console.warn(err);}});
 
 // ===================== V7.1: EPP POR CARGO, RIESGO Y TALLA =====================
