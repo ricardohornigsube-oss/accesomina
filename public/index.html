@@ -1570,7 +1570,7 @@ body.private #main { display:block; }
   </section>
 </div>
 
-<script src="/cloud-client.js?v=7.6.0" onerror="this.onerror=null;this.src='public/cloud-client.js?v=7.6.0';"></script>
+<script src="/cloud-client.js?v=7.6.0" onerror="this.onerror=null;this.src='cloud-client.js?v=7.6.0';"></script>
 <script>
 const CHILE_REGIONES_COMUNAS = [
   {region:'Arica y Parinacota',comunas:['Arica','Camarones','Putre','General Lagos']},
@@ -2262,6 +2262,7 @@ function renderDashboard() {
 function renderMineras() {
   const grid = document.getElementById('minas-cards');
   grid.innerHTML = S.minas.map(mina => {
+    const altura = Number(mina.altura)||0;
     const trabs = S.trabajadores.filter(t => t.mineras?.includes(mina.id) && !t.bloqueado);
     const mants = S.mantenciones.filter(m => m.minaId === mina.id && m.estado !== 'cerrada');
     const avgAcred = trabs.length ? Math.round(trabs.reduce((a,t)=>a+acreditacion(t),0)/trabs.length) : 0;
@@ -2271,8 +2272,8 @@ function renderMineras() {
         <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;"><div class="mina-card-name">${mina.nombre}</div><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteMina('${mina.id}')">Eliminar</button></div>
         <div class="mina-card-mandante">${mina.mandante} · ${[mina.comuna,mina.region].filter(Boolean).join(' · ')}</div>
         <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
-          <span class="badge badge-orange">${mina.altura.toLocaleString()} msnm</span>
-          <span class="badge badge-blue">${mina.sistema}</span>
+          <span class="badge badge-orange">${altura.toLocaleString()} msnm</span>
+          <span class="badge badge-blue">${mina.sistema||'Propio'}</span>
         </div>
         <div class="mina-stats">
           <div class="mina-stat"><div class="mina-stat-val" style="color:${mina.color};">${trabs.length}</div><div class="mina-stat-lbl">Trabajadores</div></div>
@@ -2297,11 +2298,12 @@ function openMinaDetalle(minaId) {
   const conts = S.contratos.filter(c => c.minaId === minaId);
   const avgAcred = trabs.length ? Math.round(trabs.reduce((a,t)=>a+acreditacion(t),0)/trabs.length) : 0;
   const alertas = computeAlertas().filter(a => trabs.some(t=>t.id===a.trabId)).length;
+  const altura = Number(mina.altura)||0;
 
   det.querySelector('#mina-detalle-content').innerHTML = `
     <div style="border-left:5px solid ${mina.color};padding-left:16px;margin-bottom:24px;">
       <div style="font-size:24px;font-weight:800;">${mina.nombre}</div>
-      <div style="color:var(--text-muted);">${mina.mandante} · ${[mina.comuna,mina.region].filter(Boolean).join(' · ')} · ${mina.altura.toLocaleString()} msnm · ${mina.sistema}</div>
+      <div style="color:var(--text-muted);">${mina.mandante} · ${[mina.comuna,mina.region].filter(Boolean).join(' · ')} · ${altura.toLocaleString()} msnm · ${mina.sistema||'Propio'}</div>
     </div>
     <div class="tab-bar" id="mina-det-tabs">
       <button class="tab-btn active" onclick="switchMinaTab('resumen',this,'${minaId}')">📊 Resumen</button>
@@ -2319,8 +2321,8 @@ function openMinaDetalle(minaId) {
       <div class="grid-2">
         <div class="card"><div class="card-header"><div class="card-title">Contacto Minera</div></div>
           <div class="info-row"><span class="info-label">Contraparte:</span><span class="info-value">${mina.contacto}</span></div>
-          <div class="info-row"><span class="info-label">Sistema acceso:</span><span class="info-value">${mina.sistema}</span></div>
-          <div class="info-row"><span class="info-label">Altura:</span><span class="info-value">${mina.altura.toLocaleString()} msnm ${mina.altura>=3000?'<span class="badge badge-warn">Requiere Alt. Geo.</span>':''}</span></div>
+          <div class="info-row"><span class="info-label">Sistema acceso:</span><span class="info-value">${mina.sistema||'Propio'}</span></div>
+          <div class="info-row"><span class="info-label">Altura:</span><span class="info-value">${altura.toLocaleString()} msnm ${altura>=3000?'<span class="badge badge-warn">Requiere Alt. Geo.</span>':''}</span></div>
         </div>
         <div class="card"><div class="card-header"><div class="card-title">Contratos Marco</div></div>
           ${conts.map(c=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);"><div style="font-weight:600;font-size:13px;">${c.nombre}</div><div style="font-size:11px;color:var(--text-muted);">${c.numero} · ${c.inicio} → ${c.termino}</div></div>`).join('')}
@@ -5792,6 +5794,18 @@ function renderClientTreeV90(id){
 }
 const renderMinerasV90Base=renderMineras;
 renderMineras=function(){renderMinerasV90Base();document.querySelectorAll('#page-mineras .mina-card,#page-mineras .card').forEach((card,i)=>{const c=S.minas[i];if(c&&!card.querySelector('[data-v90-client]'))card.insertAdjacentHTML('beforeend',`<button data-v90-client class="btn btn-secondary btn-sm" onclick="renderClientTreeV90('${c.id}')">Ficha 360 cliente</button>`);});};
+const renderMinerasV91Base=renderMineras;
+renderMineras=function(){
+  try{renderMinerasV91Base();}catch(error){console.warn('No fue posible renderizar Por Cliente con vista base',error);}
+  const grid=document.getElementById('minas-cards');
+  if(!grid||grid.children.length||!Array.isArray(S.minas)||!S.minas.length)return;
+  grid.innerHTML=S.minas.map(cliente=>{
+    const contratos=S.contratos.filter(c=>c.minaId===cliente.id),servicios=S.mantenciones.filter(m=>m.minaId===cliente.id),personas=[...new Set(servicios.flatMap(m=>S.asignaciones.filter(a=>a.mantId===m.id).map(a=>a.trabId)))],equipos=(S.vehiculos||[]).filter(v=>(v.minaIds||[]).includes(cliente.id)),altura=Number(cliente.altura)||0;
+    return `<div class="mina-card" onclick="openMinaDetalle('${cliente.id}')"><div class="mina-card-top" style="background:${cliente.color||'var(--orange)'};"></div><div class="mina-card-body"><div class="mina-card-name">${eppEsc(cliente.nombre||'Cliente')}</div><div class="mina-card-mandante">${eppEsc(cliente.mandante||'Mandante')} · ${eppEsc([cliente.comuna,cliente.region].filter(Boolean).join(' · '))}</div><div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap;"><span class="badge badge-orange">${altura.toLocaleString('es-CL')} msnm</span><span class="badge badge-blue">${eppEsc(cliente.sistema||'Propio')}</span></div><div class="mina-stats"><div class="mina-stat"><div class="mina-stat-val">${contratos.length}</div><div class="mina-stat-lbl">Contratos</div></div><div class="mina-stat"><div class="mina-stat-val">${servicios.length}</div><div class="mina-stat-lbl">Servicios</div></div><div class="mina-stat"><div class="mina-stat-val">${personas.length}</div><div class="mina-stat-lbl">Personas</div></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><span class="badge badge-na">${equipos.length} equipos</span><button data-v90-client class="btn btn-secondary btn-sm" onclick="event.stopPropagation();renderClientTreeV90('${cliente.id}')">Ficha 360 cliente</button></div></div></div>`;
+  }).join('');
+  document.getElementById('mineras-grid-view').style.display='';
+  document.getElementById('mina-detalle-view').style.display='none';
+};
 const renderTrabajadoresV90Base=renderTrabajadores;
 renderTrabajadores=function(){refreshOperationalStatusesV90();renderTrabajadoresV90Base();document.querySelectorAll('#trab-table thead tr').forEach(tr=>{if(!tr.querySelector('[data-v90]'))tr.insertAdjacentHTML('beforeend','<th data-v90>Estado operativo</th>');});document.querySelectorAll('#trab-table tbody tr').forEach((tr,i)=>{const list=[...S.trabajadores].filter(t=>{if(currentTrabTab==='planta')return t.tipo==='permanente'&&!t.bloqueado;if(currentTrabTab==='esporadico')return t.tipo==='esporadico'&&!t.bloqueado;if(currentTrabTab==='bloqueado')return t.bloqueado;return true;});const t=list[i];if(t&&!tr.querySelector('[data-v90]'))tr.insertAdjacentHTML('beforeend',`<td data-v90>${opStatusBadgeV90(t.operationalStatus)}${t.autoBlockReasons?.length?`<div class="worker-rut">${t.autoBlockReasons.length} bloqueo(s)</div>`:''}</td>`);});};
 const renderDashboardV90Base=renderDashboard;
