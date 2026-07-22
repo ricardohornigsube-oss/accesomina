@@ -6362,6 +6362,17 @@ document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#si
 window.AccesoMinaCloud?.install();
 window.addEventListener('load', init);
 </script>
-<script src="public/cloud-client.js?v=7.6.0" onload="window.AccesoMinaCloud?.install?.()" onerror="this.onerror=null;this.src='/cloud-client.js?v=7.6.0';"></script>
+<script>
+if (location.protocol !== 'file:') {
+  const cloudScript = document.createElement('script');
+  cloudScript.src = 'public/cloud-client.js?v=7.6.0';
+  cloudScript.onload = () => window.AccesoMinaCloud?.install?.();
+  cloudScript.onerror = () => {
+    cloudScript.onerror = null;
+    cloudScript.src = '/cloud-client.js?v=7.6.0';
+  };
+  document.body.appendChild(cloudScript);
+}
+</script>
 </body>
 </html>
