@@ -6355,6 +6355,99 @@ const initV97Base=init;
 init=function(){initV97Base();installCommercialStoryV97();};
 document.addEventListener('DOMContentLoaded',installCommercialStoryV97);
 
+// ===================== V9.8: CENTRO OPERATIVO ENFOCADO =====================
+function ensureV98Collections(){
+  ensureV95Collections?.();
+  ensureV88Collections?.();
+  if(!Array.isArray(S.alertAutomations))S.alertAutomations=[];
+  if(!Array.isArray(S.dailyLogs))S.dailyLogs=[];
+  if(!Array.isArray(S.capaActions))S.capaActions=[];
+}
+function hideLegacyOperationsV98(){
+  const page=document.getElementById('page-operaciones-cloud');if(!page)return;
+  Array.from(page.children).forEach(child=>{
+    if(child.id==='ops-v98-focus'||child.classList.contains('section-header'))return;
+    child.style.display='none';
+  });
+  const header=page.querySelector('.section-header');
+  const title=header?.querySelector('.section-sub');
+  if(title)title.textContent='Inventario, costos, disponibilidad, recursos, alertas, libro diario y CAPA';
+  const button=header?.querySelector('button');
+  if(button){button.textContent='Actualizar';button.setAttribute('onclick','renderFocusedOperationsV98()');}
+}
+function v98StockRows(){
+  ensureV98Collections();
+  return (S.inventoryItems||[]).map(i=>({id:i.id,name:i.name||'Recurso',type:i.type||'Inventario',stock:Number(i.stock)||0,min:Number(i.minStock)||0,location:i.location||'Bodega',cost:Number(i.unitCost)||0,status:Number(i.stock)<=Number(i.minStock)?'Reponer':'OK'}));
+}
+function v98CostRows(){ensureV98Collections();return typeof costRowsV95==='function'?costRowsV95():costRowsV94();}
+function renderDailyLogRowsV98(){
+  ensureV98Collections();
+  return (S.dailyLogs||[]).slice(-18).reverse().map(l=>`<tr><td>${esc94(l.fecha||'')}<div class="worker-rut">${esc94(l.title||'Registro diario')}</div></td><td>${esc94(mantNombre(l.mantId)||'Servicio')}</td><td>${Number(l.hh)||0} HH · ${Number(l.personas)||0} pers.</td><td>${esc94(l.avance||'—')}</td><td>${esc94(l.riesgos||'—')}</td><td>${esc94(l.fileName||'—')}</td></tr>`).join('')||'<tr><td colspan="6">Sin registros diarios.</td></tr>';
+}
+function renderCapaRowsV98(){
+  ensureV98Collections();
+  return (S.capaActions||[]).map(a=>`<tr><td><b>${esc94(a.title||'Acción correctiva')}</b><div class="worker-rut">${esc94(a.action||'')}</div></td><td>${esc94(a.source?((S.incidentes||[]).find(i=>i.id===a.source)?.tipo||a.source):'Sin origen')}</td><td>${esc94(a.rootCause||'—')}</td><td>${esc94(a.owner||'—')}</td><td>${esc94(a.due||'—')}</td><td><select class="form-select" onchange="updateCapaStatusV98('${a.id}',this.value)">${['abierta','en_proceso','verificacion','cerrada'].map(s=>`<option value="${s}" ${a.status===s?'selected':''}>${s}</option>`).join('')}</select></td></tr>`).join('')||'<tr><td colspan="6">Sin acciones CAPA.</td></tr>';
+}
+function renderNotificationRowsV98(){
+  ensureV98Collections();
+  const rows=[...(S.alertAutomations||[])].slice(0,12);
+  return rows.map(a=>`<tr><td><b>${esc94(a.title||'Alerta programada')}</b><div class="worker-rut">${esc94(a.type||'operativa')}</div></td><td>${esc94(a.channel||'Correo + WhatsApp')}</td><td>${esc94(a.frequency||'manual')}</td><td>${esc94(a.owner||'Administrador')}</td><td><span class="badge badge-warn">${esc94(a.status||'programado')}</span></td></tr>`).join('')||'<tr><td colspan="5">Sin notificaciones programadas.</td></tr>';
+}
+function renderFocusedOperationsV98(){
+  const page=document.getElementById('page-operaciones-cloud');if(!page)return;
+  ensureV98Collections();hideLegacyOperationsV98();
+  document.getElementById('ops-v98-focus')?.remove();
+  const stocks=v98StockRows(),costs=v98CostRows(),availability=typeof availabilityRowsV95==='function'?availabilityRowsV95():[];
+  const stockLow=stocks.filter(i=>i.status==='Reponer').length,totalCost=costs.reduce((n,r)=>n+Number(r.real||0),0),margin=costs.reduce((n,r)=>n+Number(r.margin||0),0);
+  const serviceOptions=(S.mantenciones||[]).map(m=>`<option value="${m.id}">${esc94(m.nombre)} · ${esc94(minaNombre(m.minaId))}</option>`).join('');
+  const incidentOptions=(S.incidentes||[]).map(i=>`<option value="${i.id}">${esc94(i.tipo||'Incidente')} · ${esc94(mantNombre(i.mantId)||'Sin servicio')}</option>`).join('');
+  page.querySelector('.section-header')?.insertAdjacentHTML('afterend',`<div id="ops-v98-focus">
+    <div class="kpi-grid" style="margin-bottom:16px;">
+      <div class="kpi kpi-blue"><div class="kpi-value">${stocks.length}</div><div class="kpi-label">Ítems inventario</div></div>
+      <div class="kpi kpi-red"><div class="kpi-value">${stockLow}</div><div class="kpi-label">Stock bajo</div></div>
+      <div class="kpi kpi-orange"><div class="kpi-value">${money94(totalCost)}</div><div class="kpi-label">Costo operacional</div></div>
+      <div class="kpi kpi-green"><div class="kpi-value">${money94(margin)}</div><div class="kpi-label">Margen estimado</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><div class="card-header"><div><div class="card-title">Inventario y stock</div><div class="card-subtitle">Resumen de recursos críticos, mínimos y alertas de reposición.</div></div><button class="btn btn-secondary btn-sm" onclick="exportV94Csv('inventario')">Exportar</button></div><div class="table-wrap"><table><thead><tr><th>Recurso</th><th>Tipo</th><th>Stock</th><th>Mínimo</th><th>Estado</th></tr></thead><tbody>${stocks.slice(0,10).map(i=>`<tr><td><b>${esc94(i.name)}</b><div class="worker-rut">${esc94(i.location)}</div></td><td>${esc94(i.type)}</td><td>${i.stock}</td><td>${i.min}</td><td><span class="badge ${i.status==='Reponer'?'badge-err':'badge-ok'}">${i.status}</span></td></tr>`).join('')||'<tr><td colspan="5">Sin inventario cargado.</td></tr>'}</tbody></table></div></div>
+      <div class="card"><div class="card-header"><div><div class="card-title">Costos y rentabilidad</div><div class="card-subtitle">Vista ejecutiva por servicio antes del detalle financiero profundo.</div></div><button class="btn btn-secondary btn-sm" onclick="exportV94Csv('costos')">Exportar</button></div><div class="table-wrap"><table><thead><tr><th>Servicio</th><th>Cliente</th><th>Costo</th><th>Venta</th><th>Margen</th></tr></thead><tbody>${costs.slice(0,8).map(r=>`<tr><td><b>${esc94(r.project||'Servicio')}</b><div class="worker-rut">${esc94(r.contract||'Sin contrato')}</div></td><td>${esc94(r.client||'Cliente')}</td><td>${money94(r.real||0)}</td><td>${money94(r.projected||0)}</td><td><span class="badge ${Number(r.margin||0)>=0?'badge-ok':'badge-err'}">${money94(r.margin||0)}</span></td></tr>`).join('')||'<tr><td colspan="5">Sin servicios costeados.</td></tr>'}</tbody></table></div></div>
+      <div class="card"><div class="card-title">Disponibilidad por especialidad</div><div class="card-subtitle">Quiénes están disponibles, asignados o bloqueados para coordinar servicios.</div><div class="table-wrap" style="margin-top:12px;"><table><thead><tr><th>Especialidad</th><th>Total</th><th>Disponible</th><th>Asignado</th><th>Bloqueado</th></tr></thead><tbody>${availability.map(a=>`<tr><td><b>${esc94(a.specialty)}</b></td><td>${a.total}</td><td><span class="badge badge-ok">${a.available}</span></td><td>${a.assigned}</td><td><span class="badge ${a.blocked?'badge-err':'badge-na'}">${a.blocked}</span></td></tr>`).join('')||'<tr><td colspan="5">Sin especialidades cargadas.</td></tr>'}</tbody></table></div></div>
+      <div class="card"><div class="card-title">Reasignación simple de recursos</div><div class="card-subtitle">Mueve personas, vehículos y hotel a un servicio sin perder historial.</div><div class="form-grid" style="margin-top:10px;"><div class="form-group"><label class="form-label">Trabajador</label><select class="form-select" id="v95-disp-worker"><option value="">Sin trabajador</option>${S.trabajadores.map(t=>`<option value="${t.id}">${esc94(t.nombre)} · ${esc94(t.especialidad||t.cargo||'')}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Servicio</label><select class="form-select" id="v95-disp-project">${serviceOptions}</select></div><div class="form-group"><label class="form-label">Vehículo/equipo</label><select class="form-select" id="v95-disp-vehicle"><option value="">Sin vehículo</option>${(S.vehiculos||[]).map(v=>`<option value="${v.id}">${esc94(v.nombre||v.patente||v.serie)}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Hotel</label><select class="form-select" id="v95-disp-hotel"><option value="">Sin hotel</option>${(S.hoteles||[]).map(h=>`<option value="${h.id}">${esc94(h.nombre)}</option>`).join('')}</select></div></div><button class="btn btn-primary btn-sm" onclick="saveDispatchAssignmentV95()">Asignar / mover recursos</button></div>
+    </div>
+    ${renderV95FinancePanel()}
+    ${renderV95InventoryPanel()}
+    <div class="card" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Programar notificación o reporte</div><div class="card-subtitle">Agenda avisos internos, WhatsApp/correo o reportes semanales por responsable.</div></div><button class="btn btn-secondary btn-sm" onclick="exportV94Csv('resumen')">Exportar resumen</button></div><form class="form-grid" style="margin-top:12px;" onsubmit="saveOperationNotificationV98(event)"><div class="form-group"><label class="form-label">Nombre</label><input class="form-input" id="v98-not-title" required placeholder="Reporte semanal de vencimientos"></div><div class="form-group"><label class="form-label">Canal</label><select class="form-select" id="v98-not-channel"><option>Correo + WhatsApp</option><option>Correo</option><option>WhatsApp</option><option>Reporte programado</option></select></div><div class="form-group"><label class="form-label">Frecuencia</label><select class="form-select" id="v98-not-frequency"><option value="semanal">Semanal</option><option value="diaria">Diaria</option><option value="mensual">Mensual</option><option value="manual">Manual</option></select></div><div class="form-group"><label class="form-label">Responsable</label><input class="form-input" id="v98-not-owner" value="${escapeAttrV62(S.empresa?.representante||'Administrador')}"></div><div class="form-group full"><label class="form-label">Mensaje / contenido</label><textarea class="form-textarea" id="v98-not-message" placeholder="Enviar brechas, vencimientos y pendientes del servicio."></textarea></div><div class="form-group"><button class="btn btn-primary">Programar</button></div></form><div class="table-wrap" style="margin-top:12px;"><table><thead><tr><th>Alerta / reporte</th><th>Canal</th><th>Frecuencia</th><th>Responsable</th><th>Estado</th></tr></thead><tbody>${renderNotificationRowsV98()}</tbody></table></div></div>
+    <div class="card" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Libro diario por servicio</div><div class="card-subtitle">Registra avance, HH, dotación, equipos, riesgos y evidencia por jornada.</div></div><button class="btn btn-secondary btn-sm" onclick="exportDailyLogV88()">Exportar</button></div><form class="form-grid" style="margin-top:12px;" onsubmit="saveDailyLogV98(event)"><div class="form-group"><label class="form-label">Servicio</label><select class="form-select" id="v98-dl-mant" required><option value="">Seleccionar...</option>${serviceOptions}</select></div><div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="v98-dl-date" type="date" value="${hoy()}"></div><div class="form-group"><label class="form-label">Título</label><input class="form-input" id="v98-dl-title" placeholder="Avance turno día"></div><div class="form-group"><label class="form-label">HH reales</label><input class="form-input" id="v98-dl-hh" type="number" min="0"></div><div class="form-group"><label class="form-label">Personas</label><input class="form-input" id="v98-dl-people" type="number" min="0"></div><div class="form-group"><label class="form-label">Evidencia</label><input class="form-input" id="v98-dl-file" type="file" accept=".pdf,.jpg,.jpeg,.png"></div><div class="form-group full"><label class="form-label">Avance del día</label><textarea class="form-textarea" id="v98-dl-progress"></textarea></div><div class="form-group full"><label class="form-label">Riesgos / restricciones</label><textarea class="form-textarea" id="v98-dl-risk"></textarea></div><div class="form-group"><button class="btn btn-primary">Guardar libro diario</button></div></form><div class="table-wrap" style="margin-top:12px;"><table><thead><tr><th>Fecha</th><th>Servicio</th><th>HH / dotación</th><th>Avance</th><th>Riesgos</th><th>Evidencia</th></tr></thead><tbody>${renderDailyLogRowsV98()}</tbody></table></div></div>
+    <div class="card" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Acciones correctivas CAPA</div><div class="card-subtitle">Causa raíz, responsable, plazo, seguimiento y cierre de acciones correctivas.</div></div><button class="btn btn-secondary btn-sm" onclick="exportCapaV88()">Exportar</button></div><form class="form-grid" style="margin-top:12px;" onsubmit="saveCapaActionV98(event)"><div class="form-group"><label class="form-label">Origen incidente/NC</label><select class="form-select" id="v98-capa-source"><option value="">Sin origen</option>${incidentOptions}</select></div><div class="form-group"><label class="form-label">Título acción</label><input class="form-input" id="v98-capa-title" required></div><div class="form-group"><label class="form-label">Responsable</label><input class="form-input" id="v98-capa-owner"></div><div class="form-group"><label class="form-label">Plazo</label><input class="form-input" id="v98-capa-due" type="date"></div><div class="form-group full"><label class="form-label">Causa raíz</label><textarea class="form-textarea" id="v98-capa-root"></textarea></div><div class="form-group full"><label class="form-label">Acción comprometida</label><textarea class="form-textarea" id="v98-capa-action"></textarea></div><div class="form-group"><button class="btn btn-primary">Crear acción</button></div></form><div class="table-wrap" style="margin-top:12px;"><table><thead><tr><th>Acción</th><th>Origen</th><th>Causa raíz</th><th>Responsable</th><th>Plazo</th><th>Estado</th></tr></thead><tbody>${renderCapaRowsV98()}</tbody></table></div></div>
+  </div>`);
+}
+function saveOperationNotificationV98(event){
+  event?.preventDefault?.();ensureV98Collections();
+  S.alertAutomations.unshift({id:'auto_'+Date.now(),type:'reporte_operativo',title:document.getElementById('v98-not-title')?.value.trim()||'Reporte operativo',channel:document.getElementById('v98-not-channel')?.value||'Correo + WhatsApp',frequency:document.getElementById('v98-not-frequency')?.value||'semanal',owner:document.getElementById('v98-not-owner')?.value.trim()||'Administrador',message:document.getElementById('v98-not-message')?.value.trim()||'',status:'programado',createdAt:new Date().toISOString()});
+  persistTenant();toast('Notificación o reporte programado');renderFocusedOperationsV98();
+}
+function saveDailyLogV98(event){
+  event?.preventDefault?.();ensureV98Collections();
+  const mantId=document.getElementById('v98-dl-mant')?.value||'';if(!mantId)return toast('Selecciona un servicio','err');
+  S.dailyLogs.push({id:'dl'+Date.now(),mantId,title:document.getElementById('v98-dl-title')?.value.trim()||'Registro diario',fecha:document.getElementById('v98-dl-date')?.value||hoy(),hh:Number(document.getElementById('v98-dl-hh')?.value)||0,personas:Number(document.getElementById('v98-dl-people')?.value)||0,avance:document.getElementById('v98-dl-progress')?.value.trim()||'',riesgos:document.getElementById('v98-dl-risk')?.value.trim()||'',fileName:document.getElementById('v98-dl-file')?.files?.[0]?.name||'',createdAt:new Date().toISOString()});
+  persistTenant();toast('Libro diario guardado');renderFocusedOperationsV98();
+}
+function saveCapaActionV98(event){
+  event?.preventDefault?.();ensureV98Collections();
+  S.capaActions.unshift({id:'ca'+Date.now(),source:document.getElementById('v98-capa-source')?.value||'',title:document.getElementById('v98-capa-title')?.value.trim()||'Acción correctiva',owner:document.getElementById('v98-capa-owner')?.value.trim()||'',due:document.getElementById('v98-capa-due')?.value||'',rootCause:document.getElementById('v98-capa-root')?.value.trim()||'',action:document.getElementById('v98-capa-action')?.value.trim()||'',status:'abierta',createdAt:new Date().toISOString()});
+  persistTenant();toast('Acción CAPA creada');renderFocusedOperationsV98();
+}
+function updateCapaStatusV98(id,status){
+  const row=(S.capaActions||[]).find(x=>x.id===id);if(!row)return;
+  row.status=status;row.updatedAt=new Date().toISOString();persistTenant();renderFocusedOperationsV98();
+}
+const renderV94OperationsSuiteV98Base=renderV94OperationsSuite;
+renderV94OperationsSuite=function(){renderV94OperationsSuiteV98Base();try{renderFocusedOperationsV98();}catch(err){console.error('Nexo Klar V9.8 operaciones',err);}};
+const renderPageV98Base=renderPage;
+renderPage=function(page){renderPageV98Base(page);if(page==='operaciones-cloud')setTimeout(renderFocusedOperationsV98,0);};
+const initV98Base=init;
+init=function(){initV98Base();if((currentPage||'dashboard')==='operaciones-cloud')renderFocusedOperationsV98();};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
