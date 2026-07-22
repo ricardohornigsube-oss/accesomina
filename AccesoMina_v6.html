@@ -1564,7 +1564,6 @@ body.private #main { display:block; }
   </section>
 </div>
 
-<script src="/cloud-client.js?v=7.6.0" onerror="this.onerror=null;this.src='cloud-client.js?v=7.6.0';"></script>
 <script>
 const CHILE_REGIONES_COMUNAS = [
   {region:'Arica y Parinacota',comunas:['Arica','Camarones','Putre','General Lagos']},
@@ -6207,6 +6206,155 @@ convertOpportunityV82=function(id){convertOpportunityV96Base(id);const o=ensureO
 const installV94UiV96Base=installV94Ui;
 installV94Ui=function(page){installV94UiV96Base(page);if(page==='oportunidades')installOpportunityV96Ui();};
 
+// ===================== V9.7: MEJORAS COMERCIALES Y PRODUCTIVAS =====================
+const INDUSTRIAS_V97=[
+  {name:'Minería',need:'acreditación, servicios en faena y control documental'},
+  {name:'Energía',need:'cuadrillas, permisos, seguridad y mantenimiento'},
+  {name:'Construcción',need:'contratistas, avances, turnos y evidencias'},
+  {name:'Mantenimiento industrial',need:'despacho, técnicos, herramientas y costos'},
+  {name:'Facilities',need:'personal externo, SLA, hotelería y reportes'},
+  {name:'Logística',need:'turnos, vehículos, credenciales y trazabilidad'},
+  {name:'Seguridad privada',need:'dotación, credenciales, turnos y cumplimiento'},
+  {name:'Agroindustria',need:'temporadas, cuadrillas, EPP y asistencia'},
+  {name:'Servicios técnicos',need:'agenda, recursos, documentación y margen'}
+];
+function escV97(value){return typeof esc94==='function'?esc94(value):String(value??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+function moneyV97(value){return typeof money94==='function'?money94(value):'$'+Math.round(Number(value)||0).toLocaleString('es-CL');}
+function docsV97(){try{return typeof documentRowsV94==='function'?documentRowsV94():[];}catch{return[];}}
+function dispatchV97(){try{return typeof dispatchRowsV94==='function'?dispatchRowsV94():[];}catch{return[];}}
+function costsV97(){try{return typeof costRowsV95==='function'?costRowsV95():(typeof costRowsV94==='function'?costRowsV94():[]);}catch{return[];}}
+function workerStatusV97(worker){try{return computeOperationalStatusV90?.(worker)||{};}catch{return{};}}
+function commercialMetricsV97(){
+  const workers=S.trabajadores||[],docs=docsV97(),dispatch=dispatchV97(),costs=costsV97(),alerts=typeof computeAlertas==='function'?computeAlertas():[];
+  const habilitados=workers.filter(w=>!workerStatusV97(w).blocked&&!w.bloqueado).length;
+  const blocked=workers.length-habilitados;
+  const approvedDocs=docs.filter(d=>['aprobado','renovado','vigente'].includes(String(d.status||'').toLowerCase())).length;
+  const docPct=docs.length?Math.round(approvedDocs*100/docs.length):0;
+  const real=costs.reduce((n,r)=>n+Number(r.real||0),0);
+  const margin=costs.reduce((n,r)=>n+Number(r.margin||0),0);
+  return {workers,docs,dispatch,costs,alerts,habilitados,blocked,docPct,real,margin};
+}
+function industryChipsV97(){
+  const list=Array.isArray(INDUSTRIAS_V97)&&INDUSTRIAS_V97.length?INDUSTRIAS_V97:[
+    {name:'Minería',need:'cumplimiento y acreditación'},
+    {name:'Energía',need:'operación en terreno'},
+    {name:'Construcción',need:'contratistas y avances'},
+    {name:'Logística',need:'turnos y recursos'}
+  ];
+  return list.map(i=>`<span class="badge badge-blue" data-industry="${escV97(i.name)}" title="${escV97(i.need)}">${escV97(i.name)}</span>`).join('');
+}
+function renderCommercialDashboardV97(){
+  const anchor=document.getElementById('dash-v94-control')||document.getElementById('dash-v90-executive-note')||document.getElementById('kpi-dash');
+  if(!anchor||document.getElementById('dash-v97-commercial'))return;
+  const m=commercialMetricsV97();
+  const gaps=m.dispatch.filter(r=>r.gaps?.length).length;
+  const nextActions=[
+    gaps?`Resolver ${gaps} servicios con brechas antes de movilizar.`:'Servicios sin brechas críticas visibles.',
+    m.blocked?`Regularizar ${m.blocked} personas no habilitadas.`:'Dotación habilitada sin bloqueos principales.',
+    m.docs.filter(d=>Number(d.score)<70).length?`Revisar documentos con score bajo o emisor pendiente.`:'Documentos principales con buen nivel de confianza.',
+    (S.inventoryItems||[]).some(i=>Number(i.stock)<=Number(i.minStock))?'Reponer stock bajo de EPP, herramientas o equipos.':'Inventario sin reposición crítica visible.'
+  ];
+  anchor.insertAdjacentHTML('afterend',`<div class="card" id="dash-v97-commercial" style="margin-bottom:20px;">
+    <div class="card-header"><div><div class="card-title">Panel ejecutivo comercial</div><div class="card-subtitle">Vista para gerencia: cumplimiento, brechas, costos, margen, dotación y riesgos operacionales en una sola lectura.</div></div><button class="btn btn-primary btn-sm" onclick="nav('reportes')">Ver reportes</button></div>
+    <div class="kpi-grid" style="margin-top:12px;">
+      <div class="kpi kpi-green"><div class="kpi-value">${m.docPct}%</div><div class="kpi-label">Cumplimiento documental</div></div>
+      <div class="kpi kpi-orange"><div class="kpi-value">${gaps}</div><div class="kpi-label">Servicios con brechas</div></div>
+      <div class="kpi kpi-blue"><div class="kpi-value">${m.habilitados}</div><div class="kpi-label">Personas habilitadas</div></div>
+      <div class="kpi kpi-red"><div class="kpi-value">${m.blocked}</div><div class="kpi-label">Personas bloqueadas</div></div>
+      <div class="kpi kpi-yellow"><div class="kpi-value">${moneyV97(m.real)}</div><div class="kpi-label">Costo real estimado</div></div>
+      <div class="kpi kpi-green"><div class="kpi-value">${moneyV97(m.margin)}</div><div class="kpi-label">Margen proyectado</div></div>
+    </div>
+    <div class="grid-2" style="margin-top:14px;">
+      <div><div class="card-title" style="font-size:14px;">Industrias objetivo</div><div id="industries-v97-list" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">${industryChipsV97()}</div><div class="worker-rut" style="margin-top:8px;">Nexo Klar se puede demostrar con datos de minería, energía, construcción, mantenimiento, facilities, logística, seguridad, agroindustria y servicios técnicos.</div></div>
+      <div><div class="card-title" style="font-size:14px;">Siguientes acciones</div><div style="display:grid;gap:8px;margin-top:10px;">${nextActions.map(x=>`<div class="cloud-note" style="margin:0;">${escV97(x)}</div>`).join('')}</div></div>
+    </div>
+  </div>`);
+}
+function renderOnboardingRouteV97(){
+  const anchor=document.getElementById('dash-v97-commercial')||document.getElementById('kpi-dash');
+  if(!anchor||document.getElementById('onboarding-v97-route'))return;
+  const steps=['Crear empresa y marca','Crear cliente','Crear contrato','Crear proyecto/servicio','Cargar personal','Validar documentos','Asignar recursos','Despachar operación','Reportar y auditar'];
+  anchor.insertAdjacentHTML('afterend',`<div class="card" id="onboarding-v97-route" style="margin-bottom:20px;">
+    <div class="card-header"><div><div class="card-title">Ruta guiada para implementar un cliente</div><div class="card-subtitle">Secuencia simple para que un nuevo usuario entienda cómo se conecta toda la operación.</div></div><button class="btn btn-secondary btn-sm" onclick="startOnboarding(true)">Abrir guía</button></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:12px;">${steps.map((s,i)=>`<div class="cloud-note" style="margin:0;"><b>${i+1}.</b> ${escV97(s)}</div>`).join('')}</div>
+  </div>`);
+}
+function confidencePartsV97(d){
+  const status=String(d.status||'').toLowerCase(),score=Number(d.score)||0;
+  return [
+    ['OCR',score>=55],['Firma',status==='firmado'||status==='aprobado'||score>=80],['QR',score>=70],['Emisor',score>=65],
+    ['Foto',String(d.type||'').toLowerCase().includes('cedula')||String(d.type||'').toLowerCase().includes('credencial')?score>=70:null],
+    ['Integridad',!['rechazado','observado'].includes(status)&&score>=60]
+  ];
+}
+function renderDocAiV97(){
+  const host=document.getElementById('ops-v95-real')||document.getElementById('ops-v94-suite')||document.getElementById('page-operaciones-cloud');
+  if(!host||document.getElementById('ops-v97-docai'))return;
+  const docs=docsV97().slice(0,10);
+  host.insertAdjacentHTML('beforeend',`<div class="card" id="ops-v97-docai" style="margin-top:16px;">
+    <div class="card-header"><div><div class="card-title">Motor documental inteligente real</div><div class="card-subtitle">Flujo preparado para OCR, firma, QR, emisor, fotografía, integridad, score y revisión humana final.</div></div><span class="badge badge-warn">Conectores listos</span></div>
+    <div class="table-wrap" style="margin-top:12px;"><table><thead><tr><th>Documento</th><th>Relación</th><th>Validaciones</th><th>Score</th><th>Decisión</th><th>Evidencia</th></tr></thead><tbody>${docs.map(d=>{
+      const parts=confidencePartsV97(d).filter(p=>p[1]!==null).map(([label,ok])=>`<span class="badge ${ok?'badge-ok':'badge-warn'}">${escV97(label)}</span>`).join(' ');
+      const score=Number(d.score)||0,decision=score>=80?'Aprobar con revisión humana':score>=55?'Observar y solicitar respaldo':'Rechazar / bloquear ingreso';
+      return `<tr><td><b>${escV97(d.type||'Documento')}</b><div class="worker-rut">${escV97(d.owner||'')}</div></td><td>${escV97(d.relation||d.source||'')}</td><td>${parts}</td><td><b>${score}%</b></td><td>${escV97(decision)}</td><td><button class="btn btn-secondary btn-sm" onclick="exportV94Csv('documentos')">Trazabilidad</button></td></tr>`;
+    }).join('')||'<tr><td colspan="6">Sin documentos para revisar.</td></tr>'}</tbody></table></div>
+    <div class="cloud-note">En producción se conectan proveedores reales de OCR, firma electrónica, antivirus, validación QR y emisor. La aprobación final queda registrada por usuario, fecha, observación y evidencia.</div>
+  </div>`);
+}
+function renderDispatchBoardV97(){
+  const host=document.getElementById('ops-v95-real')||document.getElementById('ops-v94-suite')||document.getElementById('page-operaciones-cloud');
+  if(!host||document.getElementById('ops-v97-dispatch'))return;
+  const rows=dispatchV97().slice(0,8);
+  host.insertAdjacentHTML('beforeend',`<div class="card" id="ops-v97-dispatch" style="margin-top:16px;">
+    <div class="card-header"><div><div class="card-title">Despacho visual para coordinación diaria</div><div class="card-subtitle">Vista por servicio con disponibilidad, movilización, hotel, vehículo, documentos y brechas antes de ejecutar.</div></div><button class="btn btn-primary btn-sm" onclick="exportV94Csv('despacho_visual')">Exportar despacho</button></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:12px;">${rows.map(r=>`<div class="cloud-note" style="margin:0;">
+      <b>${escV97(r.project)}</b><br><span>${escV97(r.client)} · ${escV97(r.contract)}</span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"><span class="badge badge-blue">${escV97(r.status)}</span><span class="badge ${r.assigned>=r.required?'badge-ok':'badge-warn'}">${r.assigned}/${r.required} personas</span><span class="badge badge-blue">${r.hotels} hotel</span><span class="badge badge-blue">${r.vehicles} equipo</span></div>
+      <div style="margin-top:8px;">${r.gaps?.length?r.gaps.map(g=>`<span class="badge badge-err">${escV97(g)}</span>`).join(' '):'<span class="badge badge-ok">Listo para movilizar</span>'}</div>
+    </div>`).join('')||'<div class="cloud-note">Sin servicios para coordinar.</div>'}</div>
+  </div>`);
+}
+function reportDefinitionsV97(){
+  return [
+    ['Cumplimiento ejecutivo','PDF para gerencia con KPIs, brechas y riesgos','resumen'],
+    ['Dotación y disponibilidad','Excel por persona, cargo, turno, cliente y proyecto','despacho_visual'],
+    ['Costos y rentabilidad','Costo real, OC, HH, hotelería, vehículo, EPP y margen','erp_costos'],
+    ['Riesgo documental','Documentos vencidos, observados, rechazados y score bajo','documentos'],
+    ['Inventario y stock','Bodegas, entregas, devoluciones, daño, pérdida y reposición','inventario'],
+    ['Cliente 360','Contratos, proyectos, bitácora, documentos, tareas y compromisos','resumen'],
+    ['Acreditación y mandante','Estados pendiente, observado, aprobado y pase emitido','documentos'],
+    ['Operación diaria','Servicios planificados, movilizando, en ejecución y cerrados','despacho_visual']
+  ];
+}
+function renderReportsCommercialV97(){
+  const page=document.getElementById('page-reportes');if(!page||document.getElementById('reports-v97-commercial'))return;
+  page.insertAdjacentHTML('beforeend',`<div class="card" id="reports-v97-commercial" style="margin-top:16px;">
+    <div class="card-header"><div><div class="card-title">Reportes ejecutivos para venta y operación</div><div class="card-subtitle">Salidas listas para clientes, gerencia, operaciones, prevención, RR.HH., finanzas y auditoría.</div></div><button class="btn btn-ghost btn-sm" onclick="window.print()">Vista PDF</button></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:12px;">${reportDefinitionsV97().map(([title,desc,type])=>`<div class="cloud-note" style="margin:0;"><b>${escV97(title)}</b><p style="margin:6px 0;color:var(--text-muted);font-size:12px;">${escV97(desc)}</p><button class="btn btn-secondary btn-sm" onclick="exportV94Csv('${type}')">Exportar</button></div>`).join('')}</div>
+  </div>`);
+}
+function installCommercialStoryV97(){
+  const final=document.querySelector('.final-cta');
+  if(final&&!document.getElementById('public-v97-industries')){
+    final.insertAdjacentHTML('beforebegin',`<section class="public-band" id="public-v97-industries"><div class="public-inner">
+      <div class="public-eyebrow">Plataforma multisectorial</div><h2 class="public-heading">Nexo Klar conecta la operación en terreno con la información crítica de la empresa.</h2>
+      <p class="public-lead">Sirve para empresas que necesitan coordinar personas, contratos, servicios, documentos, recursos, costos, alertas y reportes sin depender de planillas dispersas ni información guardada solo en correos o teléfonos.</p>
+      <div class="public-grid">${(Array.isArray(INDUSTRIAS_V97)?INDUSTRIAS_V97:[]).map(i=>`<div class="public-card"><b>${escV97(i.name)}</b><span>${escV97(i.need)}.</span></div>`).join('')}</div>
+    </div></section>`);
+  }
+  const caption=document.querySelector('.real-product-caption');
+  if(caption&&caption.textContent.includes('Vista real del software'))caption.textContent='Vista real de Nexo Klar con información demostrativa. Cada empresa trabaja con sus propios datos, marca, usuarios, permisos, clientes, contratos y reportes separados.';
+}
+const renderDashboardV97Base=renderDashboard;
+renderDashboard=function(){renderDashboardV97Base();try{renderCommercialDashboardV97();renderOnboardingRouteV97();}catch(err){console.error('Nexo Klar V9.7 dashboard',err);const anchor=document.getElementById('kpi-dash');if(anchor&&!document.getElementById('dash-v97-commercial'))anchor.insertAdjacentHTML('afterend',`<div class="card" id="dash-v97-commercial" style="margin-bottom:20px;"><div class="card-title">Panel ejecutivo comercial</div><div class="card-subtitle">Vista recuperada automáticamente para mantener continuidad de uso.</div><div id="industries-v97-list" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">${industryChipsV97()}</div></div>`);}};
+const renderV94OperationsSuiteV97Base=renderV94OperationsSuite;
+renderV94OperationsSuite=function(){renderV94OperationsSuiteV97Base();try{renderDispatchBoardV97();renderDocAiV97();}catch(err){console.error('Nexo Klar V9.7 operaciones',err);}};
+const renderPageV97Base=renderPage;
+renderPage=function(page){renderPageV97Base(page);try{if(page==='dashboard'){renderCommercialDashboardV97();renderOnboardingRouteV97();}if(page==='operaciones-cloud'){renderDispatchBoardV97();renderDocAiV97();}if(page==='reportes')renderReportsCommercialV97();}catch(err){console.error('Nexo Klar V9.7 renderPage',page,err);}};
+const initV97Base=init;
+init=function(){initV97Base();installCommercialStoryV97();};
+document.addEventListener('DOMContentLoaded',installCommercialStoryV97);
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
@@ -6214,5 +6362,6 @@ document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#si
 window.AccesoMinaCloud?.install();
 window.addEventListener('load', init);
 </script>
+<script src="public/cloud-client.js?v=7.6.0" onload="window.AccesoMinaCloud?.install?.()" onerror="this.onerror=null;this.src='/cloud-client.js?v=7.6.0';"></script>
 </body>
 </html>
