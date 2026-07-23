@@ -6591,6 +6591,119 @@ function polishInventoryCenterV105(){
 const injectInventoryMovementCardV105Base=injectInventoryMovementCardV104;
 injectInventoryMovementCardV104=function(){injectInventoryMovementCardV105Base();polishInventoryCenterV105();};
 
+// ===================== V10.6: BITACORAS Y SEGUIMIENTO OPERATIVO =====================
+function ensureTraceabilityV106(){
+  ensureV98Collections?.();
+  (S.dailyLogs||[]).forEach(l=>{l.openedAt=l.openedAt||l.createdAt||`${l.fecha||hoy()}T00:00:00`;if(!Array.isArray(l.followUps))l.followUps=[];});
+  (S.capaActions||[]).forEach(a=>{a.openedAt=a.openedAt||a.createdAt||new Date().toISOString();if(!Array.isArray(a.followUps))a.followUps=[];});
+  (S.opportunities||[]).forEach(o=>{o.openedAt=o.openedAt||o.createdAt||new Date().toISOString();if(!Array.isArray(o.followUps))o.followUps=[];if(!Array.isArray(o.history))o.history=[];});
+  (S.subcontratos||[]).forEach(s=>{s.openedAt=s.openedAt||s.createdAt||new Date().toISOString();if(!Array.isArray(s.followUps))s.followUps=[];if(!Array.isArray(s.documents))s.documents=[];});
+}
+function monthOptionsV106(prefix){
+  const y=new Date().getFullYear();
+  return `<div class="filters" style="margin-top:12px;"><select class="filter-select" id="${prefix}-year" onchange="renderFocusedOperationsV98()"><option value="">Todos los años</option>${[y-1,y,y+1].map(v=>`<option value="${v}">${v}</option>`).join('')}</select><select class="filter-select" id="${prefix}-month" onchange="renderFocusedOperationsV98()"><option value="">Todos los meses</option>${Array.from({length:12},(_,i)=>`<option value="${String(i+1).padStart(2,'0')}">${String(i+1).padStart(2,'0')}</option>`).join('')}</select></div>`;
+}
+function passesYearMonthV106(date,prefix){
+  const y=document.getElementById(`${prefix}-year`)?.value||'',m=document.getElementById(`${prefix}-month`)?.value||'',d=String(date||'');
+  return (!y||d.slice(0,4)===y)&&(!m||d.slice(5,7)===m);
+}
+const renderDailyLogRowsV106Base=renderDailyLogRowsV98;
+renderDailyLogRowsV98=function(){
+  ensureTraceabilityV106();
+  const rows=(S.dailyLogs||[]).filter(l=>passesYearMonthV106(l.openedAt||l.fecha,'v106-dl')).slice(-24).reverse();
+  return rows.map(l=>`<tr><td>${esc94(l.fecha||'')}<div class="worker-rut">Abierto: ${esc94(String(l.openedAt||'').slice(0,10))}</div></td><td>${esc94(mantNombre(l.mantId)||'Servicio')}</td><td>${Number(l.hh)||0} HH · ${Number(l.personas)||0} pers.</td><td>${esc94(l.avance||'—')}</td><td>${esc94(l.riesgos||'—')}</td><td>${esc94(l.fileName||'—')}<div style="margin-top:6px;"><button class="btn btn-secondary btn-sm" onclick="openDailyLogFollowUpV106('${l.id}')">Bitácora (${(l.followUps||[]).length})</button></div></td></tr>`).join('')||'<tr><td colspan="6">Sin registros diarios para el filtro seleccionado.</td></tr>';
+};
+const renderCapaRowsV106Base=renderCapaRowsV98;
+renderCapaRowsV98=function(){
+  ensureTraceabilityV106();
+  const rows=(S.capaActions||[]).filter(a=>passesYearMonthV106(a.openedAt||a.createdAt,'v106-capa'));
+  return rows.map(a=>`<tr><td><b>${esc94(a.title||'Acción correctiva')}</b><div class="worker-rut">Abierta: ${esc94(String(a.openedAt||'').slice(0,10))}</div><button class="btn btn-secondary btn-sm" onclick="openCapaFollowUpV106('${a.id}')">Bitácora (${(a.followUps||[]).length})</button></td><td>${esc94(a.source?((S.incidentes||[]).find(i=>i.id===a.source)?.tipo||a.source):'Sin origen')}</td><td>${esc94(a.rootCause||'—')}</td><td>${esc94(a.owner||'—')}</td><td>${esc94(a.due||'—')}</td><td><select class="form-select" onchange="updateCapaStatusV98('${a.id}',this.value)">${['abierta','en_proceso','verificacion','cerrada'].map(s=>`<option value="${s}" ${a.status===s?'selected':''}>${s}</option>`).join('')}</select></td></tr>`).join('')||'<tr><td colspan="6">Sin acciones CAPA para el filtro seleccionado.</td></tr>';
+};
+function injectOpsTraceFiltersV106(){
+  const page=document.getElementById('page-operaciones-cloud');if(!page)return;
+  page.querySelectorAll('.card').forEach(card=>{
+    const title=card.querySelector('.card-title')?.textContent?.trim();
+    if(title==='Libro diario por servicio'&&!document.getElementById('v106-dl-year')){
+      card.querySelector('.card-header')?.insertAdjacentHTML('afterend',monthOptionsV106('v106-dl'));
+    }
+    if(title==='Acciones correctivas CAPA'&&!document.getElementById('v106-capa-year')){
+      card.querySelector('.card-header')?.insertAdjacentHTML('afterend',monthOptionsV106('v106-capa'));
+    }
+  });
+}
+const renderFocusedOperationsV106Base=renderFocusedOperationsV98;
+renderFocusedOperationsV98=function(){ensureTraceabilityV106();renderFocusedOperationsV106Base();injectOpsTraceFiltersV106();};
+const saveDailyLogV106Base=saveDailyLogV98;
+saveDailyLogV98=function(event){
+  saveDailyLogV106Base(event);
+  const row=(S.dailyLogs||[])[S.dailyLogs.length-1];if(row&&!row.openedAt){row.openedAt=row.createdAt||new Date().toISOString();row.followUps=[];persistTenant();}
+};
+const saveCapaActionV106Base=saveCapaActionV98;
+saveCapaActionV98=function(event){
+  saveCapaActionV106Base(event);
+  const row=(S.capaActions||[])[0];if(row&&!row.openedAt){row.openedAt=row.createdAt||new Date().toISOString();row.followUps=[];persistTenant();}
+};
+const updateCapaStatusV106Base=updateCapaStatusV98;
+updateCapaStatusV98=function(id,status){
+  const row=(S.capaActions||[]).find(x=>x.id===id),before=row?.status;
+  updateCapaStatusV106Base(id,status);
+  if(row){row.followUps=row.followUps||[];row.followUps.unshift({id:'cf_'+Date.now(),date:hoy(),type:'cambio_estado',detail:`Estado cambiado de ${before||'sin estado'} a ${status}`,owner:currentTenantUser?.email||'usuario',at:new Date().toISOString()});persistTenant();}
+};
+function traceRowsV106(rows){return (rows||[]).map(r=>`<tr><td>${esc94(r.date||String(r.at||'').slice(0,10))}</td><td><span class="badge badge-blue">${esc94(r.type||'seguimiento')}</span></td><td>${esc94(r.detail||'')}</td><td>${esc94(r.owner||'—')}</td></tr>`).join('')||'<tr><td colspan="4">Sin seguimiento registrado.</td></tr>';}
+function openDailyLogFollowUpV106(id){
+  const row=(S.dailyLogs||[]).find(x=>x.id===id);if(!row)return;
+  document.getElementById('v81-detail-title').textContent=`Bitácora libro diario · ${row.title||mantNombre(row.mantId)||'Servicio'}`;
+  document.getElementById('v81-detail-body').innerHTML=`<div class="cloud-note">Fecha apertura: ${esc94(String(row.openedAt||'').slice(0,10))} · Servicio: ${esc94(mantNombre(row.mantId)||'—')}</div><div class="form-grid" style="margin-top:12px;"><div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="dl-fu-date" type="date" value="${hoy()}"></div><div class="form-group"><label class="form-label">Responsable</label><input class="form-input" id="dl-fu-owner" value="${escapeAttrV62(currentTenantUser?.email||'')}"></div><div class="form-group"><label class="form-label">Tipo</label><select class="form-select" id="dl-fu-type"><option>seguimiento</option><option>modificación</option><option>observación</option><option>cierre</option></select></div><div class="form-group full"><label class="form-label">Detalle</label><textarea class="form-textarea" id="dl-fu-detail"></textarea></div></div><button class="btn btn-primary btn-sm" onclick="saveDailyLogFollowUpV106('${id}')">Guardar seguimiento</button><div class="table-wrap" style="margin-top:12px;"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Detalle</th><th>Responsable</th></tr></thead><tbody>${traceRowsV106(row.followUps)}</tbody></table></div>`;
+  openModal('modal-v81-detail');
+}
+function saveDailyLogFollowUpV106(id){
+  const row=(S.dailyLogs||[]).find(x=>x.id===id);if(!row)return;const detail=document.getElementById('dl-fu-detail')?.value.trim()||'';if(!detail)return toast('Ingresa detalle de seguimiento','err');
+  row.followUps=row.followUps||[];row.followUps.unshift({id:'df_'+Date.now(),date:document.getElementById('dl-fu-date')?.value||hoy(),type:document.getElementById('dl-fu-type')?.value||'seguimiento',detail,owner:document.getElementById('dl-fu-owner')?.value.trim()||'',at:new Date().toISOString()});row.updatedAt=new Date().toISOString();persistTenant();renderFocusedOperationsV98();openDailyLogFollowUpV106(id);toast('Seguimiento guardado');
+}
+function openCapaFollowUpV106(id){
+  const row=(S.capaActions||[]).find(x=>x.id===id);if(!row)return;
+  document.getElementById('v81-detail-title').textContent=`Bitácora CAPA · ${row.title||'Acción correctiva'}`;
+  document.getElementById('v81-detail-body').innerHTML=`<div class="cloud-note">Fecha apertura: ${esc94(String(row.openedAt||'').slice(0,10))} · Plazo: ${esc94(row.due||'—')} · Estado: ${esc94(row.status||'abierta')}</div><div class="form-grid" style="margin-top:12px;"><div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="capa-fu-date" type="date" value="${hoy()}"></div><div class="form-group"><label class="form-label">Responsable</label><input class="form-input" id="capa-fu-owner" value="${escapeAttrV62(row.owner||currentTenantUser?.email||'')}"></div><div class="form-group"><label class="form-label">Tipo</label><select class="form-select" id="capa-fu-type"><option>seguimiento</option><option>evidencia</option><option>verificación</option><option>cierre</option></select></div><div class="form-group full"><label class="form-label">Detalle</label><textarea class="form-textarea" id="capa-fu-detail"></textarea></div></div><button class="btn btn-primary btn-sm" onclick="saveCapaFollowUpV106('${id}')">Guardar seguimiento</button><div class="table-wrap" style="margin-top:12px;"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Detalle</th><th>Responsable</th></tr></thead><tbody>${traceRowsV106(row.followUps)}</tbody></table></div>`;
+  openModal('modal-v81-detail');
+}
+function saveCapaFollowUpV106(id){
+  const row=(S.capaActions||[]).find(x=>x.id===id);if(!row)return;const detail=document.getElementById('capa-fu-detail')?.value.trim()||'';if(!detail)return toast('Ingresa detalle de seguimiento','err');
+  row.followUps=row.followUps||[];row.followUps.unshift({id:'cf_'+Date.now(),date:document.getElementById('capa-fu-date')?.value||hoy(),type:document.getElementById('capa-fu-type')?.value||'seguimiento',detail,owner:document.getElementById('capa-fu-owner')?.value.trim()||'',at:new Date().toISOString()});row.updatedAt=new Date().toISOString();persistTenant();renderFocusedOperationsV98();openCapaFollowUpV106(id);toast('Seguimiento CAPA guardado');
+}
+
+function installOpportunityFiltersV106(){
+  const filters=document.querySelector('#page-oportunidades .filters');if(!filters||document.getElementById('filt-opp-year'))return;
+  const y=new Date().getFullYear();filters.insertAdjacentHTML('beforeend',`<select class="filter-select" id="filt-opp-year" onchange="renderOpportunitiesV82()"><option value="">Todos los años</option>${[y-1,y,y+1].map(v=>`<option value="${v}">${v}</option>`).join('')}</select><select class="filter-select" id="filt-opp-month" onchange="renderOpportunitiesV82()"><option value="">Todos los meses</option>${Array.from({length:12},(_,i)=>`<option value="${String(i+1).padStart(2,'0')}">${String(i+1).padStart(2,'0')}</option>`).join('')}</select>`);
+}
+const renderOpportunitiesV106Base=renderOpportunitiesV82;
+renderOpportunitiesV82=function(){ensureTraceabilityV106();installOpportunityFiltersV106();renderOpportunitiesV106Base();const y=document.getElementById('filt-opp-year')?.value||'',m=document.getElementById('filt-opp-month')?.value||'';if(!y&&!m)return;document.querySelectorAll('#opp-table tbody tr').forEach(tr=>{const company=tr.querySelector('td b')?.textContent||'',o=(S.opportunities||[]).find(x=>x.company===company);if(o&&!passesYearMonthV106(o.openedAt||o.createdAt,'filt-opp'))tr.remove();});};
+const saveOpportunityV106Base=saveOpportunityV82;
+saveOpportunityV82=async function(){await saveOpportunityV106Base();ensureTraceabilityV106();persistTenant();};
+const openOpportunityFollowUpV106Base=openOpportunityFollowUpV96;
+openOpportunityFollowUpV96=function(id){ensureTraceabilityV106();openOpportunityFollowUpV106Base(id);const o=S.opportunities.find(x=>x.id===id);const body=document.getElementById('v81-detail-body');if(o&&body&&!body.querySelector('[data-v106-opened]'))body.insertAdjacentHTML('afterbegin',`<div data-v106-opened class="cloud-note" style="margin-bottom:12px;">Fecha de apertura de oportunidad: ${esc94(String(o.openedAt||'').slice(0,10))}</div>`);};
+
+const openSubcontractV106Base=openSubcontractV82;
+openSubcontractV82=function(id){
+  ensureTraceabilityV106();openSubcontractV106Base(id);
+  const s=S.subcontratos.find(x=>x.id===id),body=document.getElementById('v81-detail-body');if(!s||!body)return;
+  const docs=(s.documents||[]).map(d=>`<tr><td>${esc94(d.type||'Documento')}</td><td>${esc94(d.expiresAt||'Sin vencimiento')}</td><td>${d.expiresAt?badgeEstado(d.expiresAt):'<span class="badge badge-na">Sin fecha</span>'}</td><td>${esc94(d.status||'cargado')}</td></tr>`).join('')||'<tr><td colspan="4">Sin documentos cargados.</td></tr>';
+  body.insertAdjacentHTML('beforeend',`<div class="card" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Bitácora y documentos del subcontrato</div><div class="card-subtitle">Apertura: ${esc94(String(s.openedAt||'').slice(0,10))} · renovaciones y vencimientos quedan en historial.</div></div></div><div class="form-grid"><div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="subc-fu-date" type="date" value="${hoy()}"></div><div class="form-group"><label class="form-label">Responsable</label><input class="form-input" id="subc-fu-owner" value="${escapeAttrV62(s.responsable||currentTenantUser?.email||'')}"></div><div class="form-group full"><label class="form-label">Seguimiento / observación</label><textarea class="form-textarea" id="subc-fu-detail"></textarea></div></div><button class="btn btn-primary btn-sm" onclick="saveSubcontractFollowUpV106('${id}')">Guardar bitácora</button><div class="grid-2" style="margin-top:12px;"><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Detalle</th><th>Responsable</th></tr></thead><tbody>${traceRowsV106(s.followUps)}</tbody></table></div><div class="table-wrap"><table><thead><tr><th>Documento</th><th>Vence</th><th>Alerta</th><th>Estado</th></tr></thead><tbody>${docs}</tbody></table></div></div></div>`);
+};
+function saveSubcontractFollowUpV106(id){
+  const s=S.subcontratos.find(x=>x.id===id);if(!s)return;const detail=document.getElementById('subc-fu-detail')?.value.trim()||'';if(!detail)return toast('Ingresa detalle de seguimiento','err');
+  s.followUps=s.followUps||[];s.followUps.unshift({id:'sf_'+Date.now(),date:document.getElementById('subc-fu-date')?.value||hoy(),type:'seguimiento',detail,owner:document.getElementById('subc-fu-owner')?.value.trim()||'',at:new Date().toISOString()});s.updatedAt=new Date().toISOString();persistTenant();renderSubcontratos();openSubcontractV82(id);toast('Bitácora de subcontrato actualizada');
+}
+const saveNuevoSubcontratoV106Base=saveNuevoSubcontrato;
+saveNuevoSubcontrato=async function(){const before=(S.subcontratos||[]).length;await saveNuevoSubcontratoV106Base();if((S.subcontratos||[]).length<=before||document.getElementById('modal-nuevo-subcontrato')?.classList.contains('open'))return;const row=S.subcontratos[S.subcontratos.length-1];if(row){row.openedAt=row.openedAt||new Date().toISOString();row.followUps=row.followUps||[{id:'sf_'+Date.now(),date:hoy(),type:'apertura',detail:'Subcontrato creado en plataforma',owner:currentTenantUser?.email||'usuario',at:new Date().toISOString()}];persistTenant();}};
+const saveSubcontractV106Base=saveSubcontractV82;
+saveSubcontractV82=function(id){const s=S.subcontratos.find(x=>x.id===id),before=s?JSON.stringify({razon:s.razon,responsable:s.responsable,contacto:s.contacto,servicios:s.servicios}):'';saveSubcontractV106Base(id);if(s){s.followUps=s.followUps||[];s.followUps.unshift({id:'sf_'+Date.now(),date:hoy(),type:'modificacion_ficha',detail:'Ficha del subcontrato modificada',owner:currentTenantUser?.email||'usuario',before,at:new Date().toISOString()});persistTenant();}};
+const computeAlertasV106Base=computeAlertas;
+computeAlertas=function(){
+  const alertas=computeAlertasV106Base();let n=alertas.length+1;ensureTraceabilityV106();
+  (S.subcontratos||[]).forEach(s=>(s.documents||[]).forEach(d=>{const e=d.expiresAt?estadoFecha(d.expiresAt):'falta';if(e!=='vigente')alertas.push({id:'al_sc_doc_'+n++,tipo:'subcontrato',urgencia:e==='vencido'?'vencido':'critico',msg:`${s.razon}: ${d.type||'documento'} ${e}. Cargar renovación y conservar historial.`});}));
+  return alertas;
+};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
