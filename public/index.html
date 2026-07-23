@@ -6231,6 +6231,17 @@ function hideOperationsAvailabilityAndReassignV102(){
 const renderPageV102Base=renderPage;
 renderPage=function(page){renderPageV102Base(page);if(page==='operaciones-cloud')setTimeout(hideOperationsAvailabilityAndReassignV102,0);};
 
+// ===================== V10.3: CENTRO OPERATIVO SIN COSTOS VISIBLES =====================
+function hideOperationsCostSummaryV103(){
+  const page=document.getElementById('page-operaciones-cloud');
+  page?.querySelectorAll('.card').forEach(card=>{
+    const title=card.querySelector('.card-title')?.textContent?.trim();
+    if(title==='Costos y rentabilidad')card.remove();
+  });
+}
+const renderPageV103Base=renderPage;
+renderPage=function(page){renderPageV103Base(page);if(page==='operaciones-cloud')setTimeout(hideOperationsCostSummaryV103,0);};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
