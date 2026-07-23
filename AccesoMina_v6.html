@@ -6508,6 +6508,39 @@ function hideOperationsCostSummaryV103(){
 const renderFocusedOperationsV103Base=renderFocusedOperationsV98;
 renderFocusedOperationsV98=function(){renderFocusedOperationsV103Base();hideOperationsCostSummaryV103();};
 
+// ===================== V10.4: MOVIMIENTO DE INVENTARIO JUNTO A STOCK =====================
+function renderInventoryMovementCardV104(){
+  ensureV95Collections?.();
+  const inv=S.inventoryItems||[],warehouses=S.warehouses||[],mov=S.inventoryMovements||[];
+  return `<div class="card" id="ops-v104-inv-movement"><div class="card-header"><div><div class="card-title">Registrar movimiento con firma</div><div class="card-subtitle">Movimiento asociado a Inventario y stock: entrega, devolución, reposición, traslado, pérdida o daño.</div></div></div><div class="form-grid" style="margin-top:10px;"><div class="form-group"><label class="form-label">Recurso</label><select class="form-select" id="v104-inv-item">${inv.map(i=>`<option value="${i.id}">${esc94(i.name)} · stock ${Number(i.stock)||0}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Movimiento</label><select class="form-select" id="v104-inv-type"><option value="entrega">Entrega</option><option value="devolucion">Devolución</option><option value="reposicion">Reposición</option><option value="traslado">Traslado entre bodegas</option><option value="perdida">Pérdida</option><option value="dano">Daño / desgaste</option><option value="ajuste">Ajuste de inventario</option></select></div><div class="form-group"><label class="form-label">Bodega origen</label><select class="form-select" id="v104-inv-wh">${warehouses.map(w=>`<option value="${w.id}">${esc94(w.name)}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Bodega destino</label><select class="form-select" id="v104-inv-wh-to"><option value="">No aplica</option>${warehouses.map(w=>`<option value="${w.id}">${esc94(w.name)}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Cantidad</label><input class="form-input" id="v104-inv-qty" type="number" min="1" value="1"></div><div class="form-group"><label class="form-label">Trabajador</label><select class="form-select" id="v104-inv-worker"><option value="">No aplica</option>${S.trabajadores.map(t=>`<option value="${t.id}">${esc94(t.nombre)}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Proyecto / servicio</label><select class="form-select" id="v104-inv-project"><option value="">No aplica</option>${S.mantenciones.map(m=>`<option value="${m.id}">${esc94(m.nombre)}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Responsable</label><input class="form-input" id="v104-inv-owner" value="${escapeAttrV62(currentTenantUser?.nombre||currentTenantUser?.email||S.empresa?.representante||'')}"></div><div class="form-group full"><label class="form-label">Respaldo / foto / acta</label><input class="form-input" id="v104-inv-file" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"></div><div class="form-group full"><label class="form-label">Observación</label><textarea class="form-textarea" id="v104-inv-notes" placeholder="Motivo, condición de entrega, devolución, daño, pérdida o ajuste..."></textarea></div><div class="form-group full"><label><input type="checkbox" id="v104-inv-sign"> Movimiento firmado o respaldado por evidencia</label></div></div><button class="btn btn-primary btn-sm" onclick="saveInventoryMovementV104()">Guardar movimiento</button><div class="table-wrap" style="margin-top:12px;"><table><thead><tr><th>Fecha</th><th>Movimiento</th><th>Recurso</th><th>Bodega</th><th>Persona / servicio</th><th>Firma</th></tr></thead><tbody>${mov.slice(0,5).map(m=>{const item=inv.find(i=>i.id===m.itemId),wh=warehouses.find(w=>w.id===m.warehouseId),whTo=warehouses.find(w=>w.id===m.warehouseToId);return `<tr><td>${(m.at||'').slice(0,16).replace('T',' ')}</td><td><span class="badge badge-blue">${esc94(m.type)}</span> ${Number(m.qty)||0}</td><td>${esc94(item?.name||m.itemId||'')}</td><td>${esc94(wh?.name||'—')}${whTo?` → ${esc94(whTo.name)}`:''}</td><td>${esc94(trabNombre(m.workerId)||mantNombre(m.projectId)||'—')}</td><td>${m.signed?'<span class="badge badge-ok">Sí</span>':'<span class="badge badge-warn">Pendiente</span>'}</td></tr>`;}).join('')||'<tr><td colspan="6">Sin movimientos registrados.</td></tr>'}</tbody></table></div></div>`;
+}
+function injectInventoryMovementCardV104(){
+  const page=document.getElementById('page-operaciones-cloud');if(!page||document.getElementById('ops-v104-inv-movement'))return;
+  const stockCard=[...page.querySelectorAll('.card')].find(card=>card.querySelector('.card-title')?.textContent?.trim()==='Inventario y stock');
+  if(stockCard)stockCard.insertAdjacentHTML('afterend',renderInventoryMovementCardV104());
+}
+function saveInventoryMovementV104(){
+  ensureV95Collections?.();
+  const itemId=document.getElementById('v104-inv-item')?.value,warehouseId=document.getElementById('v104-inv-wh')?.value,warehouseToId=document.getElementById('v104-inv-wh-to')?.value,type=document.getElementById('v104-inv-type')?.value||'entrega',qty=Math.max(0,Number(document.getElementById('v104-inv-qty')?.value)||0);
+  const item=(S.inventoryItems||[]).find(i=>i.id===itemId);if(!item||!warehouseId||qty<=0)return toast('Completa recurso, bodega y cantidad','err');
+  if(type==='traslado'&&!warehouseToId)return toast('Selecciona bodega destino para traslado','err');
+  if(!item.stockByLocation)item.stockByLocation={};
+  const beforeOrigin=Number(item.stockByLocation[warehouseId]||0),beforeDest=Number(item.stockByLocation[warehouseToId]||0);
+  const subtract=['entrega','perdida','dano','traslado'].includes(type),add=['devolucion','reposicion'].includes(type);
+  if(subtract)item.stockByLocation[warehouseId]=Math.max(0,beforeOrigin-qty);
+  if(add)item.stockByLocation[warehouseId]=beforeOrigin+qty;
+  if(type==='ajuste')item.stockByLocation[warehouseId]=qty;
+  if(type==='traslado')item.stockByLocation[warehouseToId]=beforeDest+qty;
+  item.stock=Object.values(item.stockByLocation).reduce((n,v)=>n+Number(v||0),0);
+  S.inventoryMovements.unshift({id:'mov_'+Date.now(),itemId,warehouseId,warehouseToId,type,qty,workerId:document.getElementById('v104-inv-worker')?.value||'',projectId:document.getElementById('v104-inv-project')?.value||'',owner:document.getElementById('v104-inv-owner')?.value.trim()||'',notes:document.getElementById('v104-inv-notes')?.value.trim()||'',fileName:document.getElementById('v104-inv-file')?.files?.[0]?.name||'',signed:!!document.getElementById('v104-inv-sign')?.checked,stockBefore:beforeOrigin,stockAfter:Number(item.stockByLocation[warehouseId]||0),at:new Date().toISOString(),user:currentTenantUser?.email||'usuario'});
+  persistTenant();toast('Movimiento de inventario registrado');
+  if(typeof renderFocusedOperationsV98==='function')renderFocusedOperationsV98();else renderV94OperationsSuite?.();
+}
+const renderFocusedOperationsV104Base=renderFocusedOperationsV98;
+renderFocusedOperationsV98=function(){renderFocusedOperationsV104Base();injectInventoryMovementCardV104();};
+const renderPageV104Base=renderPage;
+renderPage=function(page){renderPageV104Base(page);if(page==='operaciones-cloud')setTimeout(injectInventoryMovementCardV104,0);};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
