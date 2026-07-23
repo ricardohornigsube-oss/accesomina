@@ -6486,6 +6486,17 @@ renderV95FinancePanel=function(){return '';};
 const renderFocusedOperationsV101Base=renderFocusedOperationsV98;
 renderFocusedOperationsV98=function(){renderFocusedOperationsV101Base();hideOperationsDeepFinanceCardV101();};
 
+// ===================== V10.2: CENTRO OPERATIVO SIN DISPONIBILIDAD NI REASIGNACION =====================
+function hideOperationsAvailabilityAndReassignV102(){
+  const page=document.getElementById('page-operaciones-cloud');
+  page?.querySelectorAll('.card').forEach(card=>{
+    const title=card.querySelector('.card-title')?.textContent?.trim();
+    if(title==='Disponibilidad por especialidad'||title==='Reasignación simple de recursos')card.remove();
+  });
+}
+const renderFocusedOperationsV102Base=renderFocusedOperationsV98;
+renderFocusedOperationsV98=function(){renderFocusedOperationsV102Base();hideOperationsAvailabilityAndReassignV102();};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
