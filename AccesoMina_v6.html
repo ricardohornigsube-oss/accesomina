@@ -6337,8 +6337,8 @@ function installCommercialStoryV97(){
   const final=document.querySelector('.final-cta');
   if(final&&!document.getElementById('public-v97-industries')){
     final.insertAdjacentHTML('beforebegin',`<section class="public-band" id="public-v97-industries"><div class="public-inner">
-      <div class="public-eyebrow">Menos planillas. Más control.</div><h2 class="public-heading">Toda la operación de tus servicios en terreno, conectada en una sola plataforma.</h2>
-      <p class="public-lead">Nexo Klar centraliza trabajadores, clientes, contratos, documentos, recursos, turnos, alertas y reportes para que la información crítica permanezca en la empresa, sea fácil de seguir y esté disponible para equipos administrativos, comerciales y operativos.</p>
+      <div class="public-eyebrow">Control centralizado</div><h2 class="public-heading">Toda la información clave de tu operación, ordenada y conectada en un solo lugar.</h2>
+      <p class="public-lead">Nexo Klar permite controlar trabajadores, clientes, contratos, documentos, recursos, turnos, alertas y reportes desde una plataforma simple, trazable y preparada para equipos administrativos, comerciales y operativos.</p>
       <div class="public-grid">${(Array.isArray(INDUSTRIAS_V97)?INDUSTRIAS_V97:[]).map(i=>`<div class="public-card"><b>${escV97(i.name)}</b><span>${escV97(i.need)}.</span></div>`).join('')}</div>
     </div></section>`);
   }
