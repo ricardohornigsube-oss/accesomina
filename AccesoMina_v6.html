@@ -6541,6 +6541,46 @@ renderFocusedOperationsV98=function(){renderFocusedOperationsV104Base();injectIn
 const renderPageV104Base=renderPage;
 renderPage=function(page){renderPageV104Base(page);if(page==='operaciones-cloud')setTimeout(injectInventoryMovementCardV104,0);};
 
+// ===================== V10.5: INVENTARIO MAS USABLE PARA CLIENTES =====================
+function inventorySummaryV105(){
+  ensureV95Collections?.();
+  const inv=S.inventoryItems||[],mov=S.inventoryMovements||[],warehouses=S.warehouses||[];
+  const totalStock=inv.reduce((n,i)=>n+Number(i.stock||0),0);
+  const critical=inv.filter(i=>Number(i.stock||0)<=Number(i.minStock||0));
+  const pendingSign=mov.filter(m=>!m.signed).length;
+  const totalValue=inv.reduce((n,i)=>n+(Number(i.stock||0)*Number(i.unitCost||0)),0);
+  return {totalStock,critical,pendingSign,totalValue,warehouses:warehouses.length};
+}
+function renderInventoryMovementCardV104(){
+  ensureV95Collections?.();
+  const inv=S.inventoryItems||[],warehouses=S.warehouses||[],mov=S.inventoryMovements||[],sum=inventorySummaryV105();
+  const emptyOpt='<option value="">No aplica</option>';
+  return `<div class="card" id="ops-v104-inv-movement"><div class="card-header"><div><div class="card-title">Registrar movimiento con firma</div><div class="card-subtitle">Flujo simple para entregar, devolver, trasladar, reponer o ajustar recursos con trazabilidad.</div></div></div><div class="kpi-grid" style="margin-top:10px;"><div class="kpi"><div class="kpi-label">Stock total</div><div class="kpi-value">${sum.totalStock}</div></div><div class="kpi"><div class="kpi-label">Recursos críticos</div><div class="kpi-value">${sum.critical.length}</div></div><div class="kpi"><div class="kpi-label">Bodegas</div><div class="kpi-value">${sum.warehouses}</div></div><div class="kpi"><div class="kpi-label">Valor inventario</div><div class="kpi-value">${money94(sum.totalValue)}</div></div></div><div class="grid-3" style="margin-top:12px;"><div class="card"><div class="card-title">1. Qué se mueve</div><div class="form-group"><label class="form-label">Recurso</label><select class="form-select" id="v104-inv-item">${inv.map(i=>`<option value="${i.id}">${esc94(i.name)} - stock ${Number(i.stock)||0}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Movimiento</label><select class="form-select" id="v104-inv-type"><option value="entrega">Entrega a trabajador/proyecto</option><option value="devolucion">Devolución</option><option value="reposicion">Reposición / compra</option><option value="traslado">Traslado entre bodegas</option><option value="perdida">Pérdida</option><option value="dano">Daño / desgaste</option><option value="ajuste">Ajuste de inventario</option></select></div><div class="form-group"><label class="form-label">Cantidad</label><input class="form-input" id="v104-inv-qty" type="number" min="1" value="1"></div></div><div class="card"><div class="card-title">2. Dónde queda asociado</div><div class="form-group"><label class="form-label">Bodega origen</label><select class="form-select" id="v104-inv-wh">${warehouses.map(w=>`<option value="${w.id}">${esc94(w.name)}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Bodega destino</label><select class="form-select" id="v104-inv-wh-to">${emptyOpt}${warehouses.map(w=>`<option value="${w.id}">${esc94(w.name)}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Trabajador</label><select class="form-select" id="v104-inv-worker">${emptyOpt}${S.trabajadores.map(t=>`<option value="${t.id}">${esc94(t.nombre)}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Proyecto / servicio</label><select class="form-select" id="v104-inv-project">${emptyOpt}${S.mantenciones.map(m=>`<option value="${m.id}">${esc94(m.nombre)}</option>`).join('')}</select></div></div><div class="card"><div class="card-title">3. Respaldo y firma</div><div class="form-group"><label class="form-label">Responsable</label><input class="form-input" id="v104-inv-owner" value="${escapeAttrV62(currentTenantUser?.nombre||currentTenantUser?.email||S.empresa?.representante||'')}"></div><div class="form-group"><label class="form-label">Respaldo / foto / acta</label><input class="form-input" id="v104-inv-file" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"></div><div class="form-group"><label class="form-label">Observación</label><textarea class="form-textarea" id="v104-inv-notes" placeholder="Motivo, condición de entrega, daño, pérdida, devolución o ajuste..."></textarea></div><label><input type="checkbox" id="v104-inv-sign"> Movimiento firmado o respaldado</label></div></div><button class="btn btn-primary btn-sm" onclick="saveInventoryMovementV104()" style="margin-top:12px;">Guardar movimiento</button><div class="table-wrap" style="margin-top:12px;"><table><thead><tr><th>Fecha</th><th>Movimiento</th><th>Recurso</th><th>Bodega</th><th>Persona / servicio</th><th>Firma</th></tr></thead><tbody>${mov.slice(0,6).map(m=>{const item=inv.find(i=>i.id===m.itemId),wh=warehouses.find(w=>w.id===m.warehouseId),whTo=warehouses.find(w=>w.id===m.warehouseToId);return `<tr><td>${(m.at||'').slice(0,16).replace('T',' ')}</td><td><span class="badge badge-blue">${esc94(m.type)}</span> ${Number(m.qty)||0}</td><td>${esc94(item?.name||m.itemId||'')}</td><td>${esc94(wh?.name||'-')}${whTo?` &gt; ${esc94(whTo.name)}`:''}</td><td>${esc94(trabNombre(m.workerId)||mantNombre(m.projectId)||'-')}</td><td>${m.signed?'<span class="badge badge-ok">Sí</span>':'<span class="badge badge-warn">Pendiente</span>'}</td></tr>`;}).join('')||'<tr><td colspan="6">Sin movimientos registrados.</td></tr>'}</tbody></table></div></div>`;
+}
+function renderWarehouseInventoryV105(){
+  ensureV95Collections?.();
+  const inv=S.inventoryItems||[],warehouses=S.warehouses||[],mov=S.inventoryMovements||[];
+  const rows=[];
+  inv.forEach((i,idx)=>warehouses.forEach((w,widx)=>{
+    const qty=i.stockByLocation?.[w.id]??(idx===0&&widx===0?i.stock:0);
+    const last=mov.find(m=>m.itemId===i.id&&(m.warehouseId===w.id||m.warehouseToId===w.id));
+    if(Number(qty)>0||last)rows.push({i,w,qty:Number(qty)||0,last});
+  }));
+  return `<div class="card" id="ops-v105-warehouse-real" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Inventario real por bodega</div><div class="card-subtitle">Vista simple de disponibilidad, mínimos, último movimiento y reposición por ubicación.</div></div><button class="btn btn-primary btn-sm" onclick="addWarehouseV95()">+ Bodega</button></div><div class="table-wrap"><table><thead><tr><th>Recurso</th><th>Bodega</th><th>Disponible</th><th>Mínimo</th><th>Estado</th><th>Último movimiento</th></tr></thead><tbody>${rows.slice(0,18).map(r=>`<tr><td><b>${esc94(r.i.name)}</b><div class="worker-rut">${esc94(r.i.type||'Recurso')}</div></td><td>${esc94(r.w.name)}</td><td>${r.qty}</td><td>${Number(r.i.minStock)||0}</td><td>${r.qty<=Number(r.i.minStock||0)?'<span class="badge badge-err">Reponer</span>':'<span class="badge badge-ok">Disponible</span>'}</td><td>${r.last?`${esc94(r.last.type)} · ${(r.last.at||'').slice(0,10)}`:'Sin movimiento'}</td></tr>`).join('')||'<tr><td colspan="6">Sin stock por bodega registrado.</td></tr>'}</tbody></table></div></div>`;
+}
+function polishInventoryCenterV105(){
+  const page=document.getElementById('page-operaciones-cloud');if(!page)return;
+  page.querySelectorAll('.card').forEach(card=>{
+    const title=card.querySelector('.card-title')?.textContent?.trim();
+    if(title==='Registrar movimiento con firma'&&card.id!=='ops-v104-inv-movement')card.remove();
+    if(title==='Inventario real por bodega'&&card.id!=='ops-v105-warehouse-real')card.remove();
+  });
+  const movement=document.getElementById('ops-v104-inv-movement');
+  if(movement&&!document.getElementById('ops-v105-warehouse-real'))movement.insertAdjacentHTML('afterend',renderWarehouseInventoryV105());
+}
+const injectInventoryMovementCardV105Base=injectInventoryMovementCardV104;
+injectInventoryMovementCardV104=function(){injectInventoryMovementCardV105Base();polishInventoryCenterV105();};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
