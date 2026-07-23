@@ -6900,6 +6900,88 @@ renderFocusedOperationsV98=function(){renderFocusedOperationsV110Base();hideOpsD
 const renderPageV110Base=renderPage;
 renderPage=function(page){renderPageV110Base(page);if(page==='operaciones-cloud')setTimeout(hideOpsDuplicateCardsV110,0);};
 
+// ===================== V10.11: CALIFICAR O BLOQUEAR PERSONAL =====================
+const WORKER_FLOW_STATES_V111=[
+  ['disponible','Disponible'],
+  ['convocado','Convocado / llamado'],
+  ['en_validacion','Validando exámenes e inducción'],
+  ['contrato_enviado','Contrato enviado'],
+  ['contrato_firmado','Contrato firmado'],
+  ['acreditacion_enviada','Acreditación enviada'],
+  ['aprobado','Aprobado / califica'],
+  ['rechazado','Rechazado'],
+  ['en_faena','En faena'],
+  ['finalizado','Finalizado'],
+  ['bloqueado','Bloqueado']
+];
+function workerDecisionBadgeV111(t){
+  if(t.bloqueado)return '<span class="badge badge-err">Bloqueado</span>';
+  if(t.qualificationStatus==='revision')return '<span class="badge badge-warn">En revisión</span>';
+  if(t.qualificationStatus==='rechazado')return '<span class="badge badge-err">No califica</span>';
+  if((t.calificacion||0)>=5||t.qualificationStatus==='calificado')return '<span class="badge badge-ok">Califica</span>';
+  return '<span class="badge badge-warn">Pendiente evaluar</span>';
+}
+function renderWorkerQualificationPanelV111(t){
+  const history=(t.qualificationHistory||[]).slice(0,6);
+  return `<div class="card" id="worker-v111-qualification" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Calificación y bloqueo operativo</div><div class="card-subtitle">Define si la persona califica, queda en revisión o debe bloquearse dentro del flujo completo.</div></div>${workerDecisionBadgeV111(t)}</div><div class="form-grid"><div class="form-group"><label class="form-label">Calificación</label><select class="form-select" id="wq-cal">${[[7,'A - Califica alto'],[5,'B - Califica'],[3,'C - Revisar'],[1,'D - No califica']].map(([v,l])=>`<option value="${v}" ${Number(t.calificacion||0)===v?'selected':''}>${l}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Estado flujo persona</label><select class="form-select" id="wq-flow">${WORKER_FLOW_STATES_V111.map(([v,l])=>`<option value="${v}" ${(t.operationalStatus||t.disponibilidad)===v?'selected':''}>${l}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Decisión</label><select class="form-select" id="wq-decision"><option value="calificado" ${!t.bloqueado&&t.qualificationStatus!=='revision'?'selected':''}>Califica para trabajar</option><option value="revision" ${t.qualificationStatus==='revision'?'selected':''}>Dejar en revisión</option><option value="bloqueado" ${t.bloqueado?'selected':''}>Bloquear persona</option><option value="rechazado" ${t.qualificationStatus==='rechazado'?'selected':''}>No califica / rechazar</option></select></div><div class="form-group full"><label class="form-label">Motivo / respaldo de la decisión</label><textarea class="form-textarea" id="wq-note" placeholder="Ej: documentos completos, experiencia validada, examen pendiente, incidente, falta contractual...">${safeV109(t.qualificationNote||t.motivoBloq||'')}</textarea></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"><button class="btn btn-primary btn-sm" onclick="saveWorkerQualificationV111('${t.id}')">Guardar decisión</button><button class="btn btn-danger btn-sm" onclick="quickBlockWorkerV111('${t.id}')">Bloquear ahora</button><button class="btn btn-secondary btn-sm" onclick="quickQualifyWorkerV111('${t.id}')">Marcar califica</button></div>${history.length?`<div class="table-wrap" style="margin-top:12px;"><table><thead><tr><th>Fecha</th><th>Decisión</th><th>Flujo</th><th>Motivo</th></tr></thead><tbody>${history.map(h=>`<tr><td>${safeV109(String(h.at||'').slice(0,10)||'—')}</td><td>${safeV109(h.decision||'')}</td><td>${safeV109(h.flow||'')}</td><td>${safeV109(h.note||'—')}</td></tr>`).join('')}</tbody></table></div>`:''}</div>`;
+}
+function saveWorkerQualificationV111(workerId,forcedDecision=''){
+  const t=S.trabajadores.find(w=>w.id===workerId);if(!t)return;
+  const decision=forcedDecision||document.getElementById('wq-decision')?.value||'calificado';
+  const cal=Number(document.getElementById('wq-cal')?.value||t.calificacion||5);
+  const flow=decision==='bloqueado'?'bloqueado':(document.getElementById('wq-flow')?.value||t.operationalStatus||t.disponibilidad||'disponible');
+  const note=(document.getElementById('wq-note')?.value||'').trim();
+  t.calificacion=cal;
+  t.qualificationStatus=decision;
+  t.qualificationNote=note;
+  t.operationalStatus=flow;
+  t.bloqueado=decision==='bloqueado';
+  t.disponibilidad=t.bloqueado?'bloqueado':(flow==='en_faena'||flow==='convocado'||flow==='en_validacion'||flow==='contrato_enviado'||flow==='contrato_firmado'||flow==='acreditacion_enviada'?'asignado':'disponible');
+  if(t.bloqueado)t.motivoBloq=note||'Bloqueo operativo por evaluación';
+  else if(t.motivoBloq&&['calificado','revision'].includes(decision))t.motivoBloq='';
+  t.qualificationHistory=t.qualificationHistory||[];
+  t.qualificationHistory.unshift({id:'wq_'+Date.now(),at:new Date().toISOString(),decision,flow,calificacion:cal,note,owner:currentTenantUser?.email||'usuario'});
+  if(typeof recordHistoryV90==='function')recordHistoryV90('trabajador',t.id,'Calificación / bloqueo actualizado',null,{decision,flow,calificacion:cal,note},'Control operativo de personas');
+  persistTenant();toast(t.bloqueado?'Trabajador bloqueado':'Calificación actualizada');renderCurrentPageSoft();openFicha(workerId);updateBadges();
+}
+function quickBlockWorkerV111(workerId){
+  const note=document.getElementById('wq-note');if(note&&!note.value.trim())note.value='Bloqueo operativo por revisión pendiente';
+  const dec=document.getElementById('wq-decision');if(dec)dec.value='bloqueado';
+  saveWorkerQualificationV111(workerId,'bloqueado');
+}
+function quickQualifyWorkerV111(workerId){
+  const dec=document.getElementById('wq-decision'),cal=document.getElementById('wq-cal'),flow=document.getElementById('wq-flow');
+  if(dec)dec.value='calificado';if(cal)cal.value='7';if(flow)flow.value='aprobado';
+  saveWorkerQualificationV111(workerId,'calificado');
+}
+function filteredWorkersV111(){
+  const txt=document.getElementById('filt-trab-txt')?.value.toLowerCase()||'',esp=document.getElementById('filt-trab-esp')?.value||'',disp=document.getElementById('filt-trab-disp')?.value||'',cal=document.getElementById('filt-trab-cal')?.value||'',mina=document.getElementById('filt-trab-mina')?.value||'',mant=document.getElementById('filt-trab-mant')?.value||'',contrato=document.getElementById('filt-trab-contrato')?.value||'';
+  let workers=[...(S.trabajadores||[])];
+  if(currentTrabTab==='planta')workers=workers.filter(t=>t.tipo==='permanente'&&!t.bloqueado);
+  else if(currentTrabTab==='esporadico')workers=workers.filter(t=>t.tipo==='esporadico'&&!t.bloqueado);
+  else if(currentTrabTab==='bloqueado')workers=workers.filter(t=>t.bloqueado);
+  if(txt)workers=workers.filter(t=>String(t.nombre||'').toLowerCase().includes(txt)||String(t.rut||'').toLowerCase().includes(txt));
+  if(esp)workers=workers.filter(t=>t.especialidad===esp);
+  if(disp)workers=workers.filter(t=>t.disponibilidad===disp);
+  if(cal){const n=parseInt(cal);workers=workers.filter(t=>n===7?t.calificacion===7:n===5?t.calificacion>=5&&t.calificacion<7:n===3?t.calificacion>=3&&t.calificacion<5:t.calificacion<3);}
+  if(mina)workers=workers.filter(t=>t.mineras?.includes(mina));
+  if(mant)workers=workers.filter(t=>workerMantIds(t).includes(mant));
+  if(contrato)workers=workers.filter(t=>workerContratoIds(t).includes(contrato));
+  return workers;
+}
+function installWorkerQualificationListV111(){
+  const table=document.getElementById('trab-table');if(!table)return;
+  table.querySelectorAll('thead tr').forEach(tr=>{if(!tr.querySelector('[data-v111]'))tr.insertAdjacentHTML('beforeend','<th data-v111>Calificar / bloquear</th>');});
+  const rows=[...table.querySelectorAll('tbody tr')],workers=filteredWorkersV111();
+  rows.forEach((tr,i)=>{const t=workers[i];if(!t||tr.querySelector('[data-v111]'))return;tr.insertAdjacentHTML('beforeend',`<td data-v111>${workerDecisionBadgeV111(t)}<div style="margin-top:6px;"><button class="btn btn-secondary btn-sm" onclick="openFicha('${t.id}');setTimeout(()=>document.getElementById('worker-v111-qualification')?.scrollIntoView({behavior:'smooth',block:'start'}),120);">Calificar / bloquear</button></div></td>`);});
+}
+const openFichaV111Base=openFicha;
+openFicha=function(id){openFichaV111Base(id);const t=S.trabajadores.find(w=>w.id===id),host=document.getElementById('ficha-tab-datos');if(t&&host&&!document.getElementById('worker-v111-qualification'))host.insertAdjacentHTML('afterbegin',renderWorkerQualificationPanelV111(t));};
+const renderTrabajadoresV111Base=renderTrabajadores;
+renderTrabajadores=function(){renderTrabajadoresV111Base();installWorkerQualificationListV111();};
+const renderPageV111Base=renderPage;
+renderPage=function(page){renderPageV111Base(page);if(page==='trabajadores')setTimeout(installWorkerQualificationListV111,0);};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
