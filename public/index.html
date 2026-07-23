@@ -6595,6 +6595,28 @@ renderClientTreeV90=function(id){renderClientTreeV109Base(id);try{renderClientTr
 const renderPageV109Base=renderPage;
 renderPage=function(page){renderPageV109Base(page);if(page==='dashboard')setTimeout(installClientHomePanelV109,0);if(['subcontratos','operaciones-cloud'].includes(page))setTimeout(()=>installHelpMessagesV109(page),0);};
 
+// ===================== V10.10: OCULTAR DUPLICADOS CENTRO OPERATIVO =====================
+function hideDuplicatedOpsCardsV110(){
+  const page=document.getElementById('page-operaciones-cloud');if(!page)return;
+  ['libro','capa'].forEach(tab=>{
+    const btn=page.querySelector(`[data-v107-tab="${tab}"]`);
+    if(btn){btn.style.display='none';btn.setAttribute('aria-hidden','true');}
+  });
+  if(['libro','capa'].includes(opsTabV107))opsTabV107='inventario';
+  page.querySelectorAll('.card').forEach(card=>{
+    const title=card.querySelector('.card-title')?.textContent?.trim()||'';
+    if(['Libro diario por servicio','Acciones correctivas CAPA'].includes(title)){
+      card.style.display='none';
+      card.setAttribute('aria-hidden','true');
+      card.dataset.v110Hidden='true';
+    }
+  });
+}
+const renderFocusedOperationsV110Base=renderFocusedOperationsV98;
+renderFocusedOperationsV98=function(){renderFocusedOperationsV110Base();hideDuplicatedOpsCardsV110();};
+const renderPageV110Base=renderPage;
+renderPage=function(page){renderPageV110Base(page);if(page==='operaciones-cloud')setTimeout(hideDuplicatedOpsCardsV110,0);};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
