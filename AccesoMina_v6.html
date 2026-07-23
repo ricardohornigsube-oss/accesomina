@@ -333,8 +333,18 @@ body.private #main { display:block; }
 .real-product-band { padding-top:10px; }
 .real-product-shot { display:block; width:100%; margin-top:24px; border:1px solid var(--border-light); border-radius:8px; box-shadow:0 24px 70px rgba(0,0,0,.28); }
 .real-product-caption { color:var(--text-muted); font-size:12px; margin-top:10px; }
-@media(max-width:980px){.public-hero,.solution-layout,.privacy-layout{grid-template-columns:1fr}.public-hero{padding-top:34px}.hero-points,.steps{grid-template-columns:1fr}.public-nav{padding:0 20px}.public-nav-links{display:none}.access-panel{max-width:560px}.capability-grid{grid-template-columns:1fr 1fr}.privacy-points{grid-template-columns:1fr}}
-@media(max-width:600px){.public-band{padding:54px 24px}.capability-grid{grid-template-columns:1fr}.product-body{grid-template-columns:1fr}.product-menu{display:none}.product-kpis{grid-template-columns:1fr 1fr}.public-footer{flex-direction:column}.public-nav .btn-ghost{display:none}}
+.industry-band { background:linear-gradient(180deg,var(--bg),var(--bg4)); }
+.industry-head { display:grid; grid-template-columns:.8fr 1.2fr; gap:48px; align-items:end; }
+.industry-head .public-heading { max-width:760px; }
+.industry-head .public-lead { max-width:680px; margin-top:0; }
+.industry-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-top:34px; }
+.industry-card { position:relative; min-height:172px; padding:22px; border:1px solid var(--border); border-radius:8px; background:rgba(255,255,255,.025); overflow:hidden; }
+.industry-card::before { content:''; position:absolute; inset:0 0 auto 0; height:3px; background:linear-gradient(90deg,var(--orange),var(--blue)); opacity:.9; }
+.industry-card small { color:var(--blue); font-size:11px; font-weight:900; letter-spacing:.12em; }
+.industry-card b { display:block; margin-top:18px; font-size:19px; color:var(--text); }
+.industry-card span { display:block; margin-top:10px; color:var(--text-muted); font-size:13px; line-height:1.55; }
+@media(max-width:980px){.public-hero,.solution-layout,.privacy-layout,.industry-head{grid-template-columns:1fr}.industry-head .public-lead{margin-top:0}.industry-grid{grid-template-columns:1fr 1fr}.public-hero{padding-top:34px}.hero-points,.steps{grid-template-columns:1fr}.public-nav{padding:0 20px}.public-nav-links{display:none}.access-panel{max-width:560px}.capability-grid{grid-template-columns:1fr 1fr}.privacy-points{grid-template-columns:1fr}}
+@media(max-width:600px){.public-band{padding:54px 24px}.industry-grid{grid-template-columns:1fr}.industry-card{min-height:auto}.capability-grid{grid-template-columns:1fr}.product-body{grid-template-columns:1fr}.product-menu{display:none}.product-kpis{grid-template-columns:1fr 1fr}.public-footer{flex-direction:column}.public-nav .btn-ghost{display:none}}
 
 </style>
 </head>
@@ -6336,10 +6346,10 @@ function renderReportsCommercialV97(){
 function installCommercialStoryV97(){
   const final=document.querySelector('.final-cta');
   if(final&&!document.getElementById('public-v97-industries')){
-    final.insertAdjacentHTML('beforebegin',`<section class="public-band" id="public-v97-industries"><div class="public-inner">
-      <div class="public-eyebrow">Control centralizado</div><h2 class="public-heading">Toda la información clave de tu operación, ordenada y conectada en un solo lugar.</h2>
-      <p class="public-lead">Nexo Klar permite controlar trabajadores, clientes, contratos, documentos, recursos, turnos, alertas y reportes desde una plataforma simple, trazable y preparada para equipos administrativos, comerciales y operativos.</p>
-      <div class="public-grid">${(Array.isArray(INDUSTRIAS_V97)?INDUSTRIAS_V97:[]).map(i=>`<div class="public-card"><b>${escV97(i.name)}</b><span>${escV97(i.need)}.</span></div>`).join('')}</div>
+    final.insertAdjacentHTML('beforebegin',`<section class="public-band industry-band" id="public-v97-industries"><div class="public-inner">
+      <div class="industry-head"><div><div class="public-eyebrow">Control centralizado</div><h2 class="public-heading">Toda la información clave de tu operación, ordenada y conectada en un solo lugar.</h2></div>
+      <p class="public-lead">Nexo Klar permite controlar trabajadores, clientes, contratos, documentos, recursos, turnos, alertas y reportes desde una plataforma simple, trazable y preparada para equipos administrativos, comerciales y operativos.</p></div>
+      <div class="industry-grid">${(Array.isArray(INDUSTRIAS_V97)?INDUSTRIAS_V97:[]).map((i,idx)=>`<div class="industry-card"><small>${String(idx+1).padStart(2,'0')}</small><b>${escV97(i.name)}</b><span>${escV97(i.need)}.</span></div>`).join('')}</div>
     </div></section>`);
   }
   const caption=document.querySelector('.real-product-caption');
