@@ -6485,6 +6485,48 @@ renderFocusedOperationsV98=function(){renderFocusedOperationsV107Base();guideOps
 const renderPageV107Base=renderPage;
 renderPage=function(page){renderPageV107Base(page);if(page==='operaciones-cloud')setTimeout(guideOpsCenterV107,0);};
 
+// ===================== V10.8: RENOVACION DOCUMENTAL SUBCONTRATOS =====================
+const SUBC_DOCS_V108=[
+  ['Contrato / anexo','contrato'],
+  ['F30','f30'],
+  ['F30-1','f301'],
+  ['Cotizaciones','cotizaciones'],
+  ['Seguro / póliza','seguro']
+];
+function subcDocDateV108(s,key){return key==='contrato'?(s.contratoVence||''):(s[key]||'');}
+function subcDocRenewRowsV108(s){
+  return SUBC_DOCS_V108.map(([label,key])=>{
+    const date=subcDocDateV108(s,key);
+    const latest=(s.documents||[]).filter(d=>d.type===label).sort((a,b)=>String(b.uploadedAt||'').localeCompare(String(a.uploadedAt||'')))[0];
+    return `<tr><td><b>${esc94(label)}</b><div class="worker-rut">${latest?'Última carga: '+esc94(String(latest.uploadedAt||'').slice(0,10)):'Sin archivo histórico'}</div></td><td>${esc94(date||'Sin fecha')} ${date?badgeEstado(date):'<span class="badge badge-na">Sin fecha</span>'}</td><td>${esc94(latest?.status||'pendiente')}</td><td><button class="btn btn-secondary btn-sm" onclick="prepareSubcRenewalV108('${s.id}','${key}')">Renovar</button></td></tr>`;
+  }).join('');
+}
+function injectSubcontractRenewalV108(id){
+  const s=S.subcontratos.find(x=>x.id===id),body=document.getElementById('v81-detail-body');if(!s||!body||document.getElementById('subc-renew-v108'))return;
+  body.insertAdjacentHTML('beforeend',`<div class="card" id="subc-renew-v108" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Renovar documentos vencidos o por vencer</div><div class="card-subtitle">Carga una nueva versión, actualiza la fecha de vencimiento y conserva el historial anterior.</div></div></div><div class="grid-2"><div><div class="form-grid"><div class="form-group"><label class="form-label">Documento</label><select class="form-select" id="subc-renew-type">${SUBC_DOCS_V108.map(([label,key])=>`<option value="${key}">${esc94(label)}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Nueva fecha de vencimiento</label><input class="form-input" id="subc-renew-date" type="date"></div><div class="form-group full"><label class="form-label">Nuevo archivo</label><input class="form-input" id="subc-renew-file" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"></div><div class="form-group full"><label class="form-label">Observación</label><textarea class="form-textarea" id="subc-renew-note" placeholder="Ej: renovación mensual F30-1, documento corregido, actualización de póliza..."></textarea></div></div><button class="btn btn-primary btn-sm" onclick="saveSubcontractRenewalV108('${id}')">Guardar nueva versión</button></div><div class="table-wrap"><table><thead><tr><th>Documento</th><th>Vencimiento actual</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${subcDocRenewRowsV108(s)}</tbody></table></div></div></div>`);
+}
+function prepareSubcRenewalV108(id,key){
+  const s=S.subcontratos.find(x=>x.id===id);if(!s)return;
+  const type=document.getElementById('subc-renew-type'),date=document.getElementById('subc-renew-date');
+  if(type)type.value=key;if(date)date.value=subcDocDateV108(s,key)||'';
+  document.getElementById('subc-renew-file')?.focus();
+}
+async function saveSubcontractRenewalV108(id){
+  const s=S.subcontratos.find(x=>x.id===id);if(!s)return;
+  const key=document.getElementById('subc-renew-type')?.value||'f30',date=document.getElementById('subc-renew-date')?.value||'',fileInput=document.getElementById('subc-renew-file'),note=document.getElementById('subc-renew-note')?.value.trim()||'';
+  const label=SUBC_DOCS_V108.find(x=>x[1]===key)?.[0]||'Documento';
+  if(!date)return toast('Ingresa la nueva fecha de vencimiento','err');
+  if(!fileInput?.files?.length)return toast('Carga el nuevo archivo del documento','err');
+  if(key==='contrato')s.contratoVence=date;else s[key]=date;
+  s.documents=s.documents||[];
+  const evidenceFiles=await captureEvidenceFilesV79(fileInput,'subcontratos',s.id);
+  s.documents.push({id:'doc'+Date.now()+key,type:label,expiresAt:date,uploadedAt:new Date().toISOString(),status:'renovado',note,evidenceFiles});
+  s.followUps=s.followUps||[];s.followUps.unshift({id:'sf_'+Date.now(),date:hoy(),type:'renovacion_documental',detail:`${label} renovado con vencimiento ${date}${note?' · '+note:''}`,owner:currentTenantUser?.email||'usuario',at:new Date().toISOString()});
+  s.updatedAt=new Date().toISOString();persistTenant();renderSubcontratos();openSubcontractV82(id);toast(`${label} renovado y guardado en historial`);
+}
+const openSubcontractV108Base=openSubcontractV82;
+openSubcontractV82=function(id){openSubcontractV108Base(id);injectSubcontractRenewalV108(id);};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
