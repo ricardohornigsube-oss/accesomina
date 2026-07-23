@@ -6208,15 +6208,15 @@ installV94Ui=function(page){installV94UiV96Base(page);if(page==='oportunidades')
 
 // ===================== V9.7: MEJORAS COMERCIALES Y PRODUCTIVAS =====================
 const INDUSTRIAS_V97=[
-  {name:'Minería',need:'acreditación, servicios en faena y control documental'},
-  {name:'Energía',need:'cuadrillas, permisos, seguridad y mantenimiento'},
-  {name:'Construcción',need:'contratistas, avances, turnos y evidencias'},
-  {name:'Mantenimiento industrial',need:'despacho, técnicos, herramientas y costos'},
-  {name:'Facilities',need:'personal externo, SLA, hotelería y reportes'},
-  {name:'Logística',need:'turnos, vehículos, credenciales y trazabilidad'},
-  {name:'Seguridad privada',need:'dotación, credenciales, turnos y cumplimiento'},
-  {name:'Agroindustria',need:'temporadas, cuadrillas, EPP y asistencia'},
-  {name:'Servicios técnicos',need:'agenda, recursos, documentación y margen'}
+  {name:'Minería',need:'acreditación, faenas, contratistas y documentos críticos siempre al día'},
+  {name:'Energía',need:'cuadrillas, permisos, mantenimiento y seguridad operacional en terreno'},
+  {name:'Construcción',need:'contratistas, avances, turnos, evidencias y control por obra'},
+  {name:'Mantenimiento industrial',need:'despacho de técnicos, herramientas, repuestos, costos y trazabilidad'},
+  {name:'Facilities',need:'personal externo, SLA, hotelería, servicios y reportes por cliente'},
+  {name:'Logística',need:'turnos, vehículos, credenciales, rutas operativas y respaldo documental'},
+  {name:'Seguridad privada',need:'dotación, credenciales, turnos, asistencia y cumplimiento por instalación'},
+  {name:'Agroindustria',need:'temporadas, cuadrillas, EPP, asistencia y documentación del personal'},
+  {name:'Servicios técnicos',need:'agenda, recursos, contratos, documentación, costos y margen operativo'}
 ];
 function escV97(value){return typeof esc94==='function'?esc94(value):String(value??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
 function moneyV97(value){return typeof money94==='function'?money94(value):'$'+Math.round(Number(value)||0).toLocaleString('es-CL');}
@@ -6337,8 +6337,8 @@ function installCommercialStoryV97(){
   const final=document.querySelector('.final-cta');
   if(final&&!document.getElementById('public-v97-industries')){
     final.insertAdjacentHTML('beforebegin',`<section class="public-band" id="public-v97-industries"><div class="public-inner">
-      <div class="public-eyebrow">Control operativo para empresas de servicios</div><h2 class="public-heading">Ordena en un solo lugar trabajadores, clientes, contratos, documentos, recursos y servicios en terreno.</h2>
-      <p class="public-lead">Nexo Klar ayuda a empresas de minería, energía, construcción, mantenimiento, logística, facilities, agroindustria y servicios técnicos a trabajar con información clara, trazable y siempre disponible para equipos administrativos, comerciales y operativos.</p>
+      <div class="public-eyebrow">Menos planillas. Más control.</div><h2 class="public-heading">Toda la operación de tus servicios en terreno, conectada en una sola plataforma.</h2>
+      <p class="public-lead">Nexo Klar centraliza trabajadores, clientes, contratos, documentos, recursos, turnos, alertas y reportes para que la información crítica permanezca en la empresa, sea fácil de seguir y esté disponible para equipos administrativos, comerciales y operativos.</p>
       <div class="public-grid">${(Array.isArray(INDUSTRIAS_V97)?INDUSTRIAS_V97:[]).map(i=>`<div class="public-card"><b>${escV97(i.name)}</b><span>${escV97(i.need)}.</span></div>`).join('')}</div>
     </div></section>`);
   }
