@@ -6873,20 +6873,32 @@ renderClientTreeV90=function(id){renderClientTreeV109Base(id);try{renderClientTr
 const renderPageV109Base=renderPage;
 renderPage=function(page){renderPageV109Base(page);if(page==='dashboard')setTimeout(installClientHomePanelV109,0);if(['subcontratos','operaciones-cloud'].includes(page))setTimeout(()=>installHelpMessagesV109(page),0);};
 
-// ===================== V10.10: OCULTAR LIBRO DIARIO DUPLICADO =====================
-function hideLegacyDailyLogDuplicateV110(){
+// ===================== V10.10: OCULTAR DUPLICADOS CENTRO OPERATIVO =====================
+function hideOpsDuplicateCardsV110(){
   const page=document.getElementById('page-operaciones-cloud');if(!page)return;
-  const legacy=document.getElementById('ops-v88-daily-table')?.closest('.card');
-  if(legacy){
-    legacy.style.display='none';
-    legacy.setAttribute('aria-hidden','true');
-    legacy.dataset.v110Hidden='legacy-daily-log';
-  }
+  const hideDuplicates=(title,preferredSelector)=>{
+    const cards=[...page.querySelectorAll('.card')].filter(card=>(card.querySelector('.card-title')?.textContent||'').trim()===title);
+    if(cards.length<=1)return;
+    const preferred=cards.find(card=>card.querySelector(preferredSelector))||cards[cards.length-1];
+    cards.forEach(card=>{
+      if(card===preferred){
+        card.style.display='';
+        card.removeAttribute('aria-hidden');
+        delete card.dataset.v110Hidden;
+      }else{
+        card.style.display='none';
+        card.setAttribute('aria-hidden','true');
+        card.dataset.v110Hidden='duplicate-ops-card';
+      }
+    });
+  };
+  hideDuplicates('Libro diario por servicio','#v98-dl-mant');
+  hideDuplicates('Acciones correctivas CAPA','#v98-capa-source');
 }
 const renderFocusedOperationsV110Base=renderFocusedOperationsV98;
-renderFocusedOperationsV98=function(){renderFocusedOperationsV110Base();hideLegacyDailyLogDuplicateV110();};
+renderFocusedOperationsV98=function(){renderFocusedOperationsV110Base();hideOpsDuplicateCardsV110();};
 const renderPageV110Base=renderPage;
-renderPage=function(page){renderPageV110Base(page);if(page==='operaciones-cloud')setTimeout(hideLegacyDailyLogDuplicateV110,0);};
+renderPage=function(page){renderPageV110Base(page);if(page==='operaciones-cloud')setTimeout(hideOpsDuplicateCardsV110,0);};
 
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
