@@ -6704,6 +6704,65 @@ computeAlertas=function(){
   return alertas;
 };
 
+// ===================== V10.7: CENTRO OPERATIVO GUIADO Y ESTADO POR SERVICIO =====================
+let opsTabV107='inventario';
+function serviceStatusV107(m){
+  const workers=(S.asignaciones||[]).filter(a=>a.mantId===m.id).map(a=>S.trabajadores.find(t=>t.id===a.trabId)).filter(Boolean);
+  const alerts=typeof computeAlertas==='function'?computeAlertas():[];
+  const personAlerts=alerts.filter(a=>workers.some(t=>t.id===a.trabId)||a.mantId===m.id);
+  const hotel=(S.hotelAsig||[]).some(a=>a.mantId===m.id&&(!a.checkout||a.checkout>=hoy()));
+  const vehicle=(S.vehiculos||[]).some(v=>(v.minaIds||[]).includes(m.minaId));
+  const eppOk=!workers.length||workers.some(t=>(S.eppDeliveries||[]).some(e=>e.trabId===t.id));
+  const needPeople=workers.length===0,needDocs=personAlerts.length>0,needHotel=!hotel,needVehicle=!vehicle,needEpp=!eppOk;
+  const gaps=[needPeople&&'Falta personal',needDocs&&'Faltan documentos',needHotel&&'Falta hotel',needVehicle&&'Falta vehículo',needEpp&&'Falta EPP'].filter(Boolean);
+  return {workers,alerts:personAlerts,gaps,status:gaps.length?'Pendiente':'Listo para ejecutar'};
+}
+function renderServiceStatusBoardV107(){
+  const rows=(S.mantenciones||[]).slice(0,12).map(m=>{const st=serviceStatusV107(m);return `<tr><td><b>${esc94(m.nombre||'Servicio')}</b><div class="worker-rut">${esc94(minaNombre(m.minaId)||'Cliente')} · ${esc94(contratoNombre(m.contratoId)||'Contrato')}</div></td><td><span class="badge ${st.gaps.length?'badge-warn':'badge-ok'}">${esc94(st.status)}</span></td><td>${st.workers.length}</td><td>${st.gaps.map(g=>`<span class="badge badge-err">${esc94(g)}</span>`).join(' ')||'<span class="badge badge-ok">Sin brechas críticas</span>'}</td><td><button class="btn btn-secondary btn-sm" onclick="openMantDetalle('${m.id}')">Abrir servicio</button></td></tr>`;}).join('')||'<tr><td colspan="5">Sin servicios o proyectos cargados.</td></tr>';
+  return `<div class="card" id="ops-v107-status" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Estado operativo por servicio</div><div class="card-subtitle">Revisa rápidamente si un servicio está listo o qué falta antes de ejecutar.</div></div></div><div class="table-wrap"><table><thead><tr><th>Servicio / proyecto</th><th>Estado</th><th>Personas</th><th>Brechas</th><th>Acción</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+function renderOpsAlertsCardV107(){
+  const rows=(typeof computeAlertas==='function'?computeAlertas():[]).slice(0,16);
+  return `<div class="card" id="ops-v107-alerts" data-v107-section="alertas" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Alertas operativas</div><div class="card-subtitle">Use esta vista para revisar vencimientos, bloqueos y pendientes antes de movilizar recursos.</div></div><button class="btn btn-secondary btn-sm" onclick="nav('alertas')">Ver alertas completas</button></div><div class="table-wrap"><table><thead><tr><th>Urgencia</th><th>Tipo</th><th>Detalle</th></tr></thead><tbody>${rows.map(a=>`<tr><td><span class="badge ${a.urgencia==='vencido'?'badge-err':a.urgencia==='critico'?'badge-warn':'badge-blue'}">${esc94(a.urgencia||'alerta')}</span></td><td>${esc94(a.tipo||'operación')}</td><td>${esc94(a.msg||'')}</td></tr>`).join('')||'<tr><td colspan="3">Sin alertas operativas.</td></tr>'}</tbody></table></div></div>`;
+}
+function renderOpsTraceCardV107(){
+  const logs=(S.dailyLogs||[]).map(l=>({date:l.openedAt||l.fecha,type:'Libro diario',title:l.title||mantNombre(l.mantId)||'Registro',detail:l.avance||l.riesgos||''}));
+  const capa=(S.capaActions||[]).map(a=>({date:a.openedAt||a.createdAt,type:'CAPA',title:a.title||'Acción correctiva',detail:a.status||''}));
+  const subs=(S.subcontratos||[]).flatMap(s=>(s.followUps||[]).map(f=>({date:f.at||f.date,type:'Subcontrato',title:s.razon,detail:f.detail})));
+  const rows=[...logs,...capa,...subs].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).slice(0,18);
+  return `<div class="card" id="ops-v107-trace" data-v107-section="bitacora" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Bitácora operativa</div><div class="card-subtitle">Use esta vista para seguir cambios, acuerdos, aperturas, avances y cierres de la operación.</div></div></div><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Origen</th><th>Registro</th><th>Detalle</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc94(String(r.date||'').slice(0,10)||'—')}</td><td><span class="badge badge-blue">${esc94(r.type)}</span></td><td><b>${esc94(r.title)}</b></td><td>${esc94(r.detail||'—')}</td></tr>`).join('')||'<tr><td colspan="4">Sin bitácora operativa registrada.</td></tr>'}</tbody></table></div></div>`;
+}
+function setOpsTabV107(tab){opsTabV107=tab;applyOpsTabsV107();}
+function sectionForOpsCardV107(title,id){
+  if(id==='ops-v104-inv-movement'||id==='ops-v105-warehouse-real'||['Inventario y stock','Inventario real por bodega','Registrar movimiento con firma'].includes(title))return 'inventario';
+  if(title==='Libro diario por servicio')return 'libro';
+  if(title==='Acciones correctivas CAPA')return 'capa';
+  if(title==='Alertas operativas')return 'alertas';
+  if(title==='Bitácora operativa')return 'bitacora';
+  return '';
+}
+function applyOpsTabsV107(){
+  const page=document.getElementById('page-operaciones-cloud');if(!page)return;
+  page.querySelectorAll('[data-v107-tab]').forEach(b=>b.classList.toggle('active',b.dataset.v107Tab===opsTabV107));
+  page.querySelectorAll('.card').forEach(card=>{
+    const section=card.dataset.v107Section||sectionForOpsCardV107(card.querySelector('.card-title')?.textContent?.trim()||'',card.id);
+    if(section){card.dataset.v107Section=section;card.style.display=section===opsTabV107?'':'none';}
+  });
+}
+function guideOpsCenterV107(){
+  const page=document.getElementById('page-operaciones-cloud');if(!page)return;
+  ['ops-v107-status','ops-v107-tabs','ops-v107-alerts','ops-v107-trace'].forEach(id=>document.getElementById(id)?.remove());
+  page.querySelector('.section-header')?.insertAdjacentHTML('afterend',renderServiceStatusBoardV107()+`<div class="card" id="ops-v107-tabs" style="margin-bottom:16px;"><div class="card-title">Centro Operativo guiado</div><div class="card-subtitle">Seleccione una pestaña para trabajar solo el tema que necesita, sin mezclar toda la información.</div><div class="tab-bar" style="margin-top:14px;margin-bottom:0;"><button class="tab-btn active" data-v107-tab="inventario" onclick="setOpsTabV107('inventario')">Inventario</button><button class="tab-btn" data-v107-tab="libro" onclick="setOpsTabV107('libro')">Libro diario</button><button class="tab-btn" data-v107-tab="capa" onclick="setOpsTabV107('capa')">CAPA</button><button class="tab-btn" data-v107-tab="alertas" onclick="setOpsTabV107('alertas')">Alertas</button><button class="tab-btn" data-v107-tab="bitacora" onclick="setOpsTabV107('bitacora')">Bitácora</button></div></div>`);
+  document.getElementById('ops-v98-focus')?.insertAdjacentHTML('beforeend',renderOpsAlertsCardV107()+renderOpsTraceCardV107());
+  const help={Inventario:'Use esta vista para revisar stock, mínimos, bodegas y registrar entregas, devoluciones o traslados con respaldo.', 'Libro diario por servicio':'Use esta vista para registrar avances diarios, HH, dotación, riesgos y evidencias del servicio.', 'Acciones correctivas CAPA':'Use esta vista para crear acciones correctivas, asignar responsable, controlar plazo y registrar seguimiento.'};
+  page.querySelectorAll('.card').forEach(card=>{const title=card.querySelector('.card-title')?.textContent?.trim();if(help[title]&&!card.querySelector('[data-v107-help]'))card.querySelector('.card-header,.card-title')?.insertAdjacentHTML('afterend',`<div data-v107-help class="cloud-note" style="margin:10px 0 0;">${help[title]}</div>`);});
+  applyOpsTabsV107();
+}
+const renderFocusedOperationsV107Base=renderFocusedOperationsV98;
+renderFocusedOperationsV98=function(){renderFocusedOperationsV107Base();guideOpsCenterV107();};
+const renderPageV107Base=renderPage;
+renderPage=function(page){renderPageV107Base(page);if(page==='operaciones-cloud')setTimeout(guideOpsCenterV107,0);};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
