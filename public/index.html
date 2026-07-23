@@ -6693,9 +6693,13 @@ function filteredWorkersV111(){
 }
 function installWorkerQualificationListV111(){
   const table=document.getElementById('trab-table');if(!table)return;
+  const page=document.getElementById('page-trabajadores');
+  if(page&&!document.getElementById('trab-v111-help')){
+    page.querySelector('.filters')?.insertAdjacentHTML('afterend','<div class="cloud-note" id="trab-v111-help" style="margin:0 0 14px;">Para calificar o bloquear personal, usa el botón <b>Calificar / bloquear</b> en cada fila o abre la ficha del trabajador. Aplica para personal de planta y esporádico.</div>');
+  }
   table.querySelectorAll('thead tr').forEach(tr=>{if(!tr.querySelector('[data-v111]'))tr.insertAdjacentHTML('beforeend','<th data-v111>Calificar / bloquear</th>');});
   const rows=[...table.querySelectorAll('tbody tr')],workers=filteredWorkersV111();
-  rows.forEach((tr,i)=>{const t=workers[i];if(!t||tr.querySelector('[data-v111]'))return;tr.insertAdjacentHTML('beforeend',`<td data-v111>${workerDecisionBadgeV111(t)}<div style="margin-top:6px;"><button class="btn btn-secondary btn-sm" onclick="openFicha('${t.id}');setTimeout(()=>document.getElementById('worker-v111-qualification')?.scrollIntoView({behavior:'smooth',block:'start'}),120);">Calificar / bloquear</button></div></td>`);});
+  rows.forEach((tr,i)=>{const t=workers[i];if(!t)return;const actionCell=tr.lastElementChild;if(actionCell&&!actionCell.querySelector('[data-v111-action]'))actionCell.insertAdjacentHTML('beforeend',` <button data-v111-action class="btn btn-secondary btn-sm" onclick="openFicha('${t.id}');setTimeout(()=>document.getElementById('worker-v111-qualification')?.scrollIntoView({behavior:'smooth',block:'start'}),120);">Calificar / bloquear</button>`);if(!tr.querySelector('[data-v111]'))tr.insertAdjacentHTML('beforeend',`<td data-v111>${workerDecisionBadgeV111(t)}<div style="margin-top:6px;"><button class="btn btn-secondary btn-sm" onclick="openFicha('${t.id}');setTimeout(()=>document.getElementById('worker-v111-qualification')?.scrollIntoView({behavior:'smooth',block:'start'}),120);">Calificar / bloquear</button></div></td>`);});
 }
 const openFichaV111Base=openFicha;
 openFicha=function(id){openFichaV111Base(id);const t=S.trabajadores.find(w=>w.id===id),host=document.getElementById('ficha-tab-datos');if(t&&host&&!document.getElementById('worker-v111-qualification'))host.insertAdjacentHTML('afterbegin',renderWorkerQualificationPanelV111(t));};
