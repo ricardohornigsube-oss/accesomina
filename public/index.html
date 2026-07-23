@@ -6323,7 +6323,7 @@ function ensureTraceabilityV106(){
 }
 function monthOptionsV106(prefix){
   const y=new Date().getFullYear();
-  return `<div class="filters" style="margin-top:12px;"><select class="filter-select" id="${prefix}-year" onchange="renderFocusedOperationsV98()"><option value="">Todos los años</option>${[y-1,y,y+1].map(v=>`<option value="${v}">${v}</option>`).join('')}</select><select class="filter-select" id="${prefix}-month" onchange="renderFocusedOperationsV98()"><option value="">Todos los meses</option>${Array.from({length:12},(_,i)=>`<option value="${String(i+1).padStart(2,'0')}">${String(i+1).padStart(2,'0')}</option>`).join('')}</select></div>`;
+  return `<div class="filters" style="margin-top:12px;"><select class="filter-select" id="${prefix}-year" onchange="renderFocusedOperationsV98()"><option value="">Todos los años</option>${Array.from({length:16},(_,i)=>2025+i).map(v=>`<option value="${v}">${v}</option>`).join('')}</select><select class="filter-select" id="${prefix}-month" onchange="renderFocusedOperationsV98()"><option value="">Todos los meses</option>${Array.from({length:12},(_,i)=>`<option value="${String(i+1).padStart(2,'0')}">${String(i+1).padStart(2,'0')}</option>`).join('')}</select></div>`;
 }
 function passesYearMonthV106(date,prefix){
   const y=document.getElementById(`${prefix}-year`)?.value||'',m=document.getElementById(`${prefix}-month`)?.value||'',d=String(date||'');
@@ -6395,7 +6395,7 @@ function saveCapaFollowUpV106(id){
 
 function installOpportunityFiltersV106(){
   const filters=document.querySelector('#page-oportunidades .filters');if(!filters||document.getElementById('filt-opp-year'))return;
-  const y=new Date().getFullYear();filters.insertAdjacentHTML('beforeend',`<select class="filter-select" id="filt-opp-year" onchange="renderOpportunitiesV82()"><option value="">Todos los años</option>${[y-1,y,y+1].map(v=>`<option value="${v}">${v}</option>`).join('')}</select><select class="filter-select" id="filt-opp-month" onchange="renderOpportunitiesV82()"><option value="">Todos los meses</option>${Array.from({length:12},(_,i)=>`<option value="${String(i+1).padStart(2,'0')}">${String(i+1).padStart(2,'0')}</option>`).join('')}</select>`);
+  filters.insertAdjacentHTML('beforeend',`<select class="filter-select" id="filt-opp-year" onchange="renderOpportunitiesV82()"><option value="">Todos los años</option>${Array.from({length:16},(_,i)=>2025+i).map(v=>`<option value="${v}">${v}</option>`).join('')}</select><select class="filter-select" id="filt-opp-month" onchange="renderOpportunitiesV82()"><option value="">Todos los meses</option>${Array.from({length:12},(_,i)=>`<option value="${String(i+1).padStart(2,'0')}">${String(i+1).padStart(2,'0')}</option>`).join('')}</select>`);
 }
 const renderOpportunitiesV106Base=renderOpportunitiesV82;
 renderOpportunitiesV82=function(){ensureTraceabilityV106();installOpportunityFiltersV106();renderOpportunitiesV106Base();const y=document.getElementById('filt-opp-year')?.value||'',m=document.getElementById('filt-opp-month')?.value||'';if(!y&&!m)return;document.querySelectorAll('#opp-table tbody tr').forEach(tr=>{const company=tr.querySelector('td b')?.textContent||'',o=(S.opportunities||[]).find(x=>x.company===company);if(o&&!passesYearMonthV106(o.openedAt||o.createdAt,'filt-opp'))tr.remove();});};
