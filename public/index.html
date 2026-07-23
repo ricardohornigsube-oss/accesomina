@@ -6207,6 +6207,19 @@ convertOpportunityV82=function(id){convertOpportunityV96Base(id);const o=ensureO
 const installV94UiV96Base=installV94Ui;
 installV94Ui=function(page){installV94UiV96Base(page);if(page==='oportunidades')installOpportunityV96Ui();};
 
+// ===================== V10.1: CENTRO OPERATIVO SIN COSTOS PROFUNDOS VISIBLES =====================
+function hideOperationsDeepFinanceCardV101(){
+  const page=document.getElementById('page-operaciones-cloud');
+  page?.querySelectorAll('.card').forEach(card=>{
+    const title=card.querySelector('.card-title')?.textContent?.trim();
+    if(title==='Costos y rentabilidad profunda')card.remove();
+  });
+}
+const renderV95FinancePanelV101Base=renderV95FinancePanel;
+renderV95FinancePanel=function(){return '';};
+const renderPageV101Base=renderPage;
+renderPage=function(page){renderPageV101Base(page);if(page==='operaciones-cloud')setTimeout(hideOperationsDeepFinanceCardV101,0);};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
