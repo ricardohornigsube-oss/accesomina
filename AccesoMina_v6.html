@@ -6873,6 +6873,21 @@ renderClientTreeV90=function(id){renderClientTreeV109Base(id);try{renderClientTr
 const renderPageV109Base=renderPage;
 renderPage=function(page){renderPageV109Base(page);if(page==='dashboard')setTimeout(installClientHomePanelV109,0);if(['subcontratos','operaciones-cloud'].includes(page))setTimeout(()=>installHelpMessagesV109(page),0);};
 
+// ===================== V10.10: OCULTAR LIBRO DIARIO DUPLICADO =====================
+function hideLegacyDailyLogDuplicateV110(){
+  const page=document.getElementById('page-operaciones-cloud');if(!page)return;
+  const legacy=document.getElementById('ops-v88-daily-table')?.closest('.card');
+  if(legacy){
+    legacy.style.display='none';
+    legacy.setAttribute('aria-hidden','true');
+    legacy.dataset.v110Hidden='legacy-daily-log';
+  }
+}
+const renderFocusedOperationsV110Base=renderFocusedOperationsV98;
+renderFocusedOperationsV98=function(){renderFocusedOperationsV110Base();hideLegacyDailyLogDuplicateV110();};
+const renderPageV110Base=renderPage;
+renderPage=function(page){renderPageV110Base(page);if(page==='operaciones-cloud')setTimeout(hideLegacyDailyLogDuplicateV110,0);};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
