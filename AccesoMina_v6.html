@@ -6448,6 +6448,20 @@ renderPage=function(page){renderPageV98Base(page);if(page==='operaciones-cloud')
 const initV98Base=init;
 init=function(){initV98Base();if((currentPage||'dashboard')==='operaciones-cloud')renderFocusedOperationsV98();};
 
+// ===================== V9.9: DASHBOARD LIMPIO =====================
+function hideDashboardCommercialBlocksV99(){
+  ['dash-v94-control','dash-v97-commercial','dash-v88-finance','onboarding-v97-route'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.remove();
+  });
+}
+const renderDashboardV99Base=renderDashboard;
+renderDashboard=function(){renderDashboardV99Base();hideDashboardCommercialBlocksV99();};
+const renderPageV99Base=renderPage;
+renderPage=function(page){renderPageV99Base(page);if(page==='dashboard')setTimeout(hideDashboardCommercialBlocksV99,0);};
+const initV99Base=init;
+init=function(){initV99Base();if((currentPage||'dashboard')==='dashboard')hideDashboardCommercialBlocksV99();};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
