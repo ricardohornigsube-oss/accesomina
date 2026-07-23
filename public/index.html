@@ -6708,6 +6708,29 @@ renderTrabajadores=function(){renderTrabajadoresV111Base();installWorkerQualific
 const renderPageV111Base=renderPage;
 renderPage=function(page){renderPageV111Base(page);if(page==='trabajadores')setTimeout(installWorkerQualificationListV111,0);};
 
+// ===================== V10.12: CONFIGURACION EMPRESA MAS CLARA =====================
+const CATALOG_META_V112={
+  cargos:{title:'Cargos de la empresa',help:'Lista los cargos reales usados en contratos, fichas y reportes.',example:'Administrador de contrato\\nSupervisor terreno\\nTécnico mantenedor'},
+  especialidades:{title:'Especialidades operativas',help:'Sirve para buscar personal disponible y cubrir servicios por especialidad.',example:'Mecánica\\nEléctrica\\nSoldadura\\nPrevención de riesgos'},
+  epp:{title:'EPP disponibles',help:'Elementos que la empresa entrega y controla por trabajador, talla, costo y vida útil.',example:'Casco con barbiquejo\\nZapato de seguridad\\nGuantes anticorte'},
+  documentos:{title:'Documentos base requeridos',help:'Documentos generales que se pueden exigir a trabajadores, subcontratos o servicios.',example:'Cédula de identidad\\nContrato de trabajo\\nCertificado AFP'},
+  examenes:{title:'Exámenes ocupacionales',help:'Exámenes que se controlan con vencimiento para habilitar personas.',example:'Preocupacional\\nAltura geográfica\\nAlcohol y drogas'},
+  cursos:{title:'Cursos e inducciones',help:'Cursos, inducciones y certificaciones que puede pedir un cliente o servicio.',example:'Inducción mandante\\nLOTO\\nTrabajo en altura'},
+  turnos:{title:'Turnos y jornadas',help:'Regímenes de trabajo que se usarán en turnos, asistencia y planificación.',example:'5x2 día\\n4x3 día\\n7x7 noche'},
+  contratos:{title:'Tipos de contrato o servicio',help:'Clasifica contratos, servicios, subcontratos y arriendos.',example:'Marco\\nObra o faena\\nServicio spot'},
+  centrosCosto:{title:'Centros de costo',help:'Agrupa gastos de hotelería, EPP, vehículos, personal y servicios.',example:'Operaciones\\nMantención\\nProyectos\\nLogística'}
+};
+function enhanceCompanyCatalogsV112(){
+  const card=document.getElementById('cfg-v90-catalogs');if(!card||card.dataset.v112Ready)return;
+  card.dataset.v112Ready='true';
+  card.innerHTML=`<div class="card-header"><div><div class="card-title">Catálogos de la empresa</div><div class="card-subtitle">Personaliza las listas que usará Nexo Klar en fichas, filtros, asignaciones, reportes y operación diaria.</div></div><button class="btn btn-primary btn-sm" onclick="saveCatalogsV90()">Guardar catálogos</button></div><div class="cloud-note" style="margin:12px 0;">Escribe un dato por línea. Estos valores quedan solo para esta empresa y ayudan a ordenar la operación sin depender de planillas externas.</div><div class="form-grid">${Object.keys(V90_CATALOG_DEFAULTS).map(k=>{const m=CATALOG_META_V112[k]||{title:k,help:'Lista configurable de la empresa.',example:''};return `<div class="form-group full"><label class="form-label">${safeV109(m.title)}</label><div class="field-help" style="margin-bottom:6px;">${safeV109(m.help)}</div><textarea class="form-textarea" id="cat-v90-${k}" style="min-height:92px;" placeholder="${safeV109(m.example)}"></textarea></div>`;}).join('')}</div><div class="cloud-note" style="margin-top:12px;">Ejemplo de uso: si agregas una especialidad nueva, luego podrás filtrar trabajadores, planificar servicios y revisar disponibilidad usando ese mismo nombre.</div>`;
+  renderCatalogsV90();
+}
+const installV90UiV112Base=installV90Ui;
+installV90Ui=function(){installV90UiV112Base();enhanceCompanyCatalogsV112();};
+const renderPageV112Base=renderPage;
+renderPage=function(page){renderPageV112Base(page);if(page==='configuracion')setTimeout(enhanceCompanyCatalogsV112,0);};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
