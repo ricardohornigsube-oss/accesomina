@@ -6805,6 +6805,74 @@ async function saveSubcontractRenewalV108(id){
 const openSubcontractV108Base=openSubcontractV82;
 openSubcontractV82=function(id){openSubcontractV108Base(id);injectSubcontractRenewalV108(id);};
 
+// ===================== V10.9: PANEL CLIENTE Y CLIENTE 360 GUIADO =====================
+function safeV109(v){return typeof esc94==='function'?esc94(v):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function trafficBadgeV109(level,label){
+  const map={green:['badge-ok','Verde'],yellow:['badge-warning','Amarillo'],red:['badge-err','Rojo']},cfg=map[level]||map.yellow;
+  return `<span class="badge ${cfg[0]}" title="${cfg[1]}">${safeV109(label)}</span>`;
+}
+function serviceReadinessV109(m){
+  if(typeof serviceStatusV107==='function'){
+    const s=serviceStatusV107(m);const count=(s.gaps||[]).length;
+    return {...s,level:count?count>2?'red':'yellow':'green',label:count?count>2?'Bloqueado':'Pendiente menor':'Listo'};
+  }
+  const people=S.asignaciones.filter(a=>a.mantId===m.id).length,alerts=computeAlertas().filter(a=>a.mantId===m.id).length,gaps=[];
+  if(!people)gaps.push('Falta personal');if(alerts)gaps.push('Faltan documentos');
+  return {gaps,level:gaps.length?gaps.length>1?'red':'yellow':'green',label:gaps.length?'Pendiente menor':'Listo'};
+}
+function clientPanelDataV109(){
+  const alerts=computeAlertas(),services=S.mantenciones||[],workers=S.trabajadores||[];
+  const vencidos=alerts.filter(a=>a.urgencia==='vencido'||String(a.msg||'').toLowerCase().includes('vencid')).length;
+  const serviceStates=services.map(m=>({m,state:serviceReadinessV109(m)}));
+  const faltas=serviceStates.filter(x=>x.state.gaps.length).length,listos=serviceStates.filter(x=>!x.state.gaps.length).length;
+  const renovar=alerts.filter(a=>/renovar|document|subcontrato|f30|f30-1|cotiz|seguro|credencial|examen|curso/i.test(String(a.msg||a.tipo||''))).length;
+  const bloqueadas=workers.filter(t=>{
+    const st=typeof computeOperationalStatusV90==='function'?computeOperationalStatusV90(t):null;
+    return t.bloqueado||st?.blocked||alerts.some(a=>a.trabId===t.id&&['vencido','critico'].includes(a.urgencia));
+  }).length;
+  return {alerts,vencidos,serviceStates,faltas,listos,renovar,bloqueadas};
+}
+function renderClientHomePanelV109(){
+  const d=clientPanelDataV109();
+  const rows=d.serviceStates.slice(0,8).map(({m,state})=>`<tr><td><b>${safeV109(m.nombre||'Servicio')}</b><div class="worker-rut">${safeV109(minaNombre(m.minaId))} · ${safeV109(contratoNombre(m.contratoId))}</div></td><td>${trafficBadgeV109(state.level,state.label)}</td><td>${(state.gaps||[]).map(g=>`<span class="badge badge-na">${safeV109(g)}</span>`).join(' ')||'<span class="badge badge-ok">Sin brechas</span>'}</td><td><button class="btn btn-secondary btn-sm" onclick="openMantDetalle('${m.id}')">Abrir</button></td></tr>`).join('');
+  return `<div class="card" id="dash-v109-client-panel" style="margin-bottom:20px;"><div class="card-header"><div><div class="card-title">Panel Cliente</div><div class="card-subtitle">Resumen simple para saber qué está vencido, qué falta y qué servicios están listos para ejecutar.</div></div><button class="btn btn-primary btn-sm" onclick="nav('mineras')">Abrir Cliente 360</button></div><div class="cloud-note" style="margin:12px 0;">Ruta de trabajo recomendada: <b>Cliente</b> → <b>Contrato</b> → <b>Servicio</b> → Personas / Recursos / Documentos / Costos / Bitácora.</div><div class="kpi-grid"><div class="kpi kpi-red"><div class="kpi-value">${d.vencidos}</div><div class="kpi-label">Vencidos</div></div><div class="kpi kpi-orange"><div class="kpi-value">${d.faltas}</div><div class="kpi-label">Servicios con brechas</div></div><div class="kpi kpi-green"><div class="kpi-value">${d.listos}</div><div class="kpi-label">Servicios listos</div></div><div class="kpi kpi-blue"><div class="kpi-value">${d.renovar}</div><div class="kpi-label">Documentos a renovar</div></div><div class="kpi kpi-red"><div class="kpi-value">${d.bloqueadas}</div><div class="kpi-label">Personas bloqueadas</div></div></div><div class="table-wrap" style="margin-top:14px;"><table><thead><tr><th>Servicio</th><th>Semáforo</th><th>Qué falta</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="4">Sin servicios cargados. Crea un cliente, contrato y servicio para iniciar la operación.</td></tr>'}</tbody></table></div></div>`;
+}
+function installClientHomePanelV109(){
+  const old=document.getElementById('dash-v109-client-panel');if(old)old.remove();
+  const anchor=document.getElementById('kpi-dash')||document.querySelector('#page-dashboard .section-header');if(anchor)anchor.insertAdjacentHTML('afterend',renderClientHomePanelV109());
+}
+function openClientQuickV109(action,clientId){
+  const firstService=S.mantenciones.find(m=>m.minaId===clientId)||S.mantenciones.find(m=>S.contratos.some(c=>c.minaId===clientId&&c.id===m.contratoId));
+  if(action==='contract'){closeModal('modal-v81-detail');openModal('modal-nuevo-contrato');setTimeout(()=>{const s=document.getElementById('nc-mina');if(s)s.value=clientId;},80);return;}
+  if(action==='service'){closeModal('modal-v81-detail');if(typeof openProyectoModal==='function')openProyectoModal();setTimeout(()=>{['pm-mina','mant-mina','nm-mina'].forEach(id=>{const s=document.getElementById(id);if(s)s.value=clientId;});},80);return;}
+  if(action==='people'){if(firstService){closeModal('modal-v81-detail');openAsignarPersonalDirect(firstService.id);}else toast('Primero crea un servicio para asignar personal','err');return;}
+  if(action==='doc'){const c=S.minas.find(x=>x.id===clientId);if(c){c.documents=c.documents||[];requestEvidenceUpdateV81('minas',clientId,'Documento cliente');}return;}
+}
+function renderClientTreeEnhancementV109(clientId){
+  const body=document.getElementById('v81-detail-body');if(!body||document.getElementById('client-v109-center'))return;
+  const c=S.minas.find(x=>x.id===clientId);if(!c)return;
+  const contracts=S.contratos.filter(ct=>ct.minaId===clientId),services=S.mantenciones.filter(m=>m.minaId===clientId||contracts.some(ct=>ct.id===m.contratoId)),alerts=computeAlertas();
+  const tree=contracts.map(ct=>{
+    const ss=services.filter(s=>s.contratoId===ct.id);
+    return `<div style="padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg3);"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;"><b>Contrato: ${safeV109(ct.nombre||ct.numero||'Sin nombre')}</b>${trafficBadgeV109(ct.termino&&ct.termino<hoy()?'red':'green',ct.estado||'vigente')}</div><div class="worker-rut">${safeV109(ct.inicio||'—')} → ${safeV109(ct.termino||'—')}</div>${ss.map(s=>{const st=serviceReadinessV109(s),assigned=S.asignaciones.filter(a=>a.mantId===s.id).length,docAlerts=alerts.filter(a=>a.mantId===s.id).length;return `<div style="margin-top:10px;padding:10px;border-left:4px solid ${st.level==='green'?'#3fb950':st.level==='yellow'?'#d29922':'#f85149'};background:var(--bg2);border-radius:8px;"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" onclick="openMantDetalle('${s.id}')">${safeV109(s.nombre||'Servicio')}</button>${trafficBadgeV109(st.level,st.label)}</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"><span class="badge badge-blue">${assigned} personas</span><span class="badge badge-na">${docAlerts} alertas</span>${(st.gaps||[]).slice(0,4).map(g=>`<span class="badge badge-warning">${safeV109(g)}</span>`).join('')}</div></div>`;}).join('')||'<div class="worker-rut" style="margin-top:8px;">Sin servicios asociados a este contrato.</div>'}</div>`;
+  }).join('');
+  body.insertAdjacentHTML('afterbegin',`<div class="card" id="client-v109-center" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Centro Cliente 360</div><div class="card-subtitle">Vista centralizada para revisar relación comercial, operación, documentos, alertas y compromisos.</div></div></div><div class="cloud-note" style="margin:10px 0;">Use esta vista para validar si cada servicio está listo para ejecutar y entrar rápido a personas, recursos, documentos, costos o bitácora.</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;"><button class="btn btn-primary btn-sm" onclick="openClientQuickV109('contract','${clientId}')">+ Contrato</button><button class="btn btn-primary btn-sm" onclick="openClientQuickV109('service','${clientId}')">+ Servicio</button><button class="btn btn-secondary btn-sm" onclick="openClientQuickV109('people','${clientId}')">Asignar personal</button><button class="btn btn-secondary btn-sm" onclick="openClientQuickV109('doc','${clientId}')">Cargar documento</button></div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;"><span class="badge badge-blue">Cliente</span><span>→</span><span class="badge badge-blue">Contrato</span><span>→</span><span class="badge badge-blue">Servicio</span><span>→</span><span class="badge badge-na">Personas</span><span class="badge badge-na">Recursos</span><span class="badge badge-na">Documentos</span><span class="badge badge-na">Costos</span><span class="badge badge-na">Bitácora</span></div><div class="card-title" style="font-size:15px;margin-bottom:10px;">Árbol visual del cliente</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;">${tree||'<div class="empty">Sin contratos cargados. Usa + Contrato para iniciar la estructura del cliente.</div>'}</div></div>`);
+}
+function installHelpMessagesV109(page){
+  if(page==='subcontratos'){
+    const h=document.querySelector('#page-subcontratos .section-header');if(h&&!document.getElementById('help-v109-subcontratos'))h.insertAdjacentHTML('afterend','<div class="cloud-note" id="help-v109-subcontratos" style="margin-bottom:16px;">Use esta vista para renovar documentos laborales del subcontrato, controlar F30, F30-1, cotizaciones, contratos, vencimientos e historial.</div>');
+  }
+  if(page==='operaciones-cloud'){
+    const h=document.querySelector('#page-operaciones-cloud .section-header');if(h&&!document.getElementById('help-v109-operaciones'))h.insertAdjacentHTML('afterend','<div class="cloud-note" id="help-v109-operaciones" style="margin-bottom:16px;">Use esta vista para validar si el servicio está listo para ejecutar y revisar brechas de personal, documentos, hotel, vehículo, EPP y credencial.</div>');
+  }
+}
+const renderDashboardV109Base=renderDashboard;
+renderDashboard=function(){renderDashboardV109Base();try{installClientHomePanelV109();}catch(err){console.error('Nexo Klar V10.9 dashboard',err);}};
+const renderClientTreeV109Base=renderClientTreeV90;
+renderClientTreeV90=function(id){renderClientTreeV109Base(id);try{renderClientTreeEnhancementV109(id);}catch(err){console.error('Nexo Klar V10.9 cliente 360',err);}};
+const renderPageV109Base=renderPage;
+renderPage=function(page){renderPageV109Base(page);if(page==='dashboard')setTimeout(installClientHomePanelV109,0);if(['subcontratos','operaciones-cloud'].includes(page))setTimeout(()=>installHelpMessagesV109(page),0);};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
