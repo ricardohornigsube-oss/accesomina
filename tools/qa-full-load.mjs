@@ -5,7 +5,7 @@ import { validateTenantState } from '../server/validation.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
-const today = '2026-07-21';
+const today = '2026-07-22';
 
 const calcRut = number => {
   let sum = 0;
@@ -38,6 +38,39 @@ const docSet = (worker, i) => [
   { id: `${worker}-cur-odi`, type: 'curso', name: 'ODI', emision: '2026-07-02', vence: '2027-07-02', estado: 'vigente', fileName: `${worker}-odi.pdf`, evidenceFiles: evidence(`${worker}-odi.pdf`, 'worker') },
   { id: `${worker}-cur-loto`, type: 'curso', name: 'Bloqueo LOTO', emision: '2026-07-05', vence: i < 5 ? '2026-08-12' : '2027-07-05', estado: 'vigente', fileName: `${worker}-loto.pdf`, evidenceFiles: evidence(`${worker}-loto.pdf`, 'worker') }
 ];
+
+const traceKeys = new Set([
+  'nombre', 'name', 'title', 'company', 'razon', 'razonSocial', 'mandante',
+  'descripcion', 'description', 'detalle', 'detail', 'observacion', 'observations',
+  'notes', 'accion', 'action', 'reason', 'service', 'contact', 'owner',
+  'responsable', 'responsible', 'message', 'template', 'alcance', 'entregables'
+]);
+
+function applyQaTraceLabels(state) {
+  let count = 1;
+  const traceObject = value => {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return;
+    const label = `QA ${count++}`;
+    value.qaTraceLabel = label;
+    for (const key of traceKeys) {
+      if (typeof value[key] === 'string' && value[key].trim() && !/^QA\s+\d+\s+-\s+/i.test(value[key])) {
+        value[key] = `${label} - ${value[key]}`;
+      }
+    }
+  };
+  traceObject(state.empresa);
+  for (const value of Object.values(state)) {
+    if (Array.isArray(value)) value.forEach(traceObject);
+  }
+  for (const worker of state.trabajadores || []) {
+    (worker.workerItems || []).forEach(traceObject);
+  }
+  for (const opportunity of state.opportunities || []) {
+    (opportunity.documents || []).forEach(traceObject);
+    (opportunity.history || []).forEach(traceObject);
+  }
+  return state;
+}
 
 export function buildFullQaState() {
   const minas = [
@@ -340,7 +373,7 @@ export function buildFullQaState() {
     createdAt: `${today}T12:00:00.000Z`
   }));
 
-  return {
+  const state = {
     empresa: {
       nombre: 'Nexo Klar / Domian Servicios Industriales SpA',
       razonSocial: 'Domian Servicios Industriales SpA',
@@ -399,6 +432,7 @@ export function buildFullQaState() {
     productViewMode: 'ejecutivo',
     ESPECIALIDADES: ['Mecanico mantenedor', 'Prevencionista HSEC', 'Electrico SEC', 'Soldador calificado', 'Rigger', 'Operador camioneta', 'Instrumentista', 'Planificador']
   };
+  return applyQaTraceLabels(state);
 }
 
 const unique = values => new Set(values.filter(Boolean)).size === values.filter(Boolean).length;
@@ -492,6 +526,8 @@ Fecha: ${today}
 
 Se generó una carga QA realista para la cuenta administradora **78.425.213-2** con datos ficticios pero operativos. La prueba valida que cada vista principal del software tenga información asociada, relaciones consistentes y controles de duplicidad.
 
+Toda la data principal queda marcada con trazabilidad visible **QA 1**, **QA 2**, **QA 3** y así sucesivamente. Esto permite seguir clientes, contratos, proyectos, trabajadores, documentos, EPP, hoteles, vehículos, subcontratos, incidentes, oportunidades y registros operativos durante la navegación del sistema.
+
 ## Volumen cargado
 
 | Item | Cantidad |
@@ -521,7 +557,7 @@ ${rows}
 
 1. Abrir \`qa/load-nexo-klar-full-qa.html\` desde un servidor local del repositorio.
 2. La pagina carga el respaldo en la cuenta administradora \`78.425.213-2\`.
-3. Ingresar al sitio privado y navegar cada modulo.
+3. El cargador abre \`AccesoMina_v6.html\` con la data QA ya instalada.
 4. Revisar filtros por cliente, contrato, proyecto/servicio, estado y vencimiento.
 5. Exportar reportes y respaldos para confirmar continuidad de datos.
 

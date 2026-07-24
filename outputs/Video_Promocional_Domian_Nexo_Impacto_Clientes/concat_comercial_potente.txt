@@ -1,0 +1,15 @@
+file '/Users/ricardo.hornig/Desktop/Acceso Mina /Acceso Mina/outputs/Video_Promocional_Domian_Nexo_Impacto_Clientes/slide_01.png'
+duration 9.417
+file '/Users/ricardo.hornig/Desktop/Acceso Mina /Acceso Mina/outputs/Video_Promocional_Domian_Nexo_Impacto_Clientes/slide_02.png'
+duration 9.888
+file '/Users/ricardo.hornig/Desktop/Acceso Mina /Acceso Mina/outputs/Video_Promocional_Domian_Nexo_Impacto_Clientes/slide_03.png'
+duration 9.417
+file '/Users/ricardo.hornig/Desktop/Acceso Mina /Acceso Mina/outputs/Video_Promocional_Domian_Nexo_Impacto_Clientes/slide_04.png'
+duration 10.829
+file '/Users/ricardo.hornig/Desktop/Acceso Mina /Acceso Mina/outputs/Video_Promocional_Domian_Nexo_Impacto_Clientes/slide_05.png'
+duration 9.417
+file '/Users/ricardo.hornig/Desktop/Acceso Mina /Acceso Mina/outputs/Video_Promocional_Domian_Nexo_Impacto_Clientes/slide_06.png'
+duration 8.946
+file '/Users/ricardo.hornig/Desktop/Acceso Mina /Acceso Mina/outputs/Video_Promocional_Domian_Nexo_Impacto_Clientes/slide_07.png'
+duration 8.946
+file '/Users/ricardo.hornig/Desktop/Acceso Mina /Acceso Mina/outputs/Video_Promocional_Domian_Nexo_Impacto_Clientes/slide_07.png'

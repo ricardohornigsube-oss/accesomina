@@ -1,10 +1,12 @@
 # Informe QA de carga completa por modulo - Nexo Klar
 
-Fecha: 2026-07-21
+Fecha: 2026-07-22
 
 ## Resumen ejecutivo
 
 Se generó una carga QA realista para la cuenta administradora **78.425.213-2** con datos ficticios pero operativos. La prueba valida que cada vista principal del software tenga información asociada, relaciones consistentes y controles de duplicidad.
+
+Toda la data principal queda marcada con trazabilidad visible **QA 1**, **QA 2**, **QA 3** y así sucesivamente. Esto permite seguir clientes, contratos, proyectos, trabajadores, documentos, EPP, hoteles, vehículos, subcontratos, incidentes, oportunidades y registros operativos durante la navegación del sistema.
 
 ## Volumen cargado
 
@@ -85,22 +87,10 @@ Se generó una carga QA realista para la cuenta administradora **78.425.213-2** 
 
 1. Abrir `qa/load-nexo-klar-full-qa.html` desde un servidor local del repositorio.
 2. La pagina carga el respaldo en la cuenta administradora `78.425.213-2`.
-3. Ingresar al sitio privado y navegar cada modulo.
+3. El cargador abre `AccesoMina_v6.html` con la data QA ya instalada.
 4. Revisar filtros por cliente, contrato, proyecto/servicio, estado y vencimiento.
 5. Exportar reportes y respaldos para confirmar continuidad de datos.
 
 ## Resultado
 
 La carga queda apta para demo comercial, QA de navegacion y prueba funcional por modulo. Para produccion real, los archivos adjuntos simulados deben reemplazarse por almacenamiento cloud privado, OCR/firma/QR productivo, monitoreo y respaldo externo.
-
-## Validacion visual en navegador local
-
-- Se cargo la cuenta administradora `78.425.213-2` con la data QA completa.
-- Se valido ingreso al panel privado de Nexo Klar con datos visibles en Dashboard.
-- Se confirmo que los filtros superiores muestran clientes, contratos y proyectos QA.
-- Se corrigio una falla visual en `Por Cliente`: con data parcial podia quedar sin tarjetas visibles; ahora tiene render de respaldo para mostrar clientes aunque falte algun campo no critico.
-- La pasada por menu confirma que el sistema tiene acciones disponibles para todos los modulos solicitados. En pruebas visuales de alto volumen, la navegacion puede sentirse pesada por tratarse de una pagina unica grande; para produccion se recomienda mantener backend/base de datos y carga paginada por modulo.
-
-## Observacion QA final
-
-La data cargada cubre un escenario operativo realista para demostracion: clientes, contratos, servicios, trabajadores planta/spot, documentos, EPP, vehiculos, hoteles, subcontratos, turnos, credenciales, incidentes, salud, cursos, examenes, auditoria, privacidad, usuarios, oportunidades y reportes. No reemplaza una prueba con usuarios reales en ambiente cloud, pero deja una base consistente para mostrar el flujo completo y encontrar problemas de usabilidad antes de vender.
