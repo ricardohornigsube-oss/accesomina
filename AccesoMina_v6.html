@@ -7189,6 +7189,15 @@ openMantDetalle=function(mantId){openMantDetalleV115Base(mantId);injectEvolution
 const renderClientTreeV115Base=renderClientTreeV90;
 renderClientTreeV90=function(id){renderClientTreeV115Base(id);try{decorateClient360BitacoraV115();}catch(err){console.error('Nexo Klar V10.15 bitacora cliente',err);}};
 
+// ===================== V10.16: LIMPIEZA ESTADO OPERATIVO TRABAJADORES =====================
+function hideQualificationButtonFromOperationalColumnV116(){
+  document.querySelectorAll('#trab-table td[data-v90] [data-v111-action]').forEach(btn=>btn.remove());
+}
+const renderTrabajadoresV116Base=renderTrabajadores;
+renderTrabajadores=function(){renderTrabajadoresV116Base();hideQualificationButtonFromOperationalColumnV116();};
+const renderPageV116Base=renderPage;
+renderPage=function(page){renderPageV116Base(page);if(page==='trabajadores')setTimeout(hideQualificationButtonFromOperationalColumnV116,30);};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
