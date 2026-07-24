@@ -6708,6 +6708,72 @@ renderTrabajadores=function(){renderTrabajadoresV111Base();installWorkerQualific
 const renderPageV111Base=renderPage;
 renderPage=function(page){renderPageV111Base(page);if(page==='trabajadores')setTimeout(installWorkerQualificationListV111,0);};
 
+// ===================== V10.13: MODIFICACION TRAZABLE CONTRATO / SERVICIO DESDE CLIENTE 360 =====================
+function v113Clone(obj){return JSON.parse(JSON.stringify(obj||{}));}
+function v113ChangeNote(id,def){return (document.getElementById(id)?.value||'').trim()||def;}
+function v113ClientIdForContract(contract){return contract?.minaId||'';}
+function v113ClientIdForService(service){
+  if(service?.minaId)return service.minaId;
+  const contract=S.contratos.find(c=>c.id===service?.contratoId);
+  return contract?.minaId||'';
+}
+function addClientActivityV113(clientId,title,detail,type='cambio_estado',contractId='',projectId=''){
+  if(!clientId)return;
+  if(!Array.isArray(S.clientActivities))S.clientActivities=[];
+  S.clientActivities.unshift({id:'act_v113_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),clientId,type,title,detail,contractId,projectId,date:hoy(),owner:currentTenantUser?.email||'usuario local'});
+  S.clientActivities=S.clientActivities.slice(0,300);
+}
+function injectContractChangeLogV113(contractId){
+  const body=document.getElementById('contract-detail-body');if(!body||document.getElementById('contract-v113-log'))return;
+  const saveBtn=body.querySelector('button[onclick^="saveContractDetailV78"]');
+  saveBtn?.closest('.form-group')?.insertAdjacentHTML('beforebegin',`<div class="form-group full"><label class="form-label">Motivo del cambio</label><textarea class="form-textarea" id="cd-change-note" placeholder="Ej: actualización de vigencia, ajuste de alcance, cambio de número de contrato o corrección de datos."></textarea><div class="field-help">Al guardar, este motivo quedará registrado en la bitácora del contrato y en Cliente 360.</div></div>`);
+  body.insertAdjacentHTML('beforeend',`<div class="card" id="contract-v113-log" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Registro de cambios del contrato</div><div class="card-subtitle">Historial trazable de modificaciones: fecha, usuario, acción y motivo.</div></div></div>${renderHistoryV90('contrato',contractId)}</div>`);
+}
+function refreshContractChangeLogV113(contractId){
+  const log=document.getElementById('contract-v113-log');if(log)log.innerHTML=`<div class="card-header"><div><div class="card-title">Registro de cambios del contrato</div><div class="card-subtitle">Historial trazable de modificaciones: fecha, usuario, acción y motivo.</div></div></div>${renderHistoryV90('contrato',contractId)}`;
+}
+function injectProjectChangeLogV113(projectId){
+  const personal=document.getElementById('mant-tab-personal'),timeline=document.getElementById('mant-tab-timeline');
+  if(personal&&!document.getElementById('project-v113-note')){
+    const saveBtn=personal.querySelector('button[onclick^="saveProjectDetailV78"]');
+    saveBtn?.closest('.form-group')?.insertAdjacentHTML('beforebegin',`<div class="form-group full" id="project-v113-note"><label class="form-label">Motivo del cambio</label><textarea class="form-textarea" id="pd-change-note" placeholder="Ej: cambio de fechas, avance, alcance, responsable o estado del servicio."></textarea><div class="field-help">Al guardar, este motivo quedará registrado en la bitácora del proyecto/servicio y en Cliente 360.</div></div>`);
+  }
+  if(timeline&&!document.getElementById('project-v113-log')){
+    timeline.insertAdjacentHTML('afterbegin',`<div class="card" id="project-v113-log" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Registro de cambios del proyecto / servicio</div><div class="card-subtitle">Historial trazable de modificaciones, reasignaciones y ajustes operativos.</div></div></div>${renderHistoryV90('servicio',projectId)}</div>`);
+  }
+}
+function refreshProjectChangeLogV113(projectId){
+  const log=document.getElementById('project-v113-log');if(log)log.innerHTML=`<div class="card-header"><div><div class="card-title">Registro de cambios del proyecto / servicio</div><div class="card-subtitle">Historial trazable de modificaciones, reasignaciones y ajustes operativos.</div></div></div>${renderHistoryV90('servicio',projectId)}`;
+}
+function enhanceClient360ActionsV113(clientId){
+  const center=document.getElementById('client-v109-center');if(!center||document.getElementById('client-v113-actions'))return;
+  const contracts=S.contratos.filter(c=>c.minaId===clientId);
+  const services=S.mantenciones.filter(m=>m.minaId===clientId||contracts.some(c=>c.id===m.contratoId));
+  const contractBtns=contracts.map(c=>`<button class="btn btn-secondary btn-sm" onclick="openContractDetailV78('${c.id}')">Modificar contrato · ${safeV109(c.nombre||c.numero||'Sin nombre')}</button>`).join('');
+  const serviceBtns=services.map(s=>`<button class="btn btn-secondary btn-sm" onclick="openMantDetalle('${s.id}')">Modificar proyecto / servicio · ${safeV109(s.nombre||'Sin nombre')}</button>`).join('');
+  center.insertAdjacentHTML('beforeend',`<div class="card" id="client-v113-actions" style="margin-top:14px;"><div class="card-header"><div><div class="card-title">Modificar datos relacionados</div><div class="card-subtitle">Abre contratos o proyectos desde esta misma vista y registra cada cambio realizado.</div></div></div><div class="cloud-note" style="margin-bottom:10px;">Use estos accesos para corregir fechas, alcance, estado, responsables o información adicional sin perder historial.</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;"><div><b>Contratos</b><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">${contractBtns||'<span class="worker-rut">Sin contratos creados.</span>'}</div></div><div><b>Proyectos / servicios</b><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">${serviceBtns||'<span class="worker-rut">Sin proyectos o servicios creados.</span>'}</div></div></div></div>`);
+}
+const openContractDetailV113Base=openContractDetailV78;
+openContractDetailV78=function(contractId){openContractDetailV113Base(contractId);injectContractChangeLogV113(contractId);};
+const saveContractDetailV113Base=saveContractDetailV78;
+saveContractDetailV78=function(id){
+  const before=v113Clone(S.contratos.find(c=>c.id===id)),note=v113ChangeNote('cd-change-note','Modificación desde ficha de contrato');
+  saveContractDetailV113Base(id);
+  const after=S.contratos.find(c=>c.id===id);
+  if(after){recordHistoryV90('contrato',id,'Contrato modificado',before,v113Clone(after),note);addClientActivityV113(v113ClientIdForContract(after),`Contrato modificado: ${after.nombre||after.numero||'Sin nombre'}`,note,'cambio_estado',id,'');persistTenant();injectContractChangeLogV113(id);refreshContractChangeLogV113(id);}
+};
+const openMantDetalleV113Base=openMantDetalle;
+openMantDetalle=function(mantId){openMantDetalleV113Base(mantId);injectProjectChangeLogV113(mantId);};
+const saveProjectDetailV113Base=saveProjectDetailV78;
+saveProjectDetailV78=function(id){
+  const before=v113Clone(S.mantenciones.find(m=>m.id===id)),note=v113ChangeNote('pd-change-note','Modificación desde ficha de proyecto / servicio');
+  saveProjectDetailV113Base(id);
+  const after=S.mantenciones.find(m=>m.id===id);
+  if(after){recordHistoryV90('servicio',id,'Proyecto / servicio modificado',before,v113Clone(after),note);addClientActivityV113(v113ClientIdForService(after),`Proyecto / servicio modificado: ${after.nombre||'Sin nombre'}`,note,'cambio_estado',after.contratoId||'',id);persistTenant();injectProjectChangeLogV113(id);refreshProjectChangeLogV113(id);}
+};
+const renderClientTreeV113Base=renderClientTreeV90;
+renderClientTreeV90=function(id){renderClientTreeV113Base(id);try{enhanceClient360ActionsV113(id);}catch(err){console.error('Nexo Klar V10.13 cliente 360',err);}};
+
 // ===================== V10.12: CONFIGURACION EMPRESA MAS CLARA =====================
 const CATALOG_META_V112={
   cargos:{title:'Cargos autorizados',help:'Define los cargos oficiales que se usarán en fichas, contratos, asignaciones y reportes. Evita escribir el mismo cargo con nombres distintos.',example:'Administrador de contrato\\nSupervisor terreno\\nTécnico mantenedor'},
