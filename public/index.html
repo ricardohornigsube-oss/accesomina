@@ -6850,6 +6850,67 @@ finishEvidenceUpdateV81=async function(input){
   }
 };
 
+// ===================== V10.15: BITACORA DE EVOLUCION CONTRATO / PROYECTO =====================
+function ensureEvolutionV115(){
+  (S.contratos||[]).forEach(c=>{if(!Array.isArray(c.followUps))c.followUps=[];if(!Array.isArray(c.documents))c.documents=[];});
+  (S.mantenciones||[]).forEach(p=>{if(!Array.isArray(p.followUps))p.followUps=[];if(!Array.isArray(p.documents))p.documents=[];});
+}
+function evolutionRowsV115(row){
+  const logs=(row?.followUps||[]).slice().sort((a,b)=>String(b.date||b.at||'').localeCompare(String(a.date||a.at||'')));
+  return logs.map(l=>`<tr><td>${eppEsc(l.date||String(l.at||'').slice(0,10)||'—')}</td><td><span class="badge badge-blue">${eppEsc(l.type||'seguimiento')}</span></td><td><b>${eppEsc(l.title||l.status||'Registro')}</b><div class="worker-rut">${eppEsc(l.detail||'')}</div></td><td>${eppEsc(l.owner||'—')}</td><td>${eppEsc(l.impact||'—')}</td><td>${l.nextDate||'—'} ${l.nextDate&&l.nextDate<hoy()?'<span class="badge badge-err">Vencido</span>':''}</td></tr>`).join('')||'<tr><td colspan="6">Sin evolución registrada todavía.</td></tr>';
+}
+function renderEvolutionPanelV115(kind,id){
+  ensureEvolutionV115();
+  const collection=kind==='contrato'?'contratos':'mantenciones',row=(S[collection]||[]).find(x=>x.id===id);
+  if(!row)return '';
+  const label=kind==='contrato'?'contrato':'proyecto / servicio';
+  return `<div class="card" id="entity-v115-evolution" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Ficha y bitácora de evolución del ${label}</div><div class="card-subtitle">Registra cambios, ampliaciones, mejoras, acuerdos, riesgos, nuevas etapas y decisiones para mantener trazabilidad.</div></div></div><div class="form-grid" style="margin-top:10px;"><div class="form-group"><label class="form-label">Tipo de registro</label><select class="form-select" id="ev115-type"><option value="seguimiento">Seguimiento</option><option value="cambio_alcance">Cambio de alcance</option><option value="ampliacion">Ampliación / adicional</option><option value="mejora">Mejora propuesta</option><option value="acuerdo">Acuerdo con cliente</option><option value="riesgo">Riesgo / alerta</option><option value="hito">Hito relevante</option><option value="costo">Impacto en costo / HH</option><option value="documento">Documento / respaldo</option></select></div><div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="ev115-date" type="date" value="${hoy()}"></div><div class="form-group"><label class="form-label">Responsable</label><input class="form-input" id="ev115-owner" value="${escapeAttrV62(currentTenantUser?.nombre||currentTenantUser?.email||S.empresa?.representante||'')}"></div><div class="form-group"><label class="form-label">Estado</label><select class="form-select" id="ev115-status"><option value="abierto">Abierto</option><option value="en_revision">En revisión</option><option value="aprobado">Aprobado</option><option value="implementado">Implementado</option><option value="cerrado">Cerrado</option></select></div><div class="form-group"><label class="form-label">Impacto / valor a controlar</label><input class="form-input" id="ev115-impact" placeholder="Ej: +5 personas, +120 HH, nueva OC, extensión 30 días"></div><div class="form-group"><label class="form-label">Próxima revisión</label><input class="form-input" id="ev115-next" type="date"></div><div class="form-group full"><label class="form-label">Detalle del cambio, mejora o seguimiento</label><textarea class="form-textarea" id="ev115-detail" placeholder="Qué cambió, por qué, quién lo solicitó, impacto operativo, documentos asociados y próximos pasos."></textarea></div></div><button class="btn btn-primary btn-sm" onclick="saveEvolutionV115('${kind}','${id}')">Guardar en bitácora</button><div class="table-wrap" style="margin-top:12px;"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Registro</th><th>Responsable</th><th>Impacto</th><th>Próxima revisión</th></tr></thead><tbody>${evolutionRowsV115(row)}</tbody></table></div></div>`;
+}
+function saveEvolutionV115(kind,id){
+  ensureEvolutionV115();
+  const collection=kind==='contrato'?'contratos':'mantenciones',row=(S[collection]||[]).find(x=>x.id===id);if(!row)return;
+  const type=document.getElementById('ev115-type')?.value||'seguimiento',date=document.getElementById('ev115-date')?.value||hoy(),owner=(document.getElementById('ev115-owner')?.value||'').trim(),status=document.getElementById('ev115-status')?.value||'abierto',impact=(document.getElementById('ev115-impact')?.value||'').trim(),nextDate=document.getElementById('ev115-next')?.value||'',detail=(document.getElementById('ev115-detail')?.value||'').trim();
+  if(!detail&&!impact){toast('Agrega detalle o impacto para guardar la bitácora','err');return;}
+  const log={id:'ev115_'+Date.now(),at:new Date().toISOString(),date,type,status,owner,impact,nextDate,detail,title:type.replaceAll('_',' ')};
+  row.followUps.unshift(log);
+  const histType=kind==='contrato'?'contrato':'servicio';
+  recordHistoryV90(histType,id,'Bitácora de evolución registrada',{},log,detail||impact);
+  const clientId=kind==='contrato'?v113ClientIdForContract(row):v113ClientIdForService(row);
+  addClientActivityV113(clientId,`Bitácora ${kind}: ${row.nombre||row.numero||'registro'}`,`${type} · ${detail||impact}`,'seguimiento',kind==='contrato'?id:(row.contratoId||''),kind==='proyecto'?id:'');
+  persistTenant();toast('Bitácora guardada');
+  if(kind==='contrato')openContractDetailV78(id);else openMantDetalle(id);
+  setTimeout(()=>document.getElementById('entity-v115-evolution')?.scrollIntoView({behavior:'smooth',block:'start'}),120);
+}
+function injectEvolutionPanelV115(kind,id){
+  const html=renderEvolutionPanelV115(kind,id);if(!html)return;
+  if(kind==='contrato'){
+    const body=document.getElementById('contract-detail-body');if(body&&!document.getElementById('entity-v115-evolution'))body.insertAdjacentHTML('beforeend',html);
+  }else{
+    const timeline=document.getElementById('mant-tab-timeline')||document.getElementById('mant-tab-personal');if(timeline&&!document.getElementById('entity-v115-evolution'))timeline.insertAdjacentHTML('beforeend',html);
+  }
+}
+function openEntityBitacoraV115(kind,id){
+  if(kind==='contrato')openContractDetailV78(id);else openMantDetalle(id);
+  setTimeout(()=>document.getElementById('entity-v115-evolution')?.scrollIntoView({behavior:'smooth',block:'start'}),140);
+}
+function decorateClient360BitacoraV115(){
+  const body=document.getElementById('v81-detail-body');if(!body)return;
+  body.querySelectorAll('button[onclick^="openContractDetailV78"]').forEach(btn=>{
+    if(btn.dataset.v115Bitacora)return;btn.dataset.v115Bitacora='true';
+    const id=(btn.getAttribute('onclick').match(/'([^']+)'/)||[])[1];if(id)btn.insertAdjacentHTML('afterend',` <button class="btn btn-secondary btn-sm" onclick="openEntityBitacoraV115('contrato','${id}')">Bitácora</button>`);
+  });
+  body.querySelectorAll('button[onclick^="openMantDetalle"]').forEach(btn=>{
+    if(btn.dataset.v115Bitacora)return;btn.dataset.v115Bitacora='true';
+    const id=(btn.getAttribute('onclick').match(/'([^']+)'/)||[])[1];if(id)btn.insertAdjacentHTML('afterend',` <button class="btn btn-secondary btn-sm" onclick="openEntityBitacoraV115('proyecto','${id}')">Bitácora</button>`);
+  });
+}
+const openContractDetailV115Base=openContractDetailV78;
+openContractDetailV78=function(contractId){openContractDetailV115Base(contractId);injectEvolutionPanelV115('contrato',contractId);};
+const openMantDetalleV115Base=openMantDetalle;
+openMantDetalle=function(mantId){openMantDetalleV115Base(mantId);injectEvolutionPanelV115('proyecto',mantId);};
+const renderClientTreeV115Base=renderClientTreeV90;
+renderClientTreeV90=function(id){renderClientTreeV115Base(id);try{decorateClient360BitacoraV115();}catch(err){console.error('Nexo Klar V10.15 bitacora cliente',err);}};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
