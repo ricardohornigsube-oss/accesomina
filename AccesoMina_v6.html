@@ -2359,6 +2359,7 @@ function openMinaDetalle(minaId) {
           <div style="display:flex;align-items:center;gap:10px;">
             <div class="prog" style="flex:1;"><div class="prog-fill ${progColor(pct)}" style="width:${pct}%;"></div></div>
             <span style="font-size:12px;color:var(--text-muted);">${asig}/${mn.personalReq} personal</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" onclick="openMantDetalle('${mn.id}')">Ficha</button><button class="btn btn-secondary btn-sm" onclick="openEntityBitacoraV115('proyecto','${mn.id}')">Bitácora</button></div>
           </div>
         </div>`;
       }).join('') || '<div style="color:var(--text-muted);">Sin mantenciones</div>'}
