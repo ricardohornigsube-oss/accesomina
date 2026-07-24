@@ -7075,6 +7075,59 @@ installV90Ui=function(){installV90UiV112Base();enhanceCompanyCatalogsV112();};
 const renderPageV112Base=renderPage;
 renderPage=function(page){renderPageV112Base(page);if(page==='configuracion')setTimeout(enhanceCompanyCatalogsV112,0);};
 
+// ===================== V10.14: FICHAS EDITABLES Y VERSIONES DOCUMENTALES VISIBLES =====================
+function ensureContractProjectDocsV114(){
+  (S.contratos||[]).forEach(c=>{if(!Array.isArray(c.documents))c.documents=[];});
+  (S.mantenciones||[]).forEach(p=>{if(!Array.isArray(p.documents))p.documents=[];});
+}
+function entityDocsTableV114(collection,id){
+  ensureContractProjectDocsV114();
+  const row=(S[collection]||[]).find(x=>x.id===id),docs=(row?.documents||[]).slice().reverse();
+  return `<div class="table-wrap"><table><thead><tr><th>Versión</th><th>Tipo</th><th>Vencimiento</th><th>Cargado</th><th>Estado</th><th>Archivo</th></tr></thead><tbody>${docs.map((d,i)=>`<tr><td>V${docs.length-i}</td><td>${eppEsc(d.type||'Documento')}</td><td>${d.expiresAt||'—'} ${d.expiresAt?badgeEstado(d.expiresAt):''}</td><td>${String(d.uploadedAt||'').slice(0,10)||'—'}</td><td><span class="badge badge-blue">${eppEsc(d.status||'cargado')}</span></td><td>${(d.evidenceFiles||[]).map(f=>`<span class="badge badge-ok">${eppEsc(f.name||'Archivo')}</span>`).join(' ')||'—'}</td></tr>`).join('')||'<tr><td colspan="6">Sin versiones documentales cargadas.</td></tr>'}</tbody></table></div>`;
+}
+function injectContractDocsV114(contractId){
+  const body=document.getElementById('contract-detail-body');if(!body||document.getElementById('contract-v114-docs'))return;
+  body.insertAdjacentHTML('afterbegin',`<div class="card" id="contract-v114-docs" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Documentación y versiones del contrato</div><div class="card-subtitle">Carga nuevas versiones, conserva historial y revisa vencimientos asociados al contrato.</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" onclick="requestEvidenceUpdateV81('contratos','${contractId}','Nueva versión contrato')">Cargar versión</button><button class="btn btn-secondary btn-sm" onclick="openDocsV81('contratos','${contractId}')">Ver historial</button></div></div>${entityDocsTableV114('contratos',contractId)}</div>`);
+}
+function injectProjectDocsV114(projectId){
+  const timeline=document.getElementById('mant-tab-timeline')||document.getElementById('mant-tab-personal');
+  if(!timeline||document.getElementById('project-v114-docs'))return;
+  timeline.insertAdjacentHTML('afterbegin',`<div class="card" id="project-v114-docs" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Documentación y versiones del proyecto / servicio</div><div class="card-subtitle">Carga respaldos, versiones, evidencias, anexos o documentos propios del servicio.</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" onclick="requestEvidenceUpdateV81('mantenciones','${projectId}','Nueva versión proyecto / servicio')">Cargar versión</button><button class="btn btn-secondary btn-sm" onclick="openDocsV81('mantenciones','${projectId}')">Ver historial</button></div></div>${entityDocsTableV114('mantenciones',projectId)}</div>`);
+}
+function decorateClient360TablesV114(clientId){
+  const body=document.getElementById('v81-detail-body');if(!body)return;
+  body.querySelectorAll('button[onclick^="openContractDetailV78"]').forEach(btn=>{
+    if(btn.dataset.v114Ready)return;btn.dataset.v114Ready='true';btn.className='btn btn-primary btn-sm';btn.textContent='Modificar contrato';
+    const id=(btn.getAttribute('onclick').match(/'([^']+)'/)||[])[1];
+    if(id)btn.insertAdjacentHTML('afterend',` <button class="btn btn-secondary btn-sm" onclick="requestEvidenceUpdateV81('contratos','${id}','Nueva versión contrato')">Cargar versión</button> <button class="btn btn-ghost btn-sm" onclick="openDocsV81('contratos','${id}')">Versiones</button>`);
+  });
+  body.querySelectorAll('button[onclick^="openMantDetalle"]').forEach(btn=>{
+    if(btn.dataset.v114Ready)return;btn.dataset.v114Ready='true';btn.className='btn btn-primary btn-sm';btn.textContent=btn.textContent&&btn.textContent.includes('personas')?btn.textContent:'Modificar proyecto';
+    const id=(btn.getAttribute('onclick').match(/'([^']+)'/)||[])[1];
+    if(id)btn.insertAdjacentHTML('afterend',` <button class="btn btn-secondary btn-sm" onclick="requestEvidenceUpdateV81('mantenciones','${id}','Nueva versión proyecto / servicio')">Cargar versión</button> <button class="btn btn-ghost btn-sm" onclick="openDocsV81('mantenciones','${id}')">Versiones</button>`);
+  });
+  const center=document.getElementById('client-v109-center');
+  if(center&&!document.getElementById('client-v114-note'))center.insertAdjacentHTML('afterbegin',`<div id="client-v114-note" class="cloud-note" style="margin-bottom:12px;"><b>Edición directa:</b> en contratos y proyectos usa <b>Modificar</b> para cambiar datos, <b>Cargar versión</b> para subir nuevos documentos y <b>Versiones</b> para revisar el historial documental.</div>`);
+}
+const openContractDetailV114Base=openContractDetailV78;
+openContractDetailV78=function(contractId){openContractDetailV114Base(contractId);injectContractDocsV114(contractId);injectContractChangeLogV113(contractId);};
+const openMantDetalleV114Base=openMantDetalle;
+openMantDetalle=function(mantId){openMantDetalleV114Base(mantId);injectProjectDocsV114(mantId);injectProjectChangeLogV113(mantId);};
+const renderClientTreeV114Base=renderClientTreeV90;
+renderClientTreeV90=function(id){renderClientTreeV114Base(id);try{decorateClient360TablesV114(id);}catch(err){console.error('Nexo Klar V10.14 cliente 360',err);}};
+const finishEvidenceUpdateV114Base=finishEvidenceUpdateV81;
+finishEvidenceUpdateV81=async function(input){
+  const target=evidenceTargetV81?{...evidenceTargetV81}:null;
+  await finishEvidenceUpdateV114Base(input);
+  if(target&&['contratos','mantenciones'].includes(target.collection)){
+    const type=target.collection==='contratos'?'contrato':'servicio';
+    recordHistoryV90(type,target.id,'Nueva versión documental cargada',{}, {documento:target.type,vence:target.expiresAt||''},target.type||'Documento actualizado');
+    const row=(S[target.collection]||[]).find(x=>x.id===target.id),clientId=target.collection==='contratos'?v113ClientIdForContract(row):v113ClientIdForService(row);
+    addClientActivityV113(clientId,`Nueva versión documental: ${row?.nombre||'registro'}`,target.type||'Documento actualizado','documento',target.collection==='contratos'?target.id:(row?.contratoId||''),target.collection==='mantenciones'?target.id:'');
+    persistTenant();
+  }
+};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
