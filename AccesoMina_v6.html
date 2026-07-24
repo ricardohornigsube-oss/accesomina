@@ -7253,29 +7253,6 @@ function enhanceClientContractProjectCardsV117(){
 const renderClientTreeV117Base=renderClientTreeV90;
 renderClientTreeV90=function(id){renderClientTreeV117Base(id);try{injectClientEditableProfileV117(id);enhanceClientContractProjectCardsV117();}catch(err){console.error('Nexo Klar V10.17 cliente editable',err);}};
 
-// ===================== V10.18: ACCIONES POR LINEA EN CONTRATOS Y PROYECTOS =====================
-function clientRowActionsV118(kind,id){
-  if(kind==='contrato')return `<div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" onclick="openContractDetailV78('${id}')">Ficha / datos</button><button class="btn btn-secondary btn-sm" onclick="openEntityBitacoraV115('contrato','${id}')">Bitácora</button><button class="btn btn-secondary btn-sm" onclick="requestEvidenceUpdateV81('contratos','${id}','Nueva versión contrato')">Cargar versión</button><button class="btn btn-ghost btn-sm" onclick="openDocsV81('contratos','${id}')">Documentos</button></div>`;
-  return `<div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" onclick="openMantDetalle('${id}')">Ficha / datos</button><button class="btn btn-secondary btn-sm" onclick="openEntityBitacoraV115('proyecto','${id}')">Bitácora</button><button class="btn btn-secondary btn-sm" onclick="requestEvidenceUpdateV81('mantenciones','${id}','Nueva versión proyecto / servicio')">Cargar versión</button><button class="btn btn-ghost btn-sm" onclick="openDocsV81('mantenciones','${id}')">Documentos</button></div>`;
-}
-function moveClientActionsToRowsV118(){
-  const body=document.getElementById('v81-detail-body');if(!body)return;
-  document.getElementById('client-v113-actions')?.remove();
-  document.getElementById('client-v117-help')?.remove();
-  const profile=document.getElementById('client-v117-profile');
-  if(profile&&!document.getElementById('client-v118-help'))profile.insertAdjacentHTML('afterend','<div class="cloud-note" id="client-v118-help" style="margin-bottom:14px;"><b>Contratos y proyectos:</b> usa los botones de cada línea para abrir ficha, modificar datos, registrar bitácora o cargar documentos/versiones.</div>');
-  body.querySelectorAll('td button[onclick^="openContractDetailV78"]').forEach(btn=>{
-    const id=(btn.getAttribute('onclick').match(/'([^']+)'/)||[])[1],td=btn.closest('td');
-    if(id&&td)td.innerHTML=clientRowActionsV118('contrato',id);
-  });
-  body.querySelectorAll('td button[onclick^="openMantDetalle"]').forEach(btn=>{
-    const id=(btn.getAttribute('onclick').match(/'([^']+)'/)||[])[1],td=btn.closest('td');
-    if(id&&td)td.innerHTML=clientRowActionsV118('proyecto',id);
-  });
-}
-const renderClientTreeV118Base=renderClientTreeV90;
-renderClientTreeV90=function(id){renderClientTreeV118Base(id);try{moveClientActionsToRowsV118();}catch(err){console.error('Nexo Klar V10.18 acciones por linea',err);}};
-
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
