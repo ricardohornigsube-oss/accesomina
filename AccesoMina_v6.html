@@ -7198,6 +7198,61 @@ renderTrabajadores=function(){renderTrabajadoresV116Base();hideQualificationButt
 const renderPageV116Base=renderPage;
 renderPage=function(page){renderPageV116Base(page);if(page==='trabajadores')setTimeout(hideQualificationButtonFromOperationalColumnV116,30);};
 
+// ===================== V10.17: CLIENTE 360 MAS AMIGABLE Y EDITABLE =====================
+function ensureClientContactsV117(client){
+  if(!client)return;
+  if(!Array.isArray(client.contactos))client.contactos=[];
+  if(client.contacto&&!client.contactos.some(c=>String(c.nombre||'').toLowerCase()===String(client.contacto||'').toLowerCase())){
+    client.contactos.push({id:'cont_v117_'+Date.now(),nombre:client.contacto,cargo:client.cargoContacto||'Contacto principal',telefono:client.telefonoMandante||client.telMandante||'',email:client.emailMandante||client.mailMandante||'',tipo:'principal'});
+  }
+}
+function clientContactsRowsV117(clientId){
+  const c=S.minas.find(x=>x.id===clientId);ensureClientContactsV117(c);
+  return (c?.contactos||[]).map(ct=>`<tr><td><b>${eppEsc(ct.nombre||'—')}</b><div class="worker-rut">${eppEsc(ct.tipo||'contacto')}</div></td><td>${eppEsc(ct.cargo||'—')}</td><td>${eppEsc(ct.telefono||'—')}</td><td>${eppEsc(ct.email||'—')}</td><td><button class="btn btn-danger btn-sm" onclick="deleteClientContactV117('${clientId}','${ct.id}')">Eliminar</button></td></tr>`).join('')||'<tr><td colspan="5">Sin contactos adicionales cargados.</td></tr>';
+}
+function injectClientEditableProfileV117(clientId){
+  const body=document.getElementById('v81-detail-body');if(!body||document.getElementById('client-v117-profile'))return;
+  const c=S.minas.find(x=>x.id===clientId);if(!c)return;ensureClientContactsV117(c);
+  body.insertAdjacentHTML('afterbegin',`<div class="card" id="client-v117-profile" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Ficha editable del cliente</div><div class="card-subtitle">Actualiza datos generales, contactos y responsables cuando el cliente cambie su información.</div></div><button class="btn btn-primary btn-sm" onclick="saveClientProfileV117('${clientId}')">Guardar cliente</button></div><div class="form-grid" style="margin-top:10px;"><div class="form-group"><label class="form-label">Nombre cliente / mandante</label><input class="form-input" id="cl117-name" value="${escapeAttrV62(c.nombre||'')}"></div><div class="form-group"><label class="form-label">Razón / mandante principal</label><input class="form-input" id="cl117-mandante" value="${escapeAttrV62(c.mandante||'')}"></div><div class="form-group"><label class="form-label">Región</label><input class="form-input chile-region-input" id="cl117-region" list="chile-regiones-list" value="${escapeAttrV62(c.region||'')}"></div><div class="form-group"><label class="form-label">Comuna / ciudad</label><input class="form-input chile-comuna-input" id="cl117-comuna" list="chile-comunas-list" value="${escapeAttrV62(c.comuna||c.ciudad||'')}"></div><div class="form-group"><label class="form-label">Teléfono central</label><input class="form-input" id="cl117-phone" value="${escapeAttrV62(c.telefonoMandante||c.telMandante||'+569')}"></div><div class="form-group"><label class="form-label">Correo central</label><input class="form-input" id="cl117-email" type="email" value="${escapeAttrV62(c.emailMandante||c.mailMandante||'')}"></div><div class="form-group full"><label class="form-label">Observación general del cliente</label><textarea class="form-textarea" id="cl117-notes" placeholder="Condiciones comerciales, forma de trabajo, requisitos especiales, restricciones, responsables o datos relevantes.">${eppEsc(c.observacion||c.notas||'')}</textarea></div></div><div class="divider"></div><div class="card-header" style="padding:0;border:0;"><div><div class="card-title" style="font-size:15px;">Contactos del cliente</div><div class="card-subtitle">Puedes cargar más de un contacto con cargo, teléfono y correo.</div></div><button class="btn btn-secondary btn-sm" onclick="addClientContactV117('${clientId}')">+ Agregar contacto</button></div><div class="form-grid" style="margin-top:10px;"><div class="form-group"><label class="form-label">Nombre contacto</label><input class="form-input" id="cl117-contact-name" placeholder="Nombre y apellido"></div><div class="form-group"><label class="form-label">Cargo</label><input class="form-input" id="cl117-contact-role" placeholder="Administrador contrato, compras, prevención..."></div><div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="cl117-contact-phone" value="+569"></div><div class="form-group"><label class="form-label">Correo</label><input class="form-input" id="cl117-contact-email" type="email" placeholder="contacto@cliente.cl"></div></div><div class="table-wrap" style="margin-top:12px;"><table><thead><tr><th>Contacto</th><th>Cargo</th><th>Teléfono</th><th>Correo</th><th></th></tr></thead><tbody id="cl117-contacts-body">${clientContactsRowsV117(clientId)}</tbody></table></div></div>`);
+  bindChileRegionComuna('cl117-region','cl117-comuna');
+  bindPhoneV83?.('cl117-phone');bindPhoneV83?.('cl117-contact-phone');
+}
+function saveClientProfileV117(clientId){
+  const c=S.minas.find(x=>x.id===clientId);if(!c)return;
+  const before=JSON.parse(JSON.stringify(c));
+  const region=document.getElementById('cl117-region')?.value.trim()||'',comuna=document.getElementById('cl117-comuna')?.value.trim()||'';
+  if(region&&!findChileRegion(region)){toast('Selecciona una región válida de Chile','err');return;}
+  if(comuna&&!validateChileComuna(region,comuna)){toast('La comuna/ciudad no corresponde a la región seleccionada','err');return;}
+  Object.assign(c,{nombre:document.getElementById('cl117-name')?.value.trim()||c.nombre,mandante:document.getElementById('cl117-mandante')?.value.trim()||'',region,comuna,ciudad:comuna,telefonoMandante:normalizePhoneV83(document.getElementById('cl117-phone')?.value||''),emailMandante:document.getElementById('cl117-email')?.value.trim()||'',observacion:document.getElementById('cl117-notes')?.value.trim()||''});
+  recordHistoryV90('cliente',clientId,'Ficha cliente actualizada',before,JSON.parse(JSON.stringify(c)),'Actualización desde Cliente 360');
+  persistTenant();toast('Cliente actualizado');renderClientTreeV90(clientId);
+}
+function addClientContactV117(clientId){
+  const c=S.minas.find(x=>x.id===clientId);if(!c)return;ensureClientContactsV117(c);
+  const nombre=(document.getElementById('cl117-contact-name')?.value||'').trim(),cargo=(document.getElementById('cl117-contact-role')?.value||'').trim(),telefono=normalizePhoneV83(document.getElementById('cl117-contact-phone')?.value||''),email=(document.getElementById('cl117-contact-email')?.value||'').trim();
+  if(!nombre){toast('Ingresa nombre del contacto','err');return;}
+  if(c.contactos.some(ct=>String(ct.nombre||'').toLowerCase()===nombre.toLowerCase()&&String(ct.email||'').toLowerCase()===email.toLowerCase())){toast('Ese contacto ya existe para el cliente','err');return;}
+  const contact={id:'cont_v117_'+Date.now(),nombre,cargo,telefono,email,tipo:'operativo'};
+  c.contactos.push(contact);
+  recordHistoryV90('cliente',clientId,'Contacto cliente agregado',{},contact,'Nuevo contacto en Cliente 360');
+  persistTenant();toast('Contacto agregado');renderClientTreeV90(clientId);
+}
+function deleteClientContactV117(clientId,contactId){
+  const c=S.minas.find(x=>x.id===clientId);if(!c)return;ensureClientContactsV117(c);
+  const before=c.contactos.find(ct=>ct.id===contactId);c.contactos=c.contactos.filter(ct=>ct.id!==contactId);
+  recordHistoryV90('cliente',clientId,'Contacto cliente eliminado',before||{}, {},'Mantención de contactos');
+  persistTenant();renderClientTreeV90(clientId);
+}
+function enhanceClientContractProjectCardsV117(){
+  const body=document.getElementById('v81-detail-body');if(!body||document.getElementById('client-v117-help'))return;
+  const actions=document.getElementById('client-v113-actions');
+  const note=`<div class="cloud-note" id="client-v117-help" style="margin:0 0 14px;"><b>Trabajo recomendado:</b> primero actualiza la ficha del cliente y sus contactos. Luego entra a cada contrato o proyecto para modificar datos generales, cargar documentos, registrar bitácora, cambios de alcance, ampliaciones, mejoras, riesgos o acuerdos.</div>`;
+  if(actions)actions.insertAdjacentHTML('beforebegin',note);else body.insertAdjacentHTML('afterbegin',note);
+  body.querySelectorAll('#client-v113-actions .card-subtitle').forEach(el=>el.textContent='Accede a ficha, datos generales, bitácora, documentos y versiones de cada contrato o proyecto.');
+}
+const renderClientTreeV117Base=renderClientTreeV90;
+renderClientTreeV90=function(id){renderClientTreeV117Base(id);try{injectClientEditableProfileV117(id);enhanceClientContractProjectCardsV117();}catch(err){console.error('Nexo Klar V10.17 cliente editable',err);}};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
