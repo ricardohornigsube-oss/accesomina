@@ -7404,6 +7404,87 @@ init=function(){
   if((currentPage||'dashboard')==='dashboard')setTimeout(()=>{renderClientOperationalDashboardV119();simplifyDashboardV119();},0);
 };
 
+// ===================== V10.20: DASHBOARD ACCIONABLE SIN COSTOS =====================
+function clientSemaphoreRowsV120(d){
+  return (S.minas||[]).map(c=>{
+    const contracts=(S.contratos||[]).filter(ct=>ct.minaId===c.id);
+    const services=(S.mantenciones||[]).filter(s=>s.minaId===c.id||contracts.some(ct=>ct.id===s.contratoId));
+    const alerts=(computeAlertas?.()||[]).filter(a=>services.some(s=>s.id===a.mantId)||a.minaId===c.id||(a.trabId&&(S.trabajadores||[]).find(t=>t.id===a.trabId)?.mineras?.includes(c.id)));
+    const states=services.map(s=>serviceReadinessDashboardV119(s,alerts));
+    const red=states.filter(s=>s.level==='red').length+alerts.filter(a=>['vencido','critico','falta'].includes(a.urgencia)).length;
+    const yellow=states.filter(s=>s.level==='yellow').length+alerts.filter(a=>a.urgencia==='proximo').length;
+    const level=red?'red':yellow?'yellow':'green';
+    return {client:c,contracts,services,alerts,level,red,yellow,ready:states.filter(s=>s.level==='green').length};
+  }).sort((a,b)=>({red:0,yellow:1,green:2}[a.level]-{red:0,yellow:1,green:2}[b.level])||b.alerts.length-a.alerts.length);
+}
+function todayTasksV120(d){
+  const tasks=[];
+  if(d.criticos)tasks.push({kind:'red',title:'Revisar alertas críticas',detail:`${d.criticos} alertas requieren atención`,action:"nav('alertas')"});
+  if(d.bloqueados)tasks.push({kind:'red',title:'Desbloquear personas',detail:`${d.bloqueados} personas no habilitadas`,action:"nav('bloqueados')"});
+  if(d.gaps)tasks.push({kind:'orange',title:'Completar servicios con brechas',detail:`${d.gaps} servicios necesitan recursos o documentos`,action:"nav('operaciones-cloud')"});
+  if(d.docsRenew)tasks.push({kind:'blue',title:'Renovar documentos',detail:`${d.docsRenew} documentos por revisar o renovar`,action:"nav('auditoria')"});
+  const missingHotel=d.states.filter(x=>x.state.gaps.includes('Falta hotel')).length;
+  if(missingHotel)tasks.push({kind:'orange',title:'Asignar alojamiento',detail:`${missingHotel} servicios sin hotel asociado`,action:"nav('hoteleria')"});
+  const missingVehicle=d.states.filter(x=>x.state.gaps.includes('Falta vehículo')).length;
+  if(missingVehicle)tasks.push({kind:'orange',title:'Asignar vehículo',detail:`${missingVehicle} servicios sin vehículo`,action:"nav('vehiculos')"});
+  return tasks.slice(0,6);
+}
+function trendMonthlyV120(){
+  const months=Array.from({length:6},(_,i)=>{const dt=new Date();dt.setMonth(dt.getMonth()-(5-i));return dt.toISOString().slice(0,7);});
+  const alerts=computeAlertas?.()||[];
+  const services=S.mantenciones||[];
+  return months.map(m=>{
+    const docs=alerts.filter(a=>String(a.fecha||a.vence||a.createdAt||'').slice(0,7)===m).length;
+    const done=services.filter(s=>String(s.termino||s.fin||'').slice(0,7)===m||String(s.inicio||'').slice(0,7)===m).length;
+    return {m,docs,done};
+  });
+}
+function roleSummaryV120(d){
+  const role=(currentTenantUser?.rol||'admin').toLowerCase();
+  if(role.includes('rrhh'))return {title:'Vista RR.HH.',items:[`${d.workers.length} personas disponibles`,`${d.bloqueados} bloqueadas`,`${d.docsRenew} documentos por renovar`],action:"nav('trabajadores')"};
+  if(role.includes('prevencion'))return {title:'Vista Prevención',items:[`${d.criticos} alertas críticas`,`${d.docsRenew} documentos/cursos/exámenes`,`${d.states.filter(x=>x.state.gaps.includes('Falta EPP')).length} servicios con EPP pendiente`],action:"nav('auditoria')"};
+  if(role.includes('lector'))return {title:'Vista Consulta',items:[`${d.ready} servicios listos`,`${d.gaps} servicios con brechas`,`${d.criticos} alertas críticas`],action:"nav('reportes')"};
+  return {title:'Vista Administración',items:[`${d.ready} servicios listos`,`${d.gaps} servicios con brechas`,`${d.bloqueados} personas bloqueadas`],action:"nav('mineras')"};
+}
+function exportDashboardExecutiveV120(){
+  const d=dashboardSummaryV119();
+  const rows=[['Tipo','Nombre','Cliente','Contrato','Estado','Dotación','Qué falta']];
+  d.states.forEach(({service,state})=>rows.push(['Servicio',service.nombre||'',minaNombre(service.minaId),contratoNombre(service.contratoId),state.label,`${state.assigned}/${state.required||state.assigned||0}`,(state.gaps||[]).join(' | ')]));
+  d.alerts.slice(0,80).forEach(a=>rows.push(['Alerta',a.msg||a.tipo||'',a.minaId?minaNombre(a.minaId):'',a.contratoId?contratoNombre(a.contratoId):'',a.urgencia||'',a.trabId?trabNombre(a.trabId):'',a.tipo||'']));
+  exportCSV(rows,`dashboard_ejecutivo_${hoy()}.csv`);
+  toast('Reporte ejecutivo del Dashboard exportado');
+}
+function renderDashboardV120(){
+  const panel=document.getElementById('dash-v119-client-ops');if(!panel)return;
+  const d=dashboardSummaryV119();
+  const levelText=d.level==='green'?'Operación al día':d.level==='yellow'?'Operación con pendientes':'Operación con bloqueos';
+  const clientRows=clientSemaphoreRowsV120(d).slice(0,8);
+  const tasks=todayTasksV120(d);
+  const risk=d.states.slice().sort((a,b)=>({red:0,yellow:1,green:2}[a.state.level]-{red:0,yellow:1,green:2}[b.state.level])||(b.state.gaps.length-a.state.gaps.length)).slice(0,6);
+  const trend=trendMonthlyV120();
+  const role=roleSummaryV120(d);
+  const priorityRows=d.states.sort((a,b)=>({red:0,yellow:1,green:2}[a.state.level]-{red:0,yellow:1,green:2}[b.state.level])).slice(0,10).map(({service,state})=>`<tr><td><b>${safeV109(service.nombre||'Servicio')}</b><div class="worker-rut">${safeV109(minaNombre(service.minaId))} · ${safeV109(contratoNombre(service.contratoId))}</div></td><td>${dashBadgeV119(state.level,state.label)}</td><td>${state.assigned}/${state.required||state.assigned||0}</td><td>${state.gaps.slice(0,5).map(g=>`<span class="badge badge-na">${safeV109(g)}</span>`).join(' ')||'<span class="badge badge-ok">Sin brechas</span>'}</td><td><button class="btn btn-secondary btn-sm" onclick="openMantDetalle('${service.id}')">Abrir</button></td></tr>`).join('');
+  panel.innerHTML=`<div class="card-header"><div><div class="card-title">Panel operativo cliente</div><div class="card-subtitle">Data limpia y en línea para decidir qué hacer hoy.</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">${dashBadgeV119(d.level,levelText)}<button class="btn btn-secondary btn-sm" onclick="exportDashboardExecutiveV120()">Reporte ejecutivo</button></div></div>
+    <div class="cloud-note" style="margin:10px 0 14px;">Ruta simple: <b>Cliente</b> → <b>Contrato</b> → <b>Servicio</b> → Personas / Documentos / Recursos / Bitácora.</div>
+    <div class="grid-3" style="margin-bottom:14px;">
+      <div class="card"><div class="card-title">Qué hago hoy</div><div class="divider"></div>${tasks.map(t=>`<button class="btn ${t.kind==='red'?'btn-danger':t.kind==='orange'?'btn-primary':'btn-secondary'} btn-sm" style="width:100%;justify-content:space-between;margin-bottom:8px;" onclick="${t.action}"><span>${safeV109(t.title)}</span><span>${safeV109(t.detail)}</span></button>`).join('')||'<div class="worker-rut">Sin acciones urgentes para hoy.</div>'}</div>
+      <div class="card"><div class="card-title">Semáforo por cliente</div><div class="divider"></div>${clientRows.map(r=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);"><div><b>${safeV109(r.client.nombre)}</b><div class="worker-rut">${r.services.length} servicios · ${r.alerts.length} alertas</div></div>${dashBadgeV119(r.level,r.level==='green'?'OK':r.level==='yellow'?'Pendiente':'Crítico')}</div>`).join('')||'<div class="worker-rut">Sin clientes cargados.</div>'}</div>
+      <div class="card"><div class="card-title">${safeV109(role.title)}</div><div class="divider"></div>${role.items.map(i=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);">${safeV109(i)}</div>`).join('')}<button class="btn btn-secondary btn-sm" style="margin-top:10px;" onclick="${role.action}">Abrir vista</button></div>
+    </div>
+    <div class="grid-2" style="margin-bottom:14px;">
+      <div class="card"><div class="card-title">Ranking de riesgo</div><div class="card-subtitle">Servicios ordenados por urgencia operativa</div><div class="divider"></div>${risk.map(({service,state},i)=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);"><div><b>${i+1}. ${safeV109(service.nombre)}</b><div class="worker-rut">${safeV109(minaNombre(service.minaId))}</div></div>${dashBadgeV119(state.level,state.gaps.length?state.gaps[0]:'Listo')}</div>`).join('')||'<div class="worker-rut">Sin servicios.</div>'}</div>
+      <div class="card"><div class="card-title">Tendencia 6 meses</div><div class="card-subtitle">Documentos/alertas y servicios con movimiento</div><div class="divider"></div>${trend.map(t=>{const max=Math.max(1,...trend.map(x=>Math.max(x.docs,x.done)));return `<div style="margin:9px 0;"><div style="display:flex;justify-content:space-between;"><b>${safeV109(t.m)}</b><span>${t.docs} alertas · ${t.done} servicios</span></div><div class="prog" style="margin-top:6px;"><div class="prog-fill prog-red" style="width:${Math.round(t.docs/max*100)}%;"></div></div><div class="prog" style="margin-top:4px;"><div class="prog-fill prog-green" style="width:${Math.round(t.done/max*100)}%;"></div></div></div>`}).join('')}</div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>Servicio</th><th>Listo para ejecutar</th><th>Dotación</th><th>Qué falta</th><th>Acción inteligente</th></tr></thead><tbody>${priorityRows||'<tr><td colspan="5">Sin servicios para el filtro seleccionado.</td></tr>'}</tbody></table></div>
+    <div class="card" style="margin-top:14px;"><div class="card-title">Alertas con responsable</div><div class="card-subtitle">Seguimiento directo para no perder compromisos.</div><div class="table-wrap" style="margin-top:10px;"><table><thead><tr><th>Alerta</th><th>Responsable</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${d.alerts.slice(0,8).map(a=>`<tr><td><b>${safeV109(a.msg||a.tipo||'Alerta')}</b><div class="worker-rut">${safeV109(a.tipo||'')} · ${safeV109(a.urgencia||'')}</div></td><td>${safeV109(a.responsable||trabNombre(a.trabId)||currentTenantUser?.nombre||'Administrador')}</td><td>${dashBadgeV119(['vencido','critico','falta'].includes(a.urgencia)?'red':a.urgencia==='proximo'?'yellow':'green',a.urgencia||'pendiente')}</td><td><button class="btn btn-secondary btn-sm" onclick="${a.trabId?`openFicha('${a.trabId}')`:`nav('alertas')`}">${a.trabId?'Abrir ficha':'Revisar'}</button></td></tr>`).join('')||'<tr><td colspan="4">Sin alertas para el filtro seleccionado.</td></tr>'}</tbody></table></div></div>`;
+}
+const renderDashboardV120Base=renderDashboard;
+renderDashboard=function(){renderDashboardV120Base();try{renderDashboardV120();}catch(err){console.error('Nexo Klar V10.20 dashboard accionable',err);}};
+const renderPageV120Base=renderPage;
+renderPage=function(page){renderPageV120Base(page);if(page==='dashboard')setTimeout(renderDashboardV120,0);};
+const initV120Base=init;
+init=function(){initV120Base();if((currentPage||'dashboard')==='dashboard')setTimeout(renderDashboardV120,0);};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
