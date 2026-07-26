@@ -7022,6 +7022,120 @@ saveEvolutionV115=function(kind,id){
   if(kind!=='contrato')setTimeout(showProjectBitacoraTabV118,220);
 };
 
+// ===================== V10.19: DASHBOARD OPERATIVO CLIENTE =====================
+function dashboardFiltersV119(){
+  const minaId=document.getElementById('filt-dash-mina')?.value||'';
+  const contratoId=document.getElementById('filt-dash-contrato')?.value||'';
+  const mantId=document.getElementById('filt-dash-mant')?.value||'';
+  const services=(S.mantenciones||[]).filter(m=>
+    (!minaId||m.minaId===minaId)&&
+    (!contratoId||m.contratoId===contratoId)&&
+    (!mantId||m.id===mantId)
+  );
+  const serviceIds=services.map(s=>s.id);
+  let workers=(S.trabajadores||[]).filter(t=>!t.bloqueado);
+  if(minaId)workers=workers.filter(t=>(t.mineras||[]).includes(minaId));
+  if(contratoId)workers=workers.filter(t=>workerContratoIds(t).includes(contratoId));
+  if(mantId)workers=workers.filter(t=>workerMantIds(t).includes(mantId));
+  const workerIds=workers.map(t=>t.id);
+  const alerts=(computeAlertas?.()||[]).filter(a=>
+    a.tipo==='empresa' ||
+    workerIds.includes(a.trabId) ||
+    serviceIds.includes(a.mantId) ||
+    (!mantId&&!contratoId&&!minaId)
+  );
+  return {minaId,contratoId,mantId,services,serviceIds,workers,workerIds,alerts};
+}
+function serviceReadinessDashboardV119(service,alerts){
+  const assigned=(S.asignaciones||[]).filter(a=>a.mantId===service.id).length;
+  const required=Number(service.personalReq||service.requeridos||0);
+  const gaps=[];
+  if(required&&assigned<required)gaps.push(`Faltan ${required-assigned} persona${required-assigned===1?'':'s'}`);
+  if(!required&&!assigned)gaps.push('Falta personal');
+  if(alerts.some(a=>a.mantId===service.id||((S.asignaciones||[]).some(as=>as.mantId===service.id&&as.trabId===a.trabId))))gaps.push('Faltan documentos');
+  if(!(S.hotelAsig||[]).some(h=>h.mantId===service.id))gaps.push('Falta hotel');
+  const hasVehicle=(S.vehiculos||[]).some(v=>(v.mantIds||[]).includes(service.id)||(service.minaId&&(v.minaIds||[]).includes(service.minaId)));
+  if(!hasVehicle)gaps.push('Falta vehículo');
+  const hasEpp=(S.eppDeliveries||[]).some(e=>e.mantId===service.id);
+  if(!hasEpp)gaps.push('Falta EPP');
+  const level=gaps.length===0?'green':gaps.length<=2?'yellow':'red';
+  const label=level==='green'?'Listo para ejecutar':level==='yellow'?'Pendiente menor':'Bloqueado / revisar';
+  return {assigned,required,gaps,level,label};
+}
+function dashBadgeV119(level,label){
+  const cls=level==='green'?'badge-ok':level==='yellow'?'badge-warn':'badge-err';
+  return `<span class="badge ${cls}">${safeV109(label)}</span>`;
+}
+function dashboardSummaryV119(){
+  const f=dashboardFiltersV119();
+  const states=f.services.map(s=>({service:s,state:serviceReadinessDashboardV119(s,f.alerts)}));
+  const vencidos=f.alerts.filter(a=>a.urgencia==='vencido'||/vencid/i.test(String(a.msg||''))).length;
+  const criticos=f.alerts.filter(a=>['vencido','critico','falta'].includes(a.urgencia)).length;
+  const bloqueados=f.workers.filter(t=>{
+    const st=typeof computeOperationalStatusV90==='function'?computeOperationalStatusV90(t):null;
+    return t.bloqueado||st?.blocked||f.alerts.some(a=>a.trabId===t.id&&['vencido','critico','falta'].includes(a.urgencia));
+  }).length;
+  const ready=states.filter(x=>x.state.level==='green').length;
+  const gaps=states.filter(x=>x.state.level!=='green').length;
+  const docsRenew=f.alerts.filter(a=>/document|renovar|f30|cotiz|seguro|credencial|examen|curso|contrato/i.test(String(a.msg||a.tipo||''))).length;
+  const level=criticos||bloqueados||states.some(x=>x.state.level==='red')?'red':gaps||docsRenew?'yellow':'green';
+  return {...f,states,vencidos,criticos,bloqueados,ready,gaps,docsRenew,level};
+}
+function renderClientOperationalDashboardV119(){
+  const kpi=document.getElementById('kpi-dash');if(!kpi)return;
+  const d=dashboardSummaryV119();
+  const levelText=d.level==='green'?'Operación al día':d.level==='yellow'?'Operación con pendientes':'Operación con bloqueos';
+  const nextActions=[
+    d.criticos?{label:'Revisar alertas críticas',action:"nav('alertas')",kind:'red'}:null,
+    d.bloqueados?{label:'Ver personas bloqueadas',action:"nav('bloqueados')",kind:'red'}:null,
+    d.gaps?{label:'Completar servicios con brechas',action:"nav('operaciones-cloud')",kind:'orange'}:null,
+    d.docsRenew?{label:'Renovar documentos',action:"nav('auditoria')",kind:'blue'}:null,
+    {label:'Abrir Cliente 360',action:"nav('mineras')",kind:'blue'}
+  ].filter(Boolean).slice(0,5);
+  kpi.innerHTML=`
+    <div class="kpi ${d.level==='green'?'kpi-green':d.level==='yellow'?'kpi-yellow':'kpi-red'}"><div class="kpi-value">${d.level==='green'?'OK':d.level==='yellow'?'REV':'ALERTA'}</div><div class="kpi-label">${levelText}</div></div>
+    <div class="kpi kpi-green"><div class="kpi-value">${d.ready}</div><div class="kpi-label">Servicios listos</div></div>
+    <div class="kpi kpi-orange"><div class="kpi-value">${d.gaps}</div><div class="kpi-label">Servicios con brechas</div></div>
+    <div class="kpi kpi-blue"><div class="kpi-value">${d.workers.length}</div><div class="kpi-label">Personas disponibles</div></div>
+    <div class="kpi kpi-red"><div class="kpi-value">${d.bloqueados}</div><div class="kpi-label">Personas bloqueadas</div></div>
+    <div class="kpi kpi-yellow"><div class="kpi-value">${d.docsRenew}</div><div class="kpi-label">Documentos por renovar</div></div>`;
+  let panel=document.getElementById('dash-v119-client-ops');
+  if(!panel){kpi.insertAdjacentHTML('afterend','<div class="card" id="dash-v119-client-ops" style="margin-bottom:20px;"></div>');panel=document.getElementById('dash-v119-client-ops');}
+  const priorityRows=d.states
+    .sort((a,b)=>({red:0,yellow:1,green:2}[a.state.level]-{red:0,yellow:1,green:2}[b.state.level]))
+    .slice(0,10)
+    .map(({service,state})=>`<tr><td><b>${safeV109(service.nombre||'Servicio')}</b><div class="worker-rut">${safeV109(minaNombre(service.minaId))} · ${safeV109(contratoNombre(service.contratoId))}</div></td><td>${dashBadgeV119(state.level,state.label)}</td><td>${state.assigned}/${state.required||state.assigned||0}</td><td>${state.gaps.slice(0,5).map(g=>`<span class="badge badge-na">${safeV109(g)}</span>`).join(' ')||'<span class="badge badge-ok">Sin brechas</span>'}</td><td><button class="btn btn-secondary btn-sm" onclick="openMantDetalle('${service.id}')">Abrir</button></td></tr>`)
+    .join('');
+  panel.innerHTML=`<div class="card-header"><div><div class="card-title">Panel operativo cliente</div><div class="card-subtitle">Lectura limpia y en línea: qué está listo, qué falta y qué acción tomar hoy.</div></div>${dashBadgeV119(d.level,levelText)}</div>
+    <div class="cloud-note" style="margin:10px 0 14px;">Ruta simple: <b>Cliente</b> → <b>Contrato</b> → <b>Servicio</b> → Personas / Documentos / Recursos / Bitácora.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">${nextActions.map(a=>`<button class="btn ${a.kind==='red'?'btn-danger':a.kind==='orange'?'btn-primary':'btn-secondary'} btn-sm" onclick="${a.action}">${safeV109(a.label)}</button>`).join('')}</div>
+    <div class="table-wrap"><table><thead><tr><th>Servicio</th><th>Estado</th><th>Dotación</th><th>Qué falta</th><th>Acción</th></tr></thead><tbody>${priorityRows||'<tr><td colspan="5">Sin servicios para el filtro seleccionado.</td></tr>'}</tbody></table></div>`;
+}
+function simplifyDashboardV119(){
+  document.body.classList.add('dashboard-client-simple');
+  ['dash-recruitment-center','dash-v90-tree','dash-v93-readiness','dash-v86-executive','dash-v87-profiles','dash-v88-finance','dash-v94-control','dash-v97-commercial','onboarding-v97-route','dashboard-v81','dash-v109-client-panel'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.style.display='none';
+  });
+  document.querySelectorAll('#page-dashboard > .grid-2,#page-dashboard > .card').forEach(el=>{
+    if(el.id!=='dash-v119-client-ops')el.style.display='none';
+  });
+}
+const renderDashboardV119Base=renderDashboard;
+renderDashboard=function(){
+  renderDashboardV119Base();
+  try{renderClientOperationalDashboardV119();simplifyDashboardV119();}catch(err){console.error('Nexo Klar V10.19 dashboard operativo',err);}
+};
+const renderPageV119Base=renderPage;
+renderPage=function(page){
+  renderPageV119Base(page);
+  if(page==='dashboard')setTimeout(()=>{renderClientOperationalDashboardV119();simplifyDashboardV119();},0);
+};
+const initV119Base=init;
+init=function(){
+  initV119Base();
+  if((currentPage||'dashboard')==='dashboard')setTimeout(()=>{renderClientOperationalDashboardV119();simplifyDashboardV119();},0);
+};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
