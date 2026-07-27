@@ -8016,6 +8016,117 @@ exportHoteles=function(){ensureHoteleriaV122();const rows=[['Persona','RUT','Cli
 const initV122Base=init;
 init=function(){initV122Base();ensureHoteleriaV122();};
 
+// Nexo Klar V10.23 - Calendario hotelero y control financiero real
+function ensureHotelFinanceV123(){
+  ensureHoteleriaV122();
+  if(!Array.isArray(S.hotelInvoices))S.hotelInvoices=[];
+  if(!Array.isArray(S.hotelBudgets))S.hotelBudgets=[];
+}
+const snapshotStateV123Base=snapshotState;
+snapshotState=function(){ensureHotelFinanceV123();const snap=snapshotStateV123Base();snap.hotelInvoices=S.hotelInvoices;snap.hotelBudgets=S.hotelBudgets;return JSON.parse(JSON.stringify(snap));};
+const applyStateV123Base=applyState;
+applyState=function(data){applyStateV123Base(data);if(data?.hotelInvoices!==undefined)S.hotelInvoices=data.hotelInvoices;if(data?.hotelBudgets!==undefined)S.hotelBudgets=data.hotelBudgets;ensureHotelFinanceV123();};
+const emptyTenantDataV123Base=emptyTenantData;
+emptyTenantData=function(nombre,rut,email,tel){const data=emptyTenantDataV123Base(nombre,rut,email,tel);data.hotelInvoices=[];data.hotelBudgets=[];return data;};
+function hotelDatesV123(from,to){
+  const start=new Date(from||hoy()),end=new Date(to||addDaysV122(from||hoy(),13)),days=[];
+  for(let d=new Date(start);d<=end&&days.length<31;d.setDate(d.getDate()+1))days.push(d.toISOString().slice(0,10));
+  return days;
+}
+function hotelBudgetKeyV123(hotelId,mantId){return `${hotelId||'all'}__${mantId||'all'}`;}
+function hotelBudgetV123(hotelId,mantId){
+  const key=hotelBudgetKeyV123(hotelId,mantId);
+  return (S.hotelBudgets||[]).find(b=>b.key===key)||{key,hotelId,mantId,budget:0,notes:''};
+}
+function saveHotelBudgetV123(){
+  ensureHotelFinanceV123();
+  const hotelId=document.getElementById('hotel-fin-hotel')?.value||'';
+  const mantId=document.getElementById('hotel-fin-mant')?.value||'';
+  const key=hotelBudgetKeyV123(hotelId,mantId);
+  const budget=Number(document.getElementById('hotel-fin-budget')?.value)||0;
+  const notes=document.getElementById('hotel-fin-notes')?.value||'';
+  const existing=S.hotelBudgets.find(b=>b.key===key);
+  if(existing){existing.budget=budget;existing.notes=notes;existing.updatedAt=new Date().toISOString();}
+  else S.hotelBudgets.push({key,hotelId,mantId,budget,notes,createdAt:new Date().toISOString(),owner:currentTenantUser?.email||'usuario'});
+  persistTenant();renderHoteleria();toast('Presupuesto hotelero guardado');
+}
+function saveHotelInvoiceV123(){
+  ensureHotelFinanceV123();
+  const hotelId=document.getElementById('hotel-inv-hotel')?.value;
+  const mantId=document.getElementById('hotel-inv-mant')?.value||'';
+  const amount=Number(document.getElementById('hotel-inv-amount')?.value)||0;
+  const number=document.getElementById('hotel-inv-number')?.value.trim()||'';
+  if(!hotelId||!amount)return toast('Selecciona hotel e ingresa monto de factura/OC','err');
+  S.hotelInvoices.unshift({id:'hinv_'+Date.now(),hotelId,mantId,number,oc:document.getElementById('hotel-inv-oc')?.value.trim()||'',date:document.getElementById('hotel-inv-date')?.value||hoy(),amount,status:document.getElementById('hotel-inv-status')?.value||'registrada',fileName:document.getElementById('hotel-inv-file')?.files?.[0]?.name||'',notes:document.getElementById('hotel-inv-notes')?.value.trim()||'',createdAt:new Date().toISOString(),owner:currentTenantUser?.email||'usuario'});
+  ['hotel-inv-number','hotel-inv-oc','hotel-inv-amount','hotel-inv-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const file=document.getElementById('hotel-inv-file');if(file)file.value='';
+  persistTenant();renderHoteleria();toast('Factura/OC hotelera registrada');
+}
+function deleteHotelInvoiceV123(id){
+  const inv=(S.hotelInvoices||[]).find(x=>x.id===id);if(!inv)return;
+  openConfirmActionV121({title:'Eliminar registro financiero hotelero',detail:`Documento: ${inv.number||inv.oc||'sin número'} por ${moneyV122(inv.amount)}.`,confirmText:'Eliminar registro',onConfirm:(reason)=>{
+    S.hotelInvoices=S.hotelInvoices.filter(x=>x.id!==id);
+    if(typeof recordHistoryV90==='function')recordHistoryV90('hoteleria',id,'Factura/OC hotelera eliminada',inv,{},reason||'Eliminación control financiero');
+    persistTenant();renderHoteleria();toast('Registro financiero eliminado');
+  }});
+}
+function hotelCostSummaryV123(hotelId='',mantId='',from='',to=''){
+  const asigs=(S.hotelAsig||[]).filter(a=>(!hotelId||a.hotelId===hotelId)&&(!mantId||a.mantId===mantId)&&(!from||rangesOverlapV122(from,to||addDaysV122(from,1),a.checkin,a.checkout||'2999-12-31')));
+  const estimated=asigs.reduce((n,a)=>n+Number(a.costoTotal||0),0);
+  const invoices=(S.hotelInvoices||[]).filter(i=>(!hotelId||i.hotelId===hotelId)&&(!mantId||i.mantId===mantId)&&(!from||((i.date||'')>=from&&(i.date||'')<=(to||from))));
+  const real=invoices.reduce((n,i)=>n+Number(i.amount||0),0);
+  const budget=hotelBudgetV123(hotelId,mantId).budget||0;
+  return {asigs,invoices,estimated,real,budget,deviation:(real||estimated)-budget,diffRealEstimated:real-estimated};
+}
+function exportHotelFinanceV123(){
+  ensureHotelFinanceV123();
+  const rows=[['Tipo','Hotel','Servicio','Fecha','Documento','OC','Monto CLP','Estado','Notas']];
+  (S.hotelInvoices||[]).forEach(i=>rows.push(['Factura/OC',hotelNombre(i.hotelId),mantNombre(i.mantId),i.date,i.number,i.oc,i.amount,i.status,i.notes]));
+  (S.hotelBudgets||[]).forEach(b=>rows.push(['Presupuesto',hotelNombre(b.hotelId),mantNombre(b.mantId),'','', '',b.budget,'vigente',b.notes]));
+  exportCSV(rows,`hoteleria_finanzas_${hoy()}.csv`);
+}
+function renderHotelCalendarFinanceV123(){
+  ensureHotelFinanceV123();
+  const tableCard=document.getElementById('hotel-table')?.closest('.card');if(!tableCard)return;
+  document.getElementById('hotel-v123-panel')?.remove();
+  const from=document.getElementById('hotel-filter-from')?.value||hoy();
+  const to=document.getElementById('hotel-filter-to')?.value||addDaysV122(from,13);
+  const hotelFilter=document.getElementById('hotel-cal-hotel')?.value||'';
+  const mantFilter=document.getElementById('hotel-filter-mant')?.value||'';
+  const days=hotelDatesV123(from,to);
+  const hotels=(S.hoteles||[]).filter(h=>!hotelFilter||h.id===hotelFilter);
+  const calRows=hotels.map(h=>`<tr><td><b>${escV122(h.nombre)}</b><div class="worker-rut">${escV122(h.ciudad||h.comuna||'')}</div></td>${days.map(day=>{const oc=hotelOccupancyV122(h,day,addDaysV122(day,1));const cls=oc.free===0?'badge-err':oc.free<=2?'badge-warn':'badge-ok';const names=oc.active.slice(0,2).map(a=>trabNombre(a.trabId)).join(', ');return `<td style="min-width:92px;"><span class="badge ${cls}">${oc.occupied}/${oc.total}</span><div class="worker-rut">${oc.free} libres</div>${names?`<div class="worker-rut">${escV122(names)}</div>`:''}</td>`;}).join('')}</tr>`).join('');
+  const summary=hotelCostSummaryV123(hotelFilter,mantFilter,from,to);
+  const budgetRow=hotelBudgetV123(hotelFilter,mantFilter);
+  const invoiceRows=(S.hotelInvoices||[]).filter(i=>(!hotelFilter||i.hotelId===hotelFilter)&&(!mantFilter||i.mantId===mantFilter)).slice(0,12).map(i=>`<tr><td><b>${escV122(i.number||'Documento')}</b><div class="worker-rut">OC ${escV122(i.oc||'sin OC')}</div></td><td>${escV122(hotelNombre(i.hotelId))}</td><td>${escV122(mantNombre(i.mantId))}</td><td>${escV122(i.date)}</td><td>${moneyV122(i.amount)}</td><td><span class="badge badge-blue">${escV122(i.status)}</span></td><td><button class="btn btn-danger btn-sm" onclick="deleteHotelInvoiceV123('${i.id}')">Eliminar</button></td></tr>`).join('');
+  tableCard.insertAdjacentHTML('beforebegin',`<div class="card" id="hotel-v123-panel" style="margin-bottom:18px;">
+    <div class="card-header"><div><div class="card-title">Calendario y control financiero hotelero</div><div class="card-subtitle">Ocupación diaria por hotel, presupuesto, OC/facturas y costo real versus estimado.</div></div><button class="btn btn-secondary btn-sm" onclick="exportHotelFinanceV123()">Exportar finanzas</button></div>
+    <div class="form-grid" style="margin-top:12px;">
+      <div class="form-group"><label class="form-label">Hotel calendario</label><select class="form-select" id="hotel-cal-hotel" onchange="renderHoteleria()"><option value="">Todos</option>${S.hoteles.map(h=>`<option value="${h.id}" ${hotelFilter===h.id?'selected':''}>${escV122(h.nombre)}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">Servicio financiero</label><select class="form-select" id="hotel-fin-mant" onchange="renderHoteleria()"><option value="">Todos</option>${S.mantenciones.map(m=>`<option value="${m.id}" ${mantFilter===m.id?'selected':''}>${escV122(m.nombre)}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">Hotel financiero</label><select class="form-select" id="hotel-fin-hotel" onchange="renderHoteleria()"><option value="">Todos</option>${S.hoteles.map(h=>`<option value="${h.id}" ${hotelFilter===h.id?'selected':''}>${escV122(h.nombre)}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">Presupuesto CLP</label><input class="form-input" type="number" id="hotel-fin-budget" value="${Number(budgetRow.budget||0)}"></div>
+      <div class="form-group full"><label class="form-label">Notas presupuesto</label><input class="form-input" id="hotel-fin-notes" value="${escV122(budgetRow.notes||'')}" placeholder="Presupuesto mensual, OC marco, tarifa acordada..."></div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="saveHotelBudgetV123()">Guardar presupuesto</button>
+    <div class="kpi-grid" style="margin-top:12px;">
+      <div class="kpi kpi-blue"><div class="kpi-value">${moneyV122(summary.estimated)}</div><div class="kpi-label">Costo estimado por estadías</div></div>
+      <div class="kpi kpi-orange"><div class="kpi-value">${moneyV122(summary.real)}</div><div class="kpi-label">Costo real facturado</div></div>
+      <div class="kpi kpi-green"><div class="kpi-value">${moneyV122(summary.budget)}</div><div class="kpi-label">Presupuesto</div></div>
+      <div class="kpi ${summary.deviation>0?'kpi-red':'kpi-blue'}"><div class="kpi-value">${moneyV122(summary.deviation)}</div><div class="kpi-label">Desviación</div></div>
+    </div>
+    <div class="table-wrap" style="margin-top:14px;overflow:auto;"><table><thead><tr><th>Hotel</th>${days.map(d=>`<th>${d.slice(5)}</th>`).join('')}</tr></thead><tbody>${calRows||'<tr><td colspan="15">Sin hoteles cargados.</td></tr>'}</tbody></table></div>
+    <div class="grid-2" style="margin-top:14px;">
+      <div class="card"><div class="card-title">Registrar factura / OC hotel</div><div class="form-grid" style="margin-top:10px;"><div class="form-group"><label class="form-label">Hotel</label><select class="form-select" id="hotel-inv-hotel">${S.hoteles.map(h=>`<option value="${h.id}">${escV122(h.nombre)}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Servicio</label><select class="form-select" id="hotel-inv-mant"><option value="">General</option>${S.mantenciones.map(m=>`<option value="${m.id}">${escV122(m.nombre)}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Factura / documento</label><input class="form-input" id="hotel-inv-number"></div><div class="form-group"><label class="form-label">OC</label><input class="form-input" id="hotel-inv-oc"></div><div class="form-group"><label class="form-label">Fecha</label><input class="form-input" type="date" id="hotel-inv-date" value="${hoy()}"></div><div class="form-group"><label class="form-label">Monto CLP</label><input class="form-input" type="number" id="hotel-inv-amount"></div><div class="form-group"><label class="form-label">Estado</label><select class="form-select" id="hotel-inv-status"><option value="registrada">Registrada</option><option value="aprobada">Aprobada</option><option value="pagada">Pagada</option><option value="observada">Observada</option></select></div><div class="form-group"><label class="form-label">Archivo respaldo</label><input class="form-input" type="file" id="hotel-inv-file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"></div><div class="form-group full"><label class="form-label">Notas</label><input class="form-input" id="hotel-inv-notes"></div></div><button class="btn btn-primary btn-sm" onclick="saveHotelInvoiceV123()">Registrar documento</button></div>
+      <div class="card"><div class="card-title">Últimos documentos hoteleros</div><div class="table-wrap" style="margin-top:10px;"><table><thead><tr><th>Documento</th><th>Hotel</th><th>Servicio</th><th>Fecha</th><th>Monto</th><th>Estado</th><th></th></tr></thead><tbody>${invoiceRows||'<tr><td colspan="7">Sin facturas u OC registradas.</td></tr>'}</tbody></table></div></div>
+    </div>
+  </div>`);
+}
+const renderHoteleriaV123Base=renderHoteleria;
+renderHoteleria=function(){renderHoteleriaV123Base();renderHotelCalendarFinanceV123();};
+const initV123Base=init;
+init=function(){initV123Base();ensureHotelFinanceV123();};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
