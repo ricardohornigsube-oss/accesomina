@@ -36,7 +36,8 @@
         { "name": "METRICS_TOKEN", "valueFrom": "arn:aws:secretsmanager:us-east-1:<account-id>:secret:nexo-klar/prod/metrics-token" },
         { "name": "REGISTRATION_INVITE_CODE", "valueFrom": "arn:aws:secretsmanager:us-east-1:<account-id>:secret:nexo-klar/prod/registration-invite-code" },
         { "name": "VIRUS_SCAN_API_URL", "valueFrom": "arn:aws:secretsmanager:us-east-1:<account-id>:secret:nexo-klar/prod/virus-scan-url" },
-        { "name": "VIRUS_SCAN_API_TOKEN", "valueFrom": "arn:aws:secretsmanager:us-east-1:<account-id>:secret:nexo-klar/prod/virus-scan-token" }
+        { "name": "VIRUS_SCAN_API_TOKEN", "valueFrom": "arn:aws:secretsmanager:us-east-1:<account-id>:secret:nexo-klar/prod/virus-scan-token" },
+        { "name": "VIRUS_SCAN_HEALTH_URL", "valueFrom": "arn:aws:secretsmanager:us-east-1:<account-id>:secret:nexo-klar/prod/virus-scan-health-url" }
       ],
       "logConfiguration": {
         "logDriver": "awslogs",

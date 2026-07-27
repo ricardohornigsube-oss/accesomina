@@ -6,11 +6,12 @@ Esta carpeta deja preparado el paquete base para cargar Nexo Klar en AWS con ope
 
 - `ecs-task-definition.json`: referencia de tarea ECS Fargate.
 - `production-env.template`: variables productivas esperadas.
-- `.github/workflows/aws-ecs-deploy.yml`: pipeline para construir imagen, subirla a ECR, ejecutar migraciones y actualizar ECS.
+- `github-actions-ci.yml`: plantilla de validacion de sintaxis, migraciones, seguridad funcional y construccion del contenedor; copiar a `.github/workflows/ci.yml` cuando el token GitHub tenga permiso workflow.
+- `github-actions-aws-ecs-deploy.yml`: plantilla de despliegue que debe activarse solo despues de completar roles, secretos y nombres AWS.
 
 ## Servicios AWS requeridos
 
-1. Route 53 o DNS externo apuntando a `nexo.domian.cl`.
+1. Route 53 o DNS externo apuntando al dominio productivo aprobado para Nexo Klar.
 2. AWS Certificate Manager con certificado HTTPS.
 3. Application Load Balancer público con HTTPS.
 4. ECS Fargate en subredes privadas.
@@ -19,7 +20,7 @@ Esta carpeta deja preparado el paquete base para cargar Nexo Klar en AWS con ope
 7. S3 privado para documentos, con versionado, cifrado y bloqueo público.
 8. Secrets Manager para `DATABASE_URL`, `TENANT_SECRET_KEY`, tokens y claves externas.
 9. CloudWatch Logs y alarmas.
-10. Proveedor HTTPS de antivirus de archivos.
+10. Proveedor HTTPS de antivirus de archivos, con endpoint de escaneo y endpoint de salud.
 
 ## Flujo productivo recomendado
 
@@ -28,7 +29,8 @@ Esta carpeta deja preparado el paquete base para cargar Nexo Klar en AWS con ope
 3. GitHub registra una nueva task definition.
 4. Se ejecuta una tarea puntual de migración.
 5. ECS actualiza el servicio productivo.
-6. El balanceador valida `/api/health` y `/api/ready`.
+6. El balanceador usa `/api/health` como liveness y `/api/ready` como readiness.
+7. Antes del cambio productivo se ejecuta `pnpm run validate:production` sobre la definicion final.
 
 ## Separación de datos
 

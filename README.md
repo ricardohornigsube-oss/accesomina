@@ -1,6 +1,6 @@
 # Nexo Klar Cloud
 
-Version actual: 7.6.0. Incluye Centro Operativo multiempresa para monitoreo, flujo documental, notificaciones programadas, acceso mandante, formularios configurables y conservacion de datos. Ver `docs/OPERATIONS_HUB.md` para requisitos productivos y limites de validacion inteligente.
+Version actual: 7.7.0. Incluye Centro Operativo multiempresa para monitoreo, flujo documental, notificaciones programadas, acceso mandante, formularios configurables y conservacion de datos. Ver `docs/OPERATIONS_HUB.md` para requisitos productivos y limites de validacion inteligente.
 
 Nexo Klar es una plataforma multiempresa para simplificar, unificar y controlar informacion operativa critica: trabajadores, contratos, proyectos, servicios, acreditacion, documentos, hoteleria, vehiculos y comunicaciones. La data permanece dentro de la compania, ordenada, trazable y disponible para los equipos autorizados.
 
@@ -52,7 +52,10 @@ Abrir `http://localhost:8088`.
 
 ```bash
 pnpm run check
+pnpm run validate:release
 ```
+
+Antes de desplegar la definicion AWS definitiva, ejecutar `pnpm run validate:production`. Este comando rechaza marcadores pendientes de configuracion.
 
 ## Migraciones
 

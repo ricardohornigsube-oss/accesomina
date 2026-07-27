@@ -13,7 +13,7 @@ const limiter = rateLimit({ windowMs: 15 * 60_000, limit: 20, standardHeaders: t
 authRouter.get('/config',(req,res)=>res.json({registrationEnabled:config.registrationEnabled,mfaRequired:config.mfaRequired}));
 
 authRouter.post('/register', limiter, async (req, res) => {
-  if(!config.registrationEnabled)return res.status(403).json({error:'REGISTRATION_CLOSED',message:'El registro público está cerrado. Solicite una invitación a Domian.'});
+  if(!config.registrationEnabled)return res.status(403).json({error:'REGISTRATION_CLOSED',message:'El registro público está cerrado. Solicite una invitación a Nexo Klar.'});
   const body = registerSchema.parse(req.body);
   if(!isValidRut(body.rut))return res.status(400).json({error:'INVALID_COMPANY_RUT',message:'El RUT de la empresa no es válido.'});
   if (!config.registrationInviteCode || !timingSafeEqualString(body.inviteCode, config.registrationInviteCode)) return res.status(403).json({ error: 'INVITE_CODE_INVALID' });
@@ -35,7 +35,7 @@ authRouter.post('/register', limiter, async (req, res) => {
     await client.query('INSERT INTO tenant_settings(tenant_id,branding,updated_by) VALUES($1,$2::jsonb,$3)',[tenant.id,JSON.stringify({displayName:body.companyName,accent:'#f07d36'}),user.id]);
     await appendAudit(client, { tenantId: tenant.id, userId: user.id, entityType: 'tenant', entityId: tenant.id, action: 'tenant.created', newValue: { companyName: body.companyName, rut: body.rut, adminEmail: email } });
     await client.query('COMMIT');
-    res.status(201).json({ companyName: tenant.company_name, rut: tenant.rut, status:'pending', message:'Cuenta creada y pendiente de aprobación por Domian.' });
+    res.status(201).json({ companyName: tenant.company_name, rut: tenant.rut, status:'pending', message:'Cuenta creada y pendiente de aprobación por Nexo Klar.' });
   } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
 });
 
