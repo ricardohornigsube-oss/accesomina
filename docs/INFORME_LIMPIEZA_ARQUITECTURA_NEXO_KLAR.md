@@ -43,7 +43,7 @@ Fortalecer la base productiva sin cambiar la experiencia actual del frontend, ma
 
 - ECS incorpora el secreto de salud del antivirus.
 - Se agregó validación automática de sincronización local/productiva, sintaxis del frontend, estructura ECS y variables críticas.
-- GitHub Actions ejecuta pruebas, migraciones, validación de versión y construcción del contenedor en cada cambio de `main`.
+- Se preparo la plantilla `infra/aws/github-actions-ci.yml` para ejecutar pruebas, migraciones, validacion de version y construccion del contenedor. Debe copiarse a `.github/workflows/ci.yml` cuando el token GitHub tenga permiso `workflow`.
 - La validación estricta detecta marcadores AWS no reemplazados antes del despliegue.
 
 ## Integración de datos confirmada
@@ -84,4 +84,4 @@ El frontend continúa siendo un archivo grande con capas históricas de funcione
 
 ## Criterio de salida
 
-La aplicación puede avanzar a preproducción cuando el CI esté aprobado. La salida comercial definitiva requiere ejecutar la validación estricta, probar dos empresas reales aisladas, restaurar un respaldo y obtener evidencia de las integraciones externas.
+La aplicación puede avanzar a preproducción cuando la plantilla CI sea activada y su primera ejecución esté aprobada. La salida comercial definitiva requiere ejecutar la validación estricta, probar dos empresas reales aisladas, restaurar un respaldo y obtener evidencia de las integraciones externas.
