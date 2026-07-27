@@ -8318,5 +8318,93 @@ renderDashboard=function(){renderDashboardV125Base();renderWorkBookDashboardV125
 window.addEventListener('load',()=>{installWorkBookUiV125();renderWorkBookDashboardV125();});
 </script>
 
+<script>
+// V12.6 · Navegación por área y administración cloud profesional
+const NK_WORKSPACES_V126={
+  todo:{label:'Todos los módulos',pages:null},
+  comercial:{label:'Comercial',pages:['dashboard','oportunidades','mineras','contratos','reportes']},
+  personas:{label:'Personas y cumplimiento',pages:['dashboard','reclutamiento','trabajadores','personal-planta','epp','bloqueados','auditoria','acreditacion-empresa','examenes','cursos','alertas']},
+  operaciones:{label:'Operaciones en terreno',pages:['dashboard','mineras','mantenciones','hoteleria','llamados','vehiculos','acreditacion-mandante','subcontratos','turnos','credenciales','incidentes','protocolos','operaciones-cloud','libro-obras','alertas','reportes']},
+  administracion:{label:'Administración',pages:['dashboard','configuracion','transferencia','usuarios','bitacora','privacidad','clientes','reportes']}
+};
+function preferredWorkspaceV126(){
+  const role=String(currentTenantUser?.rol||'admin').toLowerCase();
+  return role==='editor'?'personas':role==='prevencion'||role==='acreditacion'?'personas':role==='lector'?'comercial':'todo';
+}
+function workspaceStorageKeyV126(){return `nexo_klar_workspace_${currentTenantId||'local'}`;}
+function installWorkspaceV126(){
+  const logo=document.querySelector('#sidebar .sidebar-logo');if(!logo||document.getElementById('workspace-v126'))return;
+  logo.insertAdjacentHTML('afterend',`<div id="workspace-v126" style="padding:10px 14px 12px;border-bottom:1px solid var(--border);"><label for="workspace-select-v126" style="display:block;font-size:10px;font-weight:800;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Espacio de trabajo</label><select class="form-select" id="workspace-select-v126" onchange="applyWorkspaceV126(this.value)" style="width:100%;font-size:12px;">${Object.entries(NK_WORKSPACES_V126).map(([key,row])=>`<option value="${key}">${row.label}</option>`).join('')}</select><div class="worker-rut" id="workspace-help-v126" style="margin-top:6px;">Muestra los módulos más útiles para tu tarea actual.</div></div>`);
+  let selected=preferredWorkspaceV126();try{selected=localStorage.getItem(workspaceStorageKeyV126())||selected;}catch{}
+  document.getElementById('workspace-select-v126').value=NK_WORKSPACES_V126[selected]?selected:'todo';applyWorkspaceV126(selected,false);
+}
+function navPageV126(item){return item.getAttribute('onclick')?.match(/nav\('([^']+)'\)/)?.[1]||'';}
+function allowedAdminPageV126(page){
+  if(page==='clientes')return typeof isAdminTenant==='function'&&isAdminTenant();
+  if(['configuracion','transferencia','usuarios','privacidad','operaciones-cloud'].includes(page)&&window.AccesoMinaCloud?.enabled)return ['admin'].includes(String(currentTenantUser?.rol||'').toLowerCase());
+  return true;
+}
+function applyWorkspaceV126(key,save=true){
+  const workspace=NK_WORKSPACES_V126[key]||NK_WORKSPACES_V126.todo,allowed=workspace.pages?new Set(workspace.pages):null;
+  document.querySelectorAll('#sidebar .nav-item').forEach(item=>{
+    if(item.classList.contains('onboarding-launch')){item.style.display=key==='todo'||key==='administracion'?'':'none';return;}
+    const page=navPageV126(item);if(!page)return;
+    item.style.display=(!allowed||allowed.has(page))&&allowedAdminPageV126(page)?'':'none';
+  });
+  const groups=[...document.querySelectorAll('#sidebar .nav-group-label')];
+  groups.forEach(label=>{let node=label.nextElementSibling,visible=false;while(node&&!node.classList.contains('nav-group-label')&&!node.classList.contains('sidebar-bottom')){if(node.classList.contains('nav-item')&&node.style.display!=='none')visible=true;node=node.nextElementSibling;}label.style.display=visible?'':'none';});
+  const help=document.getElementById('workspace-help-v126');if(help)help.textContent=key==='todo'?'Acceso completo según tus permisos.':'Vista simplificada. Puedes volver a “Todos los módulos” cuando lo necesites.';
+  if(save)try{localStorage.setItem(workspaceStorageKeyV126(),key);}catch{}
+  if(save&&currentPage&&document.querySelector(`.nav-item[onclick="nav('${currentPage}')"]`)?.style.display==='none')nav('dashboard');
+}
+function ensureCloudAdminModalsV126(){
+  if(document.getElementById('modal-cloud-tenant-v126'))return;
+  document.body.insertAdjacentHTML('beforeend',`
+    <div class="modal-overlay" id="modal-cloud-tenant-v126"><div class="modal">
+      <div class="modal-header"><div class="modal-title">Crear empresa cliente</div><button class="modal-close" onclick="closeModal('modal-cloud-tenant-v126')">✕</button></div>
+      <form onsubmit="saveCloudTenantV126(event)"><div class="modal-body"><div class="cloud-note" style="margin-bottom:12px;">Crea una cuenta independiente. El administrador recibirá una clave temporal y deberá configurar MFA.</div><div class="form-grid">
+        <div class="form-group full"><label class="form-label">Razón social *</label><input class="form-input" id="ct126-company" required maxlength="180"></div>
+        <div class="form-group"><label class="form-label">RUT empresa *</label><input class="form-input" id="ct126-rut" required placeholder="76.123.456-7"></div>
+        <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="ct126-phone" value="+569" inputmode="tel"></div>
+        <div class="form-group full"><label class="form-label">Administrador principal *</label><input class="form-input" id="ct126-admin" required maxlength="160"></div>
+        <div class="form-group full"><label class="form-label">Correo del administrador *</label><input class="form-input" id="ct126-email" required type="email"></div>
+      </div></div><div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="closeModal('modal-cloud-tenant-v126')">Cancelar</button><button class="btn btn-primary" type="submit">Crear empresa</button></div></form>
+    </div></div>
+    <div class="modal-overlay" id="modal-cloud-user-v126"><div class="modal">
+      <div class="modal-header"><div class="modal-title">Permisos del usuario</div><button class="modal-close" onclick="closeModal('modal-cloud-user-v126')">✕</button></div>
+      <form onsubmit="saveCloudUserV126(event)"><div class="modal-body"><div class="cloud-note" id="cu126-detail" style="margin-bottom:12px;"></div><div class="form-grid">
+        <div class="form-group"><label class="form-label">Rol</label><select class="form-select" id="cu126-role"><option value="client_admin">Administrador</option><option value="rrhh">RR.HH.</option><option value="prevencion">Prevención</option><option value="acreditacion">Acreditación</option><option value="consulta">Solo lectura</option></select></div>
+        <div class="form-group"><label class="form-label">Estado</label><select class="form-select" id="cu126-active"><option value="true">Activo</option><option value="false">Suspendido</option></select></div>
+        <div class="form-group full"><label class="form-label">Módulos sin acceso</label><div id="cu126-modules" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;"></div><div class="worker-rut">Marca únicamente los módulos que esta persona no debe visualizar.</div></div>
+      </div></div><div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="closeModal('modal-cloud-user-v126')">Cancelar</button><button class="btn btn-primary" type="submit">Guardar permisos</button></div></form>
+    </div></div>
+    <div class="modal-overlay" id="modal-cloud-result-v126"><div class="modal"><div class="modal-header"><div class="modal-title">Acceso temporal creado</div><button class="modal-close" onclick="closeModal('modal-cloud-result-v126')">✕</button></div><div class="modal-body" id="cloud-result-body-v126"></div><div class="modal-footer"><button class="btn btn-primary" onclick="closeModal('modal-cloud-result-v126')">Entendido</button></div></div></div>`);
+}
+let cloudUserContextV126=null;
+const cloudModulesV126={trabajadores:'Trabajadores',epp:'EPP y entregas',auditoria:'Auditoría',mantenciones:'Servicios',contratos:'Contratos y firmas',hoteleria:'Hotelería',llamados:'WhatsApp',vehiculos:'Vehículos y equipos',subcontratos:'Subcontratos',turnos:'Turnos y jornada',credenciales:'Credenciales',incidentes:'Incidentes',protocolos:'Salud ocupacional',reportes:'Reportes'};
+function openCloudTenantV126(){ensureCloudAdminModalsV126();document.querySelector('#modal-cloud-tenant-v126 form').reset();document.getElementById('ct126-phone').value='+569';openModal('modal-cloud-tenant-v126');}
+async function saveCloudTenantV126(event){
+  event.preventDefault();const companyName=document.getElementById('ct126-company').value.trim(),rut=document.getElementById('ct126-rut').value.trim(),adminName=document.getElementById('ct126-admin').value.trim(),email=document.getElementById('ct126-email').value.trim(),phone=document.getElementById('ct126-phone').value.trim();
+  if(!isValidRut(rut))return toast('El RUT de la empresa no es válido','err');if(!isValidEmail(email))return toast('El correo no es válido','err');if(phone&&!isValidPhoneCL(phone))return toast('El teléfono no es válido','err');
+  try{const result=await window.AccesoMinaCloud.api('/tenants',{method:'POST',body:{companyName,rut,adminName,email,phone}});closeModal('modal-cloud-tenant-v126');document.getElementById('cloud-result-body-v126').innerHTML=`<div class="cloud-note">La contraseña se muestra una sola vez. Entrégala por un canal seguro.</div><div class="card" style="margin-top:12px;"><b>Usuario</b><div>${escWorkBookV125(result.user.email)}</div><b style="display:block;margin-top:10px;">Contraseña temporal</b><div style="font-size:20px;font-weight:800;word-break:break-all;">${escWorkBookV125(result.temporaryPassword)}</div></div><div class="worker-rut" style="margin-top:10px;">El usuario deberá cambiar su contraseña y configurar doble autenticación en el primer acceso.</div>`;openModal('modal-cloud-result-v126');window.renderClientes?.();toast('Empresa creada con datos separados');}catch(error){toast(error.message||'No fue posible crear la empresa','err');}
+}
+function openCloudUserV126(id,currentRole,active,currentDenied=''){
+  ensureCloudAdminModalsV126();cloudUserContextV126={id};document.getElementById('cu126-role').value=currentRole;document.getElementById('cu126-active').value=String(active);document.getElementById('cu126-detail').textContent='Define el rol, estado y módulos visibles. Los cambios aplican únicamente a esta empresa.';
+  const denied=new Set(String(currentDenied||'').split(',').map(x=>x.trim()).filter(Boolean));document.getElementById('cu126-modules').innerHTML=Object.entries(cloudModulesV126).map(([key,label])=>`<label style="display:flex;gap:7px;align-items:center;"><input type="checkbox" value="${key}" ${denied.has(key)?'checked':''}> ${label}</label>`).join('');openModal('modal-cloud-user-v126');
+}
+async function saveCloudUserV126(event){
+  event.preventDefault();const modules={};document.querySelectorAll('#cu126-modules input:checked').forEach(input=>modules[input.value]=false);
+  try{await window.AccesoMinaCloud.api(`/users/${cloudUserContextV126.id}`,{method:'PATCH',body:{role:document.getElementById('cu126-role').value,active:document.getElementById('cu126-active').value==='true',permissions:{modules}}});closeModal('modal-cloud-user-v126');nav('usuarios');toast('Permisos actualizados');}catch(error){toast(error.message||'No fue posible actualizar permisos','err');}
+}
+function hookCloudAdminV126(){
+  if(!window.AccesoMinaCloud?.api)return false;ensureCloudAdminModalsV126();window.AccesoMinaCloud.createTenantAdmin=openCloudTenantV126;window.AccesoMinaCloud.editUser=openCloudUserV126;return true;
+}
+const setCloudIdentityV126Base=setCloudIdentityV7;
+setCloudIdentityV7=function(identity){setCloudIdentityV126Base(identity);installWorkspaceV126();setTimeout(()=>{const key=document.getElementById('workspace-select-v126')?.value||preferredWorkspaceV126();applyWorkspaceV126(key,false);hookCloudAdminV126();},40);};
+const renderCurrentPageSoftV126Base=renderCurrentPageSoft;
+renderCurrentPageSoft=function(){renderCurrentPageSoftV126Base();installWorkspaceV126();setTimeout(()=>applyWorkspaceV126(document.getElementById('workspace-select-v126')?.value||preferredWorkspaceV126(),false),20);};
+window.addEventListener('load',()=>{installWorkspaceV126();ensureCloudAdminModalsV126();let attempts=0;const timer=setInterval(()=>{if(hookCloudAdminV126()||++attempts>20)clearInterval(timer);},250);});
+</script>
+
 </body>
 </html>
