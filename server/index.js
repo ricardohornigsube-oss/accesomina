@@ -18,6 +18,7 @@ import { settingsRouter } from './routes/settings.js';
 import { dataTransferRouter } from './routes/data-transfer.js';
 import { privacyRouter } from './routes/privacy.js';
 import { operationsRouter } from './routes/operations.js';
+import { workBooksRouter } from './routes/work-books.js';
 import { startJobRunner } from './jobs.js';
 import { evaluateReadiness } from './readiness.js';
 
@@ -47,6 +48,7 @@ app.use('/api/settings', settingsRouter);
 app.use('/api/data-transfer', dataTransferRouter);
 app.use('/api/privacy', privacyRouter);
 app.use('/api/operations', operationsRouter);
+app.use('/api/work-books', workBooksRouter);
 app.use('/api', (req,res)=>res.status(404).json({error:'API_ROUTE_NOT_FOUND'}));
 
 app.use(express.static(path.resolve(__dirname, '../public'), { etag:true, maxAge:config.env==='production'?'1h':0, index:'index.html' }));

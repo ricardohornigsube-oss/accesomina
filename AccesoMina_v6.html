@@ -8161,5 +8161,162 @@ if (location.protocol !== 'file:') {
   document.body.appendChild(cloudScript);
 }
 </script>
+<script>
+// V12.5 · Libro de Obra formal
+let workBookEntriesV125=[];
+const workBookStatusLabelsV125={borrador:'Borrador',pendiente_firma:'Pendiente firma',observado:'Observado',firmado:'Firmado',cerrado:'Cerrado'};
+const workBookTypeLabelsV125={instruccion:'Instrucción',consulta:'Consulta',respuesta:'Respuesta',avance:'Avance',incidente:'Incidente',acuerdo:'Acuerdo',observacion:'Observación',recepcion:'Recepción',otro:'Otro'};
+const workBookBookLabelsV125={maestro:'Maestro',seguridad_hsec:'Seguridad / HSEC',calidad:'Calidad',terreno_avance:'Terreno / avance',comunicaciones:'Comunicaciones'};
+const escWorkBookV125=value=>typeof eppEsc==='function'?eppEsc(String(value??'')):String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+const workBookCloudV125=()=>Boolean(window.AccesoMinaCloud?.enabled&&window.AccesoMinaCloud?.api);
+function ensureWorkBookStateV125(){
+  if(!Array.isArray(S.workBookEntries))S.workBookEntries=[];
+  workBookEntriesV125=S.workBookEntries;
+  S.workBookEntries.forEach(row=>{if(!Array.isArray(row.history))row.history=[];if(!Array.isArray(row.evidenceFiles))row.evidenceFiles=[];});
+}
+const snapshotStateV125Base=snapshotState;
+snapshotState=function(){ensureWorkBookStateV125();return {...snapshotStateV125Base(),workBookEntries:S.workBookEntries};};
+const applyStateV125Base=applyState;
+applyState=function(data){applyStateV125Base(data);if(data?.workBookEntries!==undefined)S.workBookEntries=data.workBookEntries;ensureWorkBookStateV125();};
+const emptyTenantDataV125Base=emptyTenantData;
+emptyTenantData=function(nombre,rut,email,tel){return {...emptyTenantDataV125Base(nombre,rut,email,tel),workBookEntries:[]};};
+function installWorkBookUiV125(){
+  ensureWorkBookStateV125();
+  if(!document.getElementById('nav-work-book-v125')){
+    const center=[...document.querySelectorAll('#sidebar .nav-item')].find(el=>el.getAttribute('onclick')==="nav('operaciones-cloud')");
+    center?.insertAdjacentHTML('beforebegin','<div class="nav-item" id="nav-work-book-v125" onclick="nav(\'libro-obras\')">📖 Libro de Obra <span class="nav-badge" id="badge-work-book-v125">0</span></div>');
+  }
+  if(!document.getElementById('page-libro-obras')){
+    document.getElementById('main')?.insertAdjacentHTML('beforeend',`
+      <div id="page-libro-obras" class="page">
+        <div class="section-header"><div><div class="section-title">Libro de Obra</div><div class="section-subtitle">Registro formal, correlativo y trazable por cliente, contrato y servicio.</div></div><button class="btn btn-primary" onclick="openWorkBookFormV125()">+ Nueva anotación</button></div>
+        <div class="cloud-note" style="margin-bottom:16px;">Use esta vista para registrar instrucciones, acuerdos, avances, consultas, respuestas e incidentes. Las anotaciones firmadas o cerradas quedan protegidas y cualquier cambio conserva su historial.</div>
+        <div class="kpi-grid" id="work-book-kpis-v125"></div>
+        <div class="filters" style="margin-bottom:14px;">
+          <input class="form-input" id="wb-filter-q-v125" placeholder="Buscar folio, asunto o contenido..." oninput="renderWorkBookV125()">
+          <select class="filter-select" id="wb-filter-mine-v125" onchange="renderWorkBookV125()"><option value="">Todos los clientes</option></select>
+          <select class="filter-select" id="wb-filter-project-v125" onchange="renderWorkBookV125()"><option value="">Todos los servicios</option></select>
+          <select class="filter-select" id="wb-filter-status-v125" onchange="renderWorkBookV125()"><option value="">Todos los estados</option><option value="borrador">Borrador</option><option value="pendiente_firma">Pendiente firma</option><option value="observado">Observado</option><option value="firmado">Firmado</option><option value="cerrado">Cerrado</option></select>
+          <select class="filter-select" id="wb-filter-year-v125" onchange="renderWorkBookV125()"><option value="">Todos los años</option>${Array.from({length:16},(_,i)=>`<option>${2025+i}</option>`).join('')}</select>
+          <select class="filter-select" id="wb-filter-month-v125" onchange="renderWorkBookV125()"><option value="">Todos los meses</option>${Array.from({length:12},(_,i)=>`<option value="${String(i+1).padStart(2,'0')}">${new Date(2025,i,1).toLocaleString('es-CL',{month:'long'})}</option>`).join('')}</select>
+          <button class="btn btn-secondary btn-sm" onclick="exportWorkBookV125()">Exportar CSV</button>
+        </div>
+        <div class="card"><div class="table-wrap"><table id="work-book-table-v125"></table></div></div>
+      </div>`);
+  }
+  if(!document.getElementById('modal-work-book-v125')){
+    document.body.insertAdjacentHTML('beforeend',`
+      <div class="modal-overlay" id="modal-work-book-v125"><div class="modal modal-wide">
+        <div class="modal-header"><div class="modal-title">Nueva anotación del Libro de Obra</div><button class="modal-close" onclick="closeModal('modal-work-book-v125')">✕</button></div>
+        <form onsubmit="saveWorkBookEntryV125(event)"><div class="modal-body"><div class="form-grid">
+          <div class="form-group"><label class="form-label">Cliente *</label><select class="form-select" id="wb-mine-v125" required onchange="syncWorkBookScopeV125()"></select></div>
+          <div class="form-group"><label class="form-label">Contrato</label><select class="form-select" id="wb-contract-v125" onchange="syncWorkBookScopeV125(true)"></select></div>
+          <div class="form-group full"><label class="form-label">Proyecto / servicio / mantención *</label><select class="form-select" id="wb-project-v125" required></select></div>
+          <div class="form-group"><label class="form-label">Libro</label><select class="form-select" id="wb-book-type-v125">${Object.entries(workBookBookLabelsV125).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select></div>
+          <div class="form-group"><label class="form-label">Tipo de anotación</label><select class="form-select" id="wb-entry-type-v125">${Object.entries(workBookTypeLabelsV125).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select></div>
+          <div class="form-group"><label class="form-label">Fecha y hora *</label><input class="form-input" id="wb-date-v125" type="datetime-local" required></div>
+          <div class="form-group"><label class="form-label">Estado inicial</label><select class="form-select" id="wb-status-v125"><option value="borrador">Borrador</option><option value="pendiente_firma">Enviar a firma</option></select></div>
+          <div class="form-group full"><label class="form-label">Asunto *</label><input class="form-input" id="wb-subject-v125" maxlength="240" required></div>
+          <div class="form-group full"><label class="form-label">Detalle de la anotación *</label><textarea class="form-textarea" id="wb-body-v125" maxlength="12000" required placeholder="Hecho, instrucción, acuerdo, respuesta o avance que debe quedar formalmente registrado..."></textarea></div>
+          <div class="form-group"><label class="form-label">Responsable / contraparte</label><input class="form-input" id="wb-responsible-v125" maxlength="200"></div>
+          <div class="form-group"><label class="form-label">Fecha compromiso</label><input class="form-input" id="wb-due-v125" type="date"></div>
+          <div class="form-group full"><label class="form-label">Evidencia</label><input class="form-input" id="wb-files-v125" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"><div class="worker-rut">PDF, imagen o Word. En cloud se almacena de forma privada.</div></div>
+        </div></div><div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="closeModal('modal-work-book-v125')">Cancelar</button><button class="btn btn-primary" type="submit">Guardar anotación</button></div></form>
+      </div></div>
+      <div class="modal-overlay" id="modal-work-book-detail-v125"><div class="modal modal-wide">
+        <div class="modal-header"><div class="modal-title" id="wb-detail-title-v125">Ficha de anotación</div><button class="modal-close" onclick="closeModal('modal-work-book-detail-v125')">✕</button></div>
+        <div class="modal-body" id="wb-detail-body-v125"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-work-book-detail-v125')">Cerrar</button></div>
+      </div></div>`);
+  }
+  pageLabels['libro-obras']='Libro de Obra';
+  pageSubs['libro-obras']='Registro formal, compromisos, evidencias, firmas e historial';
+}
+function workBookMapCloudV125(row){return {id:row.id,bookId:row.book_id,folio:row.folio,entryNumber:row.entry_number,mineRef:row.mine_ref,contractRef:row.contract_ref||'',projectRef:row.project_ref,bookType:row.book_type,bookTitle:row.book_title,entryType:row.entry_type,occurredAt:row.occurred_at,subject:row.subject,body:row.body,responsible:row.responsible||'',dueAt:row.due_at||'',status:row.status,signatureState:row.signature_state,evidenceFiles:row.evidence_files||[],createdBy:row.created_by_name||'',createdAt:row.created_at,updatedAt:row.updated_at,history:row.history||[]};}
+async function loadWorkBookEntriesV125(){
+  ensureWorkBookStateV125();
+  if(workBookCloudV125()){
+    try{workBookEntriesV125=(await window.AccesoMinaCloud.api('/work-books/entries')).map(workBookMapCloudV125);}
+    catch(error){toast(error.message||'No fue posible cargar el Libro de Obra','err');workBookEntriesV125=[];}
+  }else workBookEntriesV125=S.workBookEntries;
+  return workBookEntriesV125;
+}
+function workBookScopeNamesV125(row){
+  return {mine:S.minas.find(x=>String(x.id)===String(row.mineRef))?.nombre||'Cliente',contract:S.contratos.find(x=>String(x.id)===String(row.contractRef))?.nombre||'Sin contrato',project:S.mantenciones.find(x=>String(x.id)===String(row.projectRef))?.nombre||'Servicio'};
+}
+function workBookBadgeV125(status){const cls=status==='firmado'||status==='cerrado'?'badge-ok':status==='observado'?'badge-err':status==='pendiente_firma'?'badge-warn':'badge-blue';return `<span class="badge ${cls}">${escWorkBookV125(workBookStatusLabelsV125[status]||status)}</span>`;}
+async function renderWorkBookV125(){
+  installWorkBookUiV125();const rows=await loadWorkBookEntriesV125();
+  const mine=document.getElementById('wb-filter-mine-v125'),project=document.getElementById('wb-filter-project-v125');
+  const mineValue=mine?.value||'',projectValue=project?.value||'';
+  if(mine){mine.innerHTML='<option value="">Todos los clientes</option>'+S.minas.map(x=>`<option value="${escWorkBookV125(x.id)}">${escWorkBookV125(x.nombre)}</option>`).join('');mine.value=mineValue;}
+  if(project){project.innerHTML='<option value="">Todos los servicios</option>'+S.mantenciones.map(x=>`<option value="${escWorkBookV125(x.id)}">${escWorkBookV125(x.nombre)}</option>`).join('');project.value=projectValue;}
+  const q=(document.getElementById('wb-filter-q-v125')?.value||'').toLowerCase(),status=document.getElementById('wb-filter-status-v125')?.value||'',year=document.getElementById('wb-filter-year-v125')?.value||'',month=document.getElementById('wb-filter-month-v125')?.value||'';
+  const filtered=rows.filter(row=>{const names=workBookScopeNamesV125(row),date=String(row.occurredAt||'');return(!q||`${row.folio} ${row.subject} ${row.body} ${names.mine} ${names.project}`.toLowerCase().includes(q))&&(!mineValue||row.mineRef===mineValue)&&(!projectValue||row.projectRef===projectValue)&&(!status||row.status===status)&&(!year||date.slice(0,4)===year)&&(!month||date.slice(5,7)===month);});
+  const overdue=rows.filter(row=>row.dueAt&&row.dueAt<hoy()&&!['firmado','cerrado'].includes(row.status)).length,pending=rows.filter(row=>row.status==='pendiente_firma').length,open=rows.filter(row=>!['firmado','cerrado'].includes(row.status)).length;
+  const kpis=document.getElementById('work-book-kpis-v125');if(kpis)kpis.innerHTML=`<div class="kpi kpi-blue"><div class="kpi-value">${rows.length}</div><div class="kpi-label">Anotaciones</div></div><div class="kpi kpi-orange"><div class="kpi-value">${open}</div><div class="kpi-label">Abiertas</div></div><div class="kpi kpi-yellow"><div class="kpi-value">${pending}</div><div class="kpi-label">Pendientes de firma</div></div><div class="kpi ${overdue?'kpi-red':'kpi-green'}"><div class="kpi-value">${overdue}</div><div class="kpi-label">Compromisos vencidos</div></div>`;
+  const table=document.getElementById('work-book-table-v125');if(table)table.innerHTML=`<thead><tr><th>Folio / N°</th><th>Fecha</th><th>Cliente / servicio</th><th>Tipo y asunto</th><th>Responsable / compromiso</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${filtered.map(row=>{const names=workBookScopeNamesV125(row),late=row.dueAt&&row.dueAt<hoy()&&!['firmado','cerrado'].includes(row.status);return `<tr><td><b>${escWorkBookV125(row.folio||'LOCAL')}</b><div class="worker-rut">Anotación ${escWorkBookV125(row.entryNumber||'—')}</div></td><td>${escWorkBookV125(String(row.occurredAt||'').slice(0,10))}</td><td><b>${escWorkBookV125(names.mine)}</b><div class="worker-rut">${escWorkBookV125(names.project)} · ${escWorkBookV125(names.contract)}</div></td><td><span class="badge badge-na">${escWorkBookV125(workBookTypeLabelsV125[row.entryType]||row.entryType)}</span><div style="font-weight:700;margin-top:5px;">${escWorkBookV125(row.subject)}</div></td><td>${escWorkBookV125(row.responsible||'—')}<div class="worker-rut">${row.dueAt?`Compromiso ${escWorkBookV125(row.dueAt)} ${late?'<span class="badge badge-err">Vencido</span>':''}`:'Sin compromiso'}</div></td><td>${workBookBadgeV125(row.status)}</td><td><button class="btn btn-secondary btn-sm" onclick="openWorkBookDetailV125('${escWorkBookV125(row.id)}')">Ficha e historial</button></td></tr>`;}).join('')||'<tr><td colspan="7">No existen anotaciones para los filtros seleccionados.</td></tr>'}</tbody>`;
+  const badge=document.getElementById('badge-work-book-v125');if(badge)badge.textContent=String(open+overdue);
+}
+function openWorkBookFormV125(){
+  installWorkBookUiV125();document.getElementById('wb-date-v125').value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16);
+  document.getElementById('wb-mine-v125').innerHTML='<option value="">Seleccionar cliente...</option>'+S.minas.map(x=>`<option value="${escWorkBookV125(x.id)}">${escWorkBookV125(x.nombre)}</option>`).join('');
+  syncWorkBookScopeV125();openModal('modal-work-book-v125');
+}
+function syncWorkBookScopeV125(contractChanged=false){
+  const mineId=document.getElementById('wb-mine-v125')?.value||'',contractEl=document.getElementById('wb-contract-v125'),projectEl=document.getElementById('wb-project-v125');
+  const previousContract=contractEl?.value||'',previousProject=projectEl?.value||'';
+  if(contractEl){contractEl.innerHTML='<option value="">Sin contrato / no aplica</option>'+S.contratos.filter(x=>!mineId||String(x.minaId)===mineId).map(x=>`<option value="${escWorkBookV125(x.id)}">${escWorkBookV125(x.nombre)}</option>`).join('');contractEl.value=[...contractEl.options].some(o=>o.value===previousContract)?previousContract:'';}
+  const contractId=contractEl?.value||'';if(projectEl){projectEl.innerHTML='<option value="">Seleccionar servicio...</option>'+S.mantenciones.filter(x=>(!mineId||String(x.minaId)===mineId)&&(!contractChanged||!contractId||String(x.contratoId||'')===contractId)).map(x=>`<option value="${escWorkBookV125(x.id)}">${escWorkBookV125(x.nombre)}</option>`).join('');projectEl.value=[...projectEl.options].some(o=>o.value===previousProject)?previousProject:'';}
+}
+async function saveWorkBookEntryV125(event){
+  event.preventDefault();const mineRef=document.getElementById('wb-mine-v125').value,contractRef=document.getElementById('wb-contract-v125').value,projectRef=document.getElementById('wb-project-v125').value,subject=document.getElementById('wb-subject-v125').value.trim(),body=document.getElementById('wb-body-v125').value.trim();
+  if(!mineRef||!projectRef||!subject||!body)return toast('Cliente, servicio, asunto y detalle son requeridos','err');
+  const project=S.mantenciones.find(x=>String(x.id)===projectRef);if(!project||String(project.minaId)!==mineRef)return toast('El servicio seleccionado no pertenece al cliente','err');
+  try{
+    const localId='wbe'+Date.now(),evidenceFiles=await captureEvidenceFilesV79(document.getElementById('wb-files-v125'),'work_book_entry',localId);
+    const payload={mineRef,contractRef,projectRef,bookType:document.getElementById('wb-book-type-v125').value,bookTitle:`Libro ${workBookBookLabelsV125[document.getElementById('wb-book-type-v125').value]} · ${project.nombre}`,entryType:document.getElementById('wb-entry-type-v125').value,occurredAt:new Date(document.getElementById('wb-date-v125').value).toISOString(),subject,body,responsible:document.getElementById('wb-responsible-v125').value.trim(),dueAt:document.getElementById('wb-due-v125').value||null,status:document.getElementById('wb-status-v125').value,evidenceFiles};
+    if(workBookCloudV125())await window.AccesoMinaCloud.api('/work-books/entries',{method:'POST',body:payload});
+    else{ensureWorkBookStateV125();const year=payload.occurredAt.slice(0,4),same=S.workBookEntries.filter(x=>String(x.occurredAt||'').slice(0,4)===year),existing=same.find(x=>x.mineRef===mineRef&&x.contractRef===contractRef&&x.projectRef===projectRef&&x.bookType===payload.bookType),folio=existing?.folio||`LOD-${year}-${String(new Set(same.map(x=>x.folio)).size+1).padStart(5,'0')}`,entryNumber=existing?Math.max(0,...same.filter(x=>x.folio===folio).map(x=>Number(x.entryNumber)||0))+1:1,row={id:localId,folio,entryNumber,...payload,signatureState:payload.status==='pendiente_firma'?'pendiente':'sin_firma',createdAt:new Date().toISOString(),createdBy:currentTenantUser?.email||'usuario',history:[{action:'creada',reason:'Creación de anotación',changedAt:new Date().toISOString(),changedBy:currentTenantUser?.email||'usuario'}]};S.workBookEntries.push(row);persistTenant();}
+    event.target.reset();closeModal('modal-work-book-v125');await renderWorkBookV125();renderWorkBookDashboardV125();toast('Anotación registrada con trazabilidad');
+  }catch(error){if(!['INVALID_FILE_TYPE','FILE_TOO_LARGE','LOCAL_FILE_TOO_LARGE'].includes(error.message))toast(error.message||'No fue posible guardar la anotación','err');}
+}
+async function workBookDetailRecordV125(id){
+  if(workBookCloudV125())return workBookMapCloudV125(await window.AccesoMinaCloud.api(`/work-books/entries/${encodeURIComponent(id)}`));
+  ensureWorkBookStateV125();return S.workBookEntries.find(x=>x.id===id);
+}
+async function openWorkBookDetailV125(id){
+  const row=await workBookDetailRecordV125(id);if(!row)return toast('Anotación no encontrada','err');const names=workBookScopeNamesV125(row),locked=['firmado','cerrado'].includes(row.status),history=row.history||[];
+  document.getElementById('wb-detail-title-v125').textContent=`${row.folio||'Libro de Obra'} · Anotación ${row.entryNumber||'—'}`;
+  document.getElementById('wb-detail-body-v125').innerHTML=`
+    <div class="kpi-grid" style="margin-bottom:14px;"><div class="kpi kpi-blue"><div class="kpi-value">${escWorkBookV125(row.folio||'LOCAL')}</div><div class="kpi-label">Folio</div></div><div class="kpi kpi-orange"><div class="kpi-value">${escWorkBookV125(row.entryNumber||'—')}</div><div class="kpi-label">Anotación</div></div><div class="kpi kpi-green"><div class="kpi-value" style="font-size:16px;">${escWorkBookV125(workBookStatusLabelsV125[row.status]||row.status)}</div><div class="kpi-label">Estado</div></div></div>
+    <div class="card" style="margin-bottom:14px;"><div class="card-title">${escWorkBookV125(row.subject)}</div><div class="worker-rut" style="margin:5px 0 12px;">${escWorkBookV125(names.mine)} · ${escWorkBookV125(names.contract)} · ${escWorkBookV125(names.project)}</div><div style="white-space:pre-wrap;">${escWorkBookV125(row.body)}</div><div style="margin-top:12px;"><b>Responsable:</b> ${escWorkBookV125(row.responsible||'—')} · <b>Compromiso:</b> ${escWorkBookV125(row.dueAt||'—')}</div><div style="margin-top:10px;">${(row.evidenceFiles||[]).map(f=>`<span class="badge badge-blue">${escWorkBookV125(f.name)}</span>`).join(' ')||'<span class="worker-rut">Sin evidencia adjunta</span>'}</div></div>
+    <div class="card" style="margin-bottom:14px;"><div class="card-title">Actualizar estado y seguimiento</div>${locked?'<div class="cloud-note">Esta anotación está protegida. Para rectificarla, cree una nueva anotación vinculada al mismo servicio.</div>':`<div class="form-grid" style="margin-top:10px;"><div class="form-group"><label class="form-label">Nuevo estado</label><select class="form-select" id="wb-update-status-v125">${['borrador','pendiente_firma','observado','firmado','cerrado'].map(s=>`<option value="${s}" ${row.status===s?'selected':''}>${workBookStatusLabelsV125[s]}</option>`).join('')}</select></div><div class="form-group full"><label class="form-label">Motivo / seguimiento *</label><textarea class="form-textarea" id="wb-update-reason-v125" placeholder="Indique qué cambió, por qué y la evidencia relacionada."></textarea></div></div><button class="btn btn-primary" onclick="updateWorkBookEntryV125('${escWorkBookV125(row.id)}')">Guardar seguimiento</button>`}</div>
+    <div class="card"><div class="card-title">Historial trazable</div><div class="table-wrap" style="margin-top:10px;"><table><thead><tr><th>Fecha</th><th>Acción</th><th>Motivo</th><th>Usuario</th></tr></thead><tbody>${history.map(h=>`<tr><td>${escWorkBookV125(String(h.changed_at||h.changedAt||'').replace('T',' ').slice(0,16))}</td><td>${escWorkBookV125(h.action||'actualización')}</td><td>${escWorkBookV125(h.reason||'—')}</td><td>${escWorkBookV125(h.changed_by_name||h.changedBy||'usuario')}</td></tr>`).join('')||'<tr><td colspan="4">La creación constituye el primer registro de auditoría.</td></tr>'}</tbody></table></div></div>`;
+  openModal('modal-work-book-detail-v125');
+}
+async function updateWorkBookEntryV125(id){
+  const status=document.getElementById('wb-update-status-v125')?.value,reason=document.getElementById('wb-update-reason-v125')?.value.trim();if(!reason)return toast('El motivo del cambio es obligatorio','err');
+  try{
+    if(workBookCloudV125())await window.AccesoMinaCloud.api(`/work-books/entries/${encodeURIComponent(id)}`,{method:'PATCH',body:{status,reason}});
+    else{const row=S.workBookEntries.find(x=>x.id===id);if(!row)return;const allowed={borrador:['borrador','pendiente_firma','cerrado'],pendiente_firma:['pendiente_firma','observado','firmado'],observado:['observado','borrador','pendiente_firma'],firmado:['firmado','cerrado'],cerrado:['cerrado']};if(!allowed[row.status]?.includes(status))return toast(`No se puede cambiar de ${row.status} a ${status}`,'err');row.history.unshift({action:row.status===status?'actualizada':'estado_cambiado',reason,from:row.status,to:status,changedAt:new Date().toISOString(),changedBy:currentTenantUser?.email||'usuario'});row.status=status;row.signatureState=status==='pendiente_firma'?'pendiente':status==='firmado'?'firmado':row.signatureState;row.updatedAt=new Date().toISOString();persistTenant();}
+    closeModal('modal-work-book-detail-v125');await renderWorkBookV125();renderWorkBookDashboardV125();toast('Seguimiento guardado en el historial');
+  }catch(error){toast(error.message||'No fue posible actualizar la anotación','err');}
+}
+function exportWorkBookV125(){
+  const rows=[['Folio','Anotación','Fecha','Cliente','Contrato','Servicio','Tipo','Asunto','Responsable','Compromiso','Estado','Firma']];
+  workBookEntriesV125.forEach(row=>{const n=workBookScopeNamesV125(row);rows.push([row.folio,row.entryNumber,String(row.occurredAt||'').slice(0,10),n.mine,n.contract,n.project,workBookTypeLabelsV125[row.entryType]||row.entryType,row.subject,row.responsible,row.dueAt,row.status,row.signatureState]);});exportCSV(rows,`libro_de_obra_${hoy()}.csv`);
+}
+async function renderWorkBookDashboardV125(){
+  const page=document.getElementById('page-dashboard');if(!page)return;let host=document.getElementById('dash-work-book-v125');if(!host){const anchor=document.getElementById('dash-recruitment-center');anchor?.insertAdjacentHTML('afterend','<div class="card" id="dash-work-book-v125" style="margin-bottom:20px;"></div>');host=document.getElementById('dash-work-book-v125');}if(!host)return;
+  const rows=await loadWorkBookEntriesV125(),open=rows.filter(x=>!['firmado','cerrado'].includes(x.status)).length,pending=rows.filter(x=>x.status==='pendiente_firma').length,late=rows.filter(x=>x.dueAt&&x.dueAt<hoy()&&!['firmado','cerrado'].includes(x.status)).length;
+  host.innerHTML=`<div class="card-header"><div><div class="card-title">📖 Libro de Obra</div><div class="card-subtitle">Registro formal de instrucciones, acuerdos, avances y compromisos.</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-secondary btn-sm" onclick="nav('libro-obras')">Abrir libro</button><button class="btn btn-primary btn-sm" onclick="openWorkBookFormV125()">+ Nueva anotación</button></div></div><div class="kpi-grid" style="margin-top:12px;"><div class="kpi kpi-blue"><div class="kpi-value">${rows.length}</div><div class="kpi-label">Anotaciones</div></div><div class="kpi kpi-orange"><div class="kpi-value">${open}</div><div class="kpi-label">Abiertas</div></div><div class="kpi kpi-yellow"><div class="kpi-value">${pending}</div><div class="kpi-label">Pendientes firma</div></div><div class="kpi ${late?'kpi-red':'kpi-green'}"><div class="kpi-value">${late}</div><div class="kpi-label">Compromisos vencidos</div></div></div>`;
+}
+const renderPageV125Base=renderPage;
+renderPage=function(page){if(page==='libro-obras')renderWorkBookV125();else renderPageV125Base(page);};
+const renderDashboardV125Base=renderDashboard;
+renderDashboard=function(){renderDashboardV125Base();renderWorkBookDashboardV125();};
+window.addEventListener('load',()=>{installWorkBookUiV125();renderWorkBookDashboardV125();});
+</script>
+
 </body>
 </html>
