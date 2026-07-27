@@ -7814,6 +7814,208 @@ function saveWarehouseV121(){
 const initV121Base=init;
 init=function(){initV121Base();ensureProfessionalModalsV121();};
 
+// Nexo Klar V10.22 - Hoteleria operativa: disponibilidad, camas, costos e integracion
+let currentHotelDetailV122='';
+function escV122(value){return String(value??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function moneyV122(n){return '$'+Number(n||0).toLocaleString('es-CL');}
+function dateV122(v){return v||hoy();}
+function addDaysV122(date,days){const d=new Date(dateV122(date));d.setDate(d.getDate()+days);return d.toISOString().slice(0,10);}
+function daysBetweenV122(a,b){const start=new Date(dateV122(a)),end=new Date(b||addDaysV122(a,1));return Math.max(1,Math.round((end-start)/86400000));}
+function rangesOverlapV122(aStart,aEnd,bStart,bEnd){
+  const as=new Date(dateV122(aStart)).getTime(),ae=new Date(aEnd||'2999-12-31').getTime();
+  const bs=new Date(dateV122(bStart)).getTime(),be=new Date(bEnd||'2999-12-31').getTime();
+  return as<be&&bs<ae;
+}
+function ensureHotelRoomsV122(h){
+  if(!h)return [];
+  if(!Array.isArray(h.rooms))h.rooms=[];
+  const simples=Math.max(0,Number(h.simples||0)),dobles=Math.max(0,Number(h.dobles||0)),baseRate=Number(h.tarifa||0);
+  if(!h.rooms.length){
+    for(let i=1;i<=simples;i++)h.rooms.push({id:`${h.id}_s_${i}`,number:String(100+i),type:'simple',beds:1,rate:baseRate,status:'activa'});
+    for(let i=1;i<=dobles;i++)h.rooms.push({id:`${h.id}_d_${i}`,number:String(200+i),type:'doble',beds:2,rate:baseRate,status:'activa'});
+  }
+  h.rooms.forEach(r=>{r.beds=Math.max(1,Number(r.beds||1));r.type=r.type||((r.beds>1)?'doble':'simple');r.rate=Number(r.rate||baseRate||0);r.status=r.status||'activa';});
+  h.piezas=h.rooms.length;
+  h.camasTotal=h.rooms.reduce((n,r)=>n+Number(r.beds||1),0);
+  h.camasPorPieza=h.camasPorPieza||Math.max(1,...h.rooms.map(r=>Number(r.beds||1)));
+  return h.rooms;
+}
+function ensureHoteleriaV122(){
+  ensureV6Collections();
+  (S.hoteles||[]).forEach(h=>{
+    ensureHotelRoomsV122(h);
+    if(!Array.isArray(h.documents))h.documents=[];
+    if(!Array.isArray(h.bitacora))h.bitacora=[];
+    if(!h.estado)h.estado='activo';
+    if(!h.contratoHotel)h.contratoHotel=h.contrato||'no';
+    if(h.tarifaSimple===undefined)h.tarifaSimple=Number(h.tarifa||0);
+    if(h.tarifaDoble===undefined)h.tarifaDoble=Number(h.tarifa||0);
+  });
+  (S.hotelAsig||[]).forEach(a=>{
+    if(!a.cama)a.cama='1';
+    if(!a.estado)a.estado=(a.checkout&&a.checkout<hoy())?'finalizada':'activa';
+    const h=S.hoteles.find(x=>x.id===a.hotelId);
+    const room=ensureHotelRoomsV122(h).find(r=>String(r.number)===String(a.pieza));
+    if(h&&!a.tarifaNoche)a.tarifaNoche=Number(room?.rate||h.tarifa||0);
+    a.noches=daysBetweenV122(a.checkin||hoy(),a.checkout||addDaysV122(hoy(),1));
+    a.costoTotal=Number(a.tarifaNoche||0)*a.noches;
+  });
+}
+function hotelBedsV122(h){return ensureHotelRoomsV122(h).flatMap(r=>Array.from({length:Number(r.beds||1)},(_,i)=>({room:r,bed:String(i+1),key:`${r.number}-${i+1}`})));}
+function activeHotelAssignmentsV122(hotelId,start=hoy(),end=addDaysV122(hoy(),1)){
+  return (S.hotelAsig||[]).filter(a=>a.hotelId===hotelId&&a.estado!=='cancelada'&&rangesOverlapV122(start,end,a.checkin||hoy(),a.checkout||'2999-12-31'));
+}
+function hotelOccupancyV122(h,start=hoy(),end=addDaysV122(hoy(),1)){
+  const beds=hotelBedsV122(h),active=activeHotelAssignmentsV122(h.id,start,end);
+  const occupiedKeys=new Set(active.map(a=>`${a.pieza}-${a.cama||'1'}`));
+  const reserved=active.filter(a=>a.checkin>hoy()).length;
+  const blocked=beds.filter(b=>b.room.status==='bloqueada'||b.room.status==='mantencion').length;
+  const occupied=[...occupiedKeys].filter(k=>beds.some(b=>b.key===k)).length;
+  const free=Math.max(0,beds.length-occupied-blocked);
+  return {beds,active,occupied,reserved,blocked,free,total:beds.length,pct:beds.length?Math.round((occupied+blocked)/beds.length*100):0};
+}
+function hotelAvailableBedsV122(hotelId,start,end,excludeId=''){
+  const h=S.hoteles.find(x=>x.id===hotelId);if(!h)return [];
+  const used=new Set((S.hotelAsig||[]).filter(a=>a.id!==excludeId&&a.hotelId===hotelId&&a.estado!=='cancelada'&&rangesOverlapV122(start,end,a.checkin||hoy(),a.checkout||'2999-12-31')).map(a=>`${a.pieza}-${a.cama||'1'}`));
+  return hotelBedsV122(h).filter(b=>!used.has(b.key)&&!['bloqueada','mantencion'].includes(String(b.room.status||'')));
+}
+function renderHotelRoomOptionsV122(){
+  const hotelId=document.getElementById('ha-hotel')?.value,start=document.getElementById('ha-checkin')?.value||hoy(),end=document.getElementById('ha-checkout')?.value||addDaysV122(start,1);
+  const pieza=document.getElementById('ha-pieza'),cama=document.getElementById('ha-cama');
+  if(!pieza||!cama)return;
+  const beds=hotelAvailableBedsV122(hotelId,start,end);
+  const rooms=[...new Map(beds.map(b=>[b.room.number,b.room])).values()];
+  pieza.innerHTML=rooms.map(r=>`<option value="${escV122(r.number)}">${escV122(r.number)} · ${escV122(r.type)} · ${r.beds} cama(s) · ${moneyV122(r.rate)}/noche</option>`).join('')||'<option value="">Sin camas disponibles</option>';
+  const selectedRoom=pieza.value;
+  cama.innerHTML=beds.filter(b=>String(b.room.number)===String(selectedRoom)).map(b=>`<option value="${b.bed}">Cama ${b.bed}</option>`).join('')||'<option value="">Sin cama</option>';
+}
+function ensureHotelAssignFieldsV122(){
+  const pieza=document.getElementById('ha-pieza');if(!pieza)return;
+  if(!document.getElementById('ha-cama')){
+    pieza.closest('.form-group')?.insertAdjacentHTML('afterend','<div class="form-group"><label class="form-label">Cama</label><select class="form-select" id="ha-cama"><option value="">Selecciona habitación</option></select></div>');
+  }
+  ['ha-hotel','ha-checkin','ha-checkout','ha-pieza'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.dataset.hotelV122){el.dataset.hotelV122='1';el.addEventListener('change',renderHotelRoomOptionsV122);}});
+}
+function filterHotelesByMant(){
+  ensureHoteleriaV122();
+  const mantId=document.getElementById('ha-mant')?.value;
+  const mn=S.mantenciones.find(m=>m.id===mantId);
+  const start=mn?.inicio||hoy(),end=mn?.termino||mn?.fin||addDaysV122(start,1);
+  const hoteles=S.hoteles.filter(h=>!(h.minaIds||[]).length||!mn||(h.minaIds||[]).includes(mn.minaId));
+  const hotelSel=document.getElementById('ha-hotel');
+  if(hotelSel)hotelSel.innerHTML=hoteles.map(h=>{const oc=hotelOccupancyV122(h,start,end);return `<option value="${h.id}">${escV122(h.nombre)} · ${escV122(chileLocationLabel(h))} · ${oc.free}/${oc.total} camas libres</option>`;}).join('')||'<option value="">Sin hoteles para este cliente</option>';
+  const ci=document.getElementById('ha-checkin'),co=document.getElementById('ha-checkout');
+  if(ci)ci.value=start;if(co)co.value=end;
+  renderHotelRoomOptionsV122();
+}
+function prepareHotelAssignV122(){
+  ensureHoteleriaV122();ensureHotelAssignFieldsV122();
+  const trab=document.getElementById('ha-trab'),mant=document.getElementById('ha-mant');
+  if(trab)trab.innerHTML='<option value="">Seleccionar trabajador...</option>'+S.trabajadores.filter(t=>!t.bloqueado).map(t=>`<option value="${t.id}">${escV122(t.nombre)} · ${escV122(t.rut)} · ${escV122(t.especialidad||t.cargo||'')}</option>`).join('');
+  if(mant)mant.innerHTML='<option value="">Seleccionar servicio...</option>'+S.mantenciones.map(m=>`<option value="${m.id}">${escV122(m.nombre)} · ${escV122(minaNombre(m.minaId))}</option>`).join('');
+  const ci=document.getElementById('ha-checkin'),co=document.getElementById('ha-checkout');
+  if(ci&&!ci.value)ci.value=hoy();if(co&&!co.value)co.value=addDaysV122(hoy(),1);
+  filterHotelesByMant();
+}
+function saveHotelAsig(){
+  ensureHoteleriaV122();
+  const trabId=document.getElementById('ha-trab')?.value,mantId=document.getElementById('ha-mant')?.value,hotelId=document.getElementById('ha-hotel')?.value,pieza=document.getElementById('ha-pieza')?.value,cama=document.getElementById('ha-cama')?.value||'1';
+  const checkin=document.getElementById('ha-checkin')?.value,checkout=document.getElementById('ha-checkout')?.value;
+  if(!trabId||!mantId||!hotelId||!pieza||!checkin||!checkout){toast('Trabajador, servicio, hotel, habitación y fechas son requeridos','err');return;}
+  if(checkout<=checkin){toast('La fecha de salida debe ser posterior al ingreso','err');return;}
+  if((S.hotelAsig||[]).some(a=>a.trabId===trabId&&a.estado!=='cancelada'&&rangesOverlapV122(checkin,checkout,a.checkin,a.checkout||'2999-12-31'))){toast('La persona ya tiene alojamiento en ese rango de fechas','err');return;}
+  if(!hotelAvailableBedsV122(hotelId,checkin,checkout).some(b=>String(b.room.number)===String(pieza)&&String(b.bed)===String(cama))){toast('La cama seleccionada ya no está disponible','err');renderHotelRoomOptionsV122();return;}
+  const h=S.hoteles.find(x=>x.id===hotelId),room=ensureHotelRoomsV122(h).find(r=>String(r.number)===String(pieza));
+  const tarifa=Number(room?.rate||h?.tarifa||0),noches=daysBetweenV122(checkin,checkout);
+  S.hotelAsig.push({id:'ha'+Date.now(),trabId,mantId,hotelId,pieza,cama,tipo:room?.type||document.getElementById('ha-tipo')?.value||'simple',turno:document.getElementById('ha-turno')?.value||'día',checkin,checkout,comparte:document.getElementById('ha-comparte')?.value||'',tarifaNoche:tarifa,noches,costoTotal:tarifa*noches,estado:'activa',createdAt:new Date().toISOString(),owner:currentTenantUser?.email||'usuario'});
+  if(!S.asignaciones.some(a=>a.trabId===trabId&&a.mantId===mantId)){
+    S.asignaciones.push({id:'asig_hotel_'+Date.now(),trabId,mantId,turno:document.getElementById('ha-turno')?.value||'día',estado:'asignado',source:'hoteleria'});
+    const t=S.trabajadores.find(x=>x.id===trabId);if(t)t.disponibilidad='asignado';
+  }
+  persistTenant();closeModal('modal-hotel-asignar');toast('Alojamiento asignado y conectado al servicio');renderHoteleria();updateBadges();
+}
+function saveNuevoHotel(){
+  ensureHoteleriaV122();
+  const nombre=document.getElementById('hot-nombre')?.value.trim();if(!nombre){toast('Nombre requerido','err');return;}
+  const checks=[...document.querySelectorAll('#hot-minas-checks input:checked')].map(c=>c.value);
+  const simples=Math.max(0,parseInt(document.getElementById('hot-simples')?.value)||0),dobles=Math.max(0,parseInt(document.getElementById('hot-dobles')?.value)||0),tarifa=Number(document.getElementById('hot-tarifa')?.value)||0;
+  const hotel={id:'h'+Date.now(),nombre,direccion:document.getElementById('hot-direccion')?.value||'',region:document.getElementById('hot-region')?.value||'',ciudad:document.getElementById('hot-ciudad')?.value||'',comuna:document.getElementById('hot-ciudad')?.value||'',contacto:document.getElementById('hot-contacto')?.value||'',mail:document.getElementById('hot-mail')?.value||'',tel:document.getElementById('hot-tel')?.value||'',contratoHotel:document.getElementById('hot-contrato')?.value||'no',estado:'activo',simples,dobles,tarifa,tarifaSimple:tarifa,tarifaDoble:tarifa,minaIds:checks,documents:[],bitacora:[{id:'hb_'+Date.now(),date:hoy(),type:'creacion',detail:'Hotel creado en Nexo Klar',owner:currentTenantUser?.email||'usuario',at:new Date().toISOString()}]};
+  ensureHotelRoomsV122(hotel);
+  S.hoteles.push(hotel);
+  closeModal('modal-nuevo-hotel');persistTenant();renderCurrentPageSoft();toast('Hotel agregado con habitaciones y camas');clearAfterSaveV83?.('hotel');
+}
+function closeHotelStayV122(id){
+  const a=S.hotelAsig.find(x=>x.id===id);if(!a)return;
+  openConfirmActionV121({title:'Liberar cama',detail:`Se cerrara la estadía de ${trabNombre(a.trabId)} y la cama quedara disponible desde hoy.`,confirmText:'Liberar cama',kind:'primary',onConfirm:(reason)=>{
+    a.checkout=hoy();a.estado='finalizada';a.closedAt=new Date().toISOString();a.closeReason=reason||'Salida registrada';a.noches=daysBetweenV122(a.checkin,a.checkout);a.costoTotal=Number(a.tarifaNoche||0)*a.noches;
+    persistTenant();renderHoteleria();toast('Cama liberada');
+  }});
+}
+function cancelHotelStayV122(id){
+  const a=S.hotelAsig.find(x=>x.id===id);if(!a)return;
+  openConfirmActionV121({title:'Cancelar alojamiento',detail:`Se cancelara la asignación de ${trabNombre(a.trabId)} sin borrar el historial.`,confirmText:'Cancelar alojamiento',onConfirm:(reason)=>{a.estado='cancelada';a.cancelReason=reason||'Cancelado desde hoteleria';a.cancelledAt=new Date().toISOString();persistTenant();renderHoteleria();toast('Alojamiento cancelado');}});
+}
+function openHotelDetailV122(id){
+  ensureHoteleriaV122();currentHotelDetailV122=id;ensureHotelDetailModalV122();
+  const h=S.hoteles.find(x=>x.id===id);if(!h)return;
+  document.getElementById('hotel-detail-title-v122').textContent=`Hotel: ${h.nombre}`;
+  ['nombre','direccion','region','ciudad','contacto','tel','mail','tarifa','tarifaSimple','tarifaDoble','convenioVence'].forEach(k=>{const el=document.getElementById(`hd-${k}-v122`);if(el)el.value=h[k]||'';});
+  document.getElementById('hd-estado-v122').value=h.estado||'activo';
+  document.getElementById('hd-contrato-v122').value=h.contratoHotel||'no';
+  renderHotelDetailBodyV122(h);
+  openModal('modal-hotel-detail-v122');
+}
+function renderHotelDetailBodyV122(h){
+  const start=document.getElementById('hotel-date-from-v122')?.value||hoy(),end=document.getElementById('hotel-date-to-v122')?.value||addDaysV122(start,7),oc=hotelOccupancyV122(h,start,end);
+  const rooms=ensureHotelRoomsV122(h);
+  const grid=rooms.map(r=>{const beds=Array.from({length:Number(r.beds||1)},(_,i)=>{const bed=String(i+1),asig=activeHotelAssignmentsV122(h.id,start,end).find(a=>String(a.pieza)===String(r.number)&&String(a.cama||'1')===bed);return `<span class="badge ${asig?'badge-err':(['bloqueada','mantencion'].includes(r.status)?'badge-warn':'badge-ok')}">${asig?escV122(trabNombre(asig.trabId)):`Cama ${bed}`}</span>`;}).join(' ');return `<div class="card" style="padding:10px;"><b>Hab. ${escV122(r.number)}</b><div class="worker-rut">${escV122(r.type)} · ${moneyV122(r.rate)} · ${escV122(r.status)}</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;">${beds}</div></div>`;}).join('');
+  document.getElementById('hotel-detail-rooms-v122').innerHTML=`<div class="kpi-grid"><div class="kpi kpi-blue"><div class="kpi-value">${oc.total}</div><div class="kpi-label">Camas</div></div><div class="kpi kpi-red"><div class="kpi-value">${oc.occupied}</div><div class="kpi-label">Ocupadas</div></div><div class="kpi kpi-green"><div class="kpi-value">${oc.free}</div><div class="kpi-label">Libres</div></div><div class="kpi kpi-orange"><div class="kpi-value">${oc.pct}%</div><div class="kpi-label">Ocupación</div></div></div><div class="grid-3" style="margin-top:12px;">${grid||'<div class="cloud-note">Sin habitaciones configuradas.</div>'}</div>`;
+  const hist=(S.hotelAsig||[]).filter(a=>a.hotelId===h.id).slice().sort((a,b)=>String(b.checkin).localeCompare(String(a.checkin))).slice(0,30);
+  document.getElementById('hotel-detail-history-v122').innerHTML=`<div class="table-wrap"><table><thead><tr><th>Persona</th><th>Servicio</th><th>Habitación</th><th>Fechas</th><th>Costo</th><th>Estado</th></tr></thead><tbody>${hist.map(a=>`<tr><td><b>${escV122(trabNombre(a.trabId))}</b></td><td>${escV122(mantNombre(a.mantId))}</td><td>${escV122(a.pieza)} / cama ${escV122(a.cama||'1')}</td><td>${escV122(a.checkin)} → ${escV122(a.checkout||'abierto')}</td><td>${moneyV122(a.costoTotal||0)}</td><td><span class="badge ${a.estado==='activa'?'badge-ok':a.estado==='cancelada'?'badge-err':'badge-na'}">${escV122(a.estado||'activa')}</span></td></tr>`).join('')||'<tr><td colspan="6">Sin historial.</td></tr>'}</tbody></table></div>`;
+  document.getElementById('hotel-detail-bitacora-v122').innerHTML=(h.bitacora||[]).map(b=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);"><b>${escV122(b.date||'')}</b> · ${escV122(b.type||'seguimiento')}<div class="worker-rut">${escV122(b.detail||'')}</div></div>`).join('')||'<div class="worker-rut">Sin bitácora.</div>';
+}
+function saveHotelDetailV122(){
+  const h=S.hoteles.find(x=>x.id===currentHotelDetailV122);if(!h)return;
+  const before=JSON.stringify(h);
+  ['nombre','direccion','region','ciudad','contacto','tel','mail','convenioVence'].forEach(k=>h[k]=document.getElementById(`hd-${k}-v122`)?.value||'');
+  h.tarifa=Number(document.getElementById('hd-tarifa-v122')?.value)||0;h.tarifaSimple=Number(document.getElementById('hd-tarifaSimple-v122')?.value)||h.tarifa;h.tarifaDoble=Number(document.getElementById('hd-tarifaDoble-v122')?.value)||h.tarifa;
+  h.estado=document.getElementById('hd-estado-v122')?.value||'activo';h.contratoHotel=document.getElementById('hd-contrato-v122')?.value||'no';
+  ensureHotelRoomsV122(h).forEach(r=>{if(r.type==='simple')r.rate=h.tarifaSimple;if(r.type==='doble')r.rate=h.tarifaDoble;});
+  h.bitacora=h.bitacora||[];h.bitacora.unshift({id:'hb_'+Date.now(),date:hoy(),type:'modificacion',detail:document.getElementById('hd-note-v122')?.value||'Ficha hotel actualizada',owner:currentTenantUser?.email||'usuario',before,at:new Date().toISOString()});
+  persistTenant();renderHoteleria();renderHotelDetailBodyV122(h);toast('Hotel actualizado');
+}
+function addHotelNoteV122(){
+  const h=S.hoteles.find(x=>x.id===currentHotelDetailV122);if(!h)return;
+  const detail=document.getElementById('hd-new-note-v122')?.value.trim();if(!detail)return toast('Ingresa detalle de seguimiento','err');
+  h.bitacora=h.bitacora||[];h.bitacora.unshift({id:'hb_'+Date.now(),date:hoy(),type:'seguimiento',detail,owner:currentTenantUser?.email||'usuario',at:new Date().toISOString()});
+  document.getElementById('hd-new-note-v122').value='';persistTenant();renderHotelDetailBodyV122(h);toast('Bitácora del hotel actualizada');
+}
+function ensureHotelDetailModalV122(){
+  if(document.getElementById('modal-hotel-detail-v122'))return;
+  document.body.insertAdjacentHTML('beforeend',`<div class="modal-overlay" id="modal-hotel-detail-v122"><div class="modal modal-wide"><div class="modal-header"><div class="modal-title" id="hotel-detail-title-v122">Hotel</div><button class="modal-close" onclick="closeModal('modal-hotel-detail-v122')">✕</button></div><div class="modal-body"><div class="form-grid"><div class="form-group"><label class="form-label">Nombre</label><input class="form-input" id="hd-nombre-v122"></div><div class="form-group"><label class="form-label">Estado</label><select class="form-select" id="hd-estado-v122"><option value="activo">Activo</option><option value="suspendido">Suspendido</option><option value="sin convenio">Sin convenio</option><option value="cerrado">Cerrado</option></select></div><div class="form-group full"><label class="form-label">Dirección</label><input class="form-input" id="hd-direccion-v122"></div><div class="form-group"><label class="form-label">Región</label><input class="form-input" id="hd-region-v122"></div><div class="form-group"><label class="form-label">Comuna / ciudad</label><input class="form-input" id="hd-ciudad-v122"></div><div class="form-group"><label class="form-label">Contacto</label><input class="form-input" id="hd-contacto-v122"></div><div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="hd-tel-v122"></div><div class="form-group"><label class="form-label">Mail</label><input class="form-input" id="hd-mail-v122"></div><div class="form-group"><label class="form-label">Contrato hotel</label><select class="form-select" id="hd-contrato-v122"><option value="no">No</option><option value="si">Sí</option></select></div><div class="form-group"><label class="form-label">Vence convenio</label><input class="form-input" type="date" id="hd-convenioVence-v122"></div><div class="form-group"><label class="form-label">Tarifa base CLP</label><input class="form-input" type="number" id="hd-tarifa-v122"></div><div class="form-group"><label class="form-label">Tarifa simple CLP</label><input class="form-input" type="number" id="hd-tarifaSimple-v122"></div><div class="form-group"><label class="form-label">Tarifa doble CLP</label><input class="form-input" type="number" id="hd-tarifaDoble-v122"></div><div class="form-group full"><label class="form-label">Motivo modificación</label><input class="form-input" id="hd-note-v122" placeholder="Cambio de tarifa, contacto, convenio, disponibilidad..."></div></div><button class="btn btn-primary btn-sm" onclick="saveHotelDetailV122()">Guardar cambios</button><div class="divider"></div><div class="grid-2"><div><label class="form-label">Disponibilidad desde</label><input class="form-input" type="date" id="hotel-date-from-v122" value="${hoy()}" onchange="openHotelDetailV122(currentHotelDetailV122)"></div><div><label class="form-label">Hasta</label><input class="form-input" type="date" id="hotel-date-to-v122" value="${addDaysV122(hoy(),7)}" onchange="openHotelDetailV122(currentHotelDetailV122)"></div></div><div id="hotel-detail-rooms-v122" style="margin-top:12px;"></div><div class="grid-2" style="margin-top:14px;"><div class="card"><div class="card-title">Historial de alojamientos</div><div id="hotel-detail-history-v122"></div></div><div class="card"><div class="card-title">Bitácora hotel</div><textarea class="form-input" id="hd-new-note-v122" rows="3" placeholder="Registrar llamada, acuerdo, cambio tarifa, reclamo, OC, factura..."></textarea><button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="addHotelNoteV122()">Agregar seguimiento</button><div id="hotel-detail-bitacora-v122" style="margin-top:10px;"></div></div></div></div><div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-hotel-detail-v122')">Cerrar</button></div></div></div>`);
+}
+function renderHoteleria(){
+  ensureHoteleriaV122();
+  const from=document.getElementById('hotel-filter-from')?.value||hoy(),to=document.getElementById('hotel-filter-to')?.value||addDaysV122(from,7),client=document.getElementById('hotel-filter-client')?.value||'',mant=document.getElementById('hotel-filter-mant')?.value||'';
+  const hotels=S.hoteles.filter(h=>!client||!(h.minaIds||[]).length||(h.minaIds||[]).includes(client));
+  const asigs=S.hotelAsig.filter(a=>(!mant||a.mantId===mant)&&rangesOverlapV122(from,to,a.checkin||hoy(),a.checkout||'2999-12-31'));
+  const totalBeds=hotels.reduce((n,h)=>n+hotelOccupancyV122(h,from,to).total,0),occupied=hotels.reduce((n,h)=>n+hotelOccupancyV122(h,from,to).occupied,0),free=hotels.reduce((n,h)=>n+hotelOccupancyV122(h,from,to).free,0),cost=asigs.reduce((n,a)=>n+Number(a.costoTotal||0),0);
+  const cards=document.getElementById('hotel-cards');
+  if(cards)cards.innerHTML=`<div class="card" style="grid-column:1/-1;"><div class="card-header"><div><div class="card-title">Control operativo de hotelería</div><div class="card-subtitle">Disponibilidad por cama, personal alojado, costos y salidas conectadas a cliente, contrato y servicio.</div></div><button class="btn btn-secondary btn-sm" onclick="exportHoteles()">Exportar</button></div><div class="form-grid" style="margin-top:12px;"><div class="form-group"><label class="form-label">Desde</label><input class="form-input" type="date" id="hotel-filter-from" value="${from}" onchange="renderHoteleria()"></div><div class="form-group"><label class="form-label">Hasta</label><input class="form-input" type="date" id="hotel-filter-to" value="${to}" onchange="renderHoteleria()"></div><div class="form-group"><label class="form-label">Cliente</label><select class="form-select" id="hotel-filter-client" onchange="renderHoteleria()"><option value="">Todos</option>${S.minas.map(m=>`<option value="${m.id}" ${client===m.id?'selected':''}>${escV122(m.nombre)}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Servicio</label><select class="form-select" id="hotel-filter-mant" onchange="renderHoteleria()"><option value="">Todos</option>${S.mantenciones.map(m=>`<option value="${m.id}" ${mant===m.id?'selected':''}>${escV122(m.nombre)}</option>`).join('')}</select></div></div><div class="kpi-grid" style="margin-top:12px;"><div class="kpi kpi-blue"><div class="kpi-value">${totalBeds}</div><div class="kpi-label">Camas totales</div></div><div class="kpi kpi-red"><div class="kpi-value">${occupied}</div><div class="kpi-label">Ocupadas</div></div><div class="kpi kpi-green"><div class="kpi-value">${free}</div><div class="kpi-label">Libres</div></div><div class="kpi kpi-orange"><div class="kpi-value">${moneyV122(cost)}</div><div class="kpi-label">Costo periodo</div></div></div></div>`+hotels.map(h=>{const oc=hotelOccupancyV122(h,from,to),level=oc.free===0?'badge-err':oc.free<=2?'badge-warn':'badge-ok';return `<div class="hotel-card"><div class="hotel-card-name">${escV122(h.nombre)}</div><div class="hotel-card-city">${escV122(h.direccion||h.ciudad||'—')}<br>${escV122(h.contacto||'Contacto no informado')} · ${escV122(h.tel||'—')} · ${escV122(h.mail||'')}</div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;"><span>Ocupación ${oc.occupied}/${oc.total}</span><span class="badge ${level}">${oc.free} libres</span></div><div class="prog"><div class="prog-fill ${progColor(oc.pct)}" style="width:${Math.min(100,oc.pct)}%;"></div></div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;"><span class="badge badge-blue">${h.simples||0} simples</span><span class="badge badge-orange">${h.dobles||0} dobles</span><span class="badge badge-ok">${moneyV122(h.tarifa||0)}/noche</span></div><div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" onclick="openHotelDetailV122('${h.id}')">Ficha hotel</button><button class="btn btn-secondary btn-sm" onclick="document.getElementById('ha-hotel').value='${h.id}';openModal('modal-hotel-asignar')">Asignar persona</button><button class="btn btn-danger btn-sm" onclick="deleteHotel('${h.id}')">Eliminar</button></div></div>`}).join('')||'<div class="cloud-note">Sin hoteles cargados.</div>';
+  const table=document.getElementById('hotel-table');
+  if(table)table.innerHTML=`<thead><tr><th>Persona</th><th>Cliente / Servicio</th><th>Hotel</th><th>Hab. / Cama</th><th>Fechas</th><th>Noches</th><th>Costo</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${asigs.map(a=>{const m=S.mantenciones.find(x=>x.id===a.mantId)||{},expired=a.checkout&&a.checkout<hoy(),status=a.estado==='cancelada'?'cancelada':expired?'finalizada':a.estado||'activa';return `<tr><td><b>${escV122(trabNombre(a.trabId))}</b><div class="worker-rut">${escV122(S.trabajadores.find(t=>t.id===a.trabId)?.rut||'')}</div></td><td>${escV122(minaNombre(m.minaId))}<div class="worker-rut">${escV122(m.nombre||a.mantId)} · ${escV122(contratoNombre(m.contratoId))}</div></td><td>${escV122(hotelNombre(a.hotelId))}</td><td>#${escV122(a.pieza)} / cama ${escV122(a.cama||'1')}</td><td>${escV122(a.checkin)} → ${escV122(a.checkout||'abierto')}</td><td>${a.noches||daysBetweenV122(a.checkin,a.checkout)}</td><td>${moneyV122(a.costoTotal||0)}</td><td><span class="badge ${status==='activa'?'badge-ok':status==='cancelada'?'badge-err':'badge-na'}">${escV122(status)}</span></td><td><button class="btn btn-secondary btn-sm" onclick="openFicha('${a.trabId}')">Ficha</button> ${status==='activa'?`<button class="btn btn-primary btn-sm" onclick="closeHotelStayV122('${a.id}')">Liberar</button><button class="btn btn-danger btn-sm" onclick="cancelHotelStayV122('${a.id}')">Cancelar</button>`:''}</td></tr>`;}).join('')||'<tr><td colspan="9" style="text-align:center;color:var(--text-muted);">Sin alojamientos para el rango seleccionado.</td></tr>'}</tbody>`;
+}
+const openModalV122Base=openModal;
+openModal=function(id){openModalV122Base(id);if(id==='modal-hotel-asignar')setTimeout(prepareHotelAssignV122,0);if(id==='modal-nuevo-hotel')setTimeout(()=>{const tel=document.getElementById('hot-tel');if(tel&&!tel.value)tel.value='+569';},0);};
+const openFichaV122Base=openFicha;
+openFicha=function(id){openFichaV122Base(id);const t=S.trabajadores.find(w=>w.id===id),host=document.getElementById('worker-v90-status');if(!t||!host||document.getElementById('worker-hotel-v122'))return;const rows=(S.hotelAsig||[]).filter(a=>a.trabId===id).slice().sort((a,b)=>String(b.checkin).localeCompare(String(a.checkin))).map(a=>`<tr><td>${escV122(hotelNombre(a.hotelId))}</td><td>#${escV122(a.pieza)} / cama ${escV122(a.cama||'1')}</td><td>${escV122(mantNombre(a.mantId))}</td><td>${escV122(a.checkin)} → ${escV122(a.checkout||'abierto')}</td><td>${moneyV122(a.costoTotal||0)}</td></tr>`).join('');host.insertAdjacentHTML('afterend',`<div class="card" id="worker-hotel-v122" style="margin-bottom:16px;"><div class="card-title">Alojamiento y hotelería</div><div class="card-subtitle">Hotel actual, historial de estadías y costo asociado.</div><div class="table-wrap" style="margin-top:10px;"><table><thead><tr><th>Hotel</th><th>Habitación</th><th>Servicio</th><th>Fechas</th><th>Costo</th></tr></thead><tbody>${rows||'<tr><td colspan="5">Sin alojamiento registrado.</td></tr>'}</tbody></table></div></div>`);};
+const computeAlertasV122Base=computeAlertas;
+computeAlertas=function(){const list=computeAlertasV122Base();let n=list.length+1;ensureHoteleriaV122();(S.hoteles||[]).forEach(h=>{if(h.convenioVence&&estadoFecha(h.convenioVence)!=='vigente')list.push({id:'al_hot_convenio_'+n++,tipo:'hotel',urgencia:estadoFecha(h.convenioVence),msg:`${h.nombre}: convenio hotelero ${estadoFecha(h.convenioVence)}`});});(S.hotelAsig||[]).forEach(a=>{if(a.estado==='activa'&&a.checkout&&a.checkout<hoy())list.push({id:'al_hot_salida_'+n++,tipo:'hotel',urgencia:'critico',trabId:a.trabId,mantId:a.mantId,msg:`${trabNombre(a.trabId)}: salida hotel vencida en ${hotelNombre(a.hotelId)}`});const dup=(S.hotelAsig||[]).filter(b=>b.id!==a.id&&b.hotelId===a.hotelId&&b.pieza===a.pieza&&String(b.cama||'1')===String(a.cama||'1')&&b.estado!=='cancelada'&&rangesOverlapV122(a.checkin,a.checkout||'2999-12-31',b.checkin,b.checkout||'2999-12-31'));if(dup.length)list.push({id:'al_hot_over_'+n++,tipo:'hotel',urgencia:'vencido',trabId:a.trabId,mantId:a.mantId,msg:`Sobrecupo hotel ${hotelNombre(a.hotelId)} habitación ${a.pieza} cama ${a.cama||'1'}`});});return list;};
+const exportHotelesV122Base=exportHoteles;
+exportHoteles=function(){ensureHoteleriaV122();const rows=[['Persona','RUT','Cliente','Contrato','Servicio','Hotel','Habitacion','Cama','Tipo','Turno','Ingreso','Salida','Noches','Tarifa noche','Costo total','Estado']];(S.hotelAsig||[]).forEach(a=>{const t=S.trabajadores.find(x=>x.id===a.trabId)||{},m=S.mantenciones.find(x=>x.id===a.mantId)||{};rows.push([t.nombre||a.trabId,t.rut||'',minaNombre(m.minaId),contratoNombre(m.contratoId),m.nombre||a.mantId,hotelNombre(a.hotelId),a.pieza,a.cama||'1',a.tipo,a.turno,a.checkin,a.checkout,a.noches||daysBetweenV122(a.checkin,a.checkout),a.tarifaNoche||0,a.costoTotal||0,a.estado||'activa']);});exportCSV(rows,`hoteleria_operativa_${hoy()}.csv`);toast('Hotelería operativa exportada');};
+const initV122Base=init;
+init=function(){initV122Base();ensureHoteleriaV122();};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
