@@ -8059,6 +8059,13 @@ function installOpportunityV124Ui(){
     stage.dataset.v124='1';
     stage.innerHTML=OPP_STAGES_V124.map(s=>`<option value="${s}">${OPP_STAGE_LABELS_V124[s]}</option>`).join('');
   }
+  const stageFilter=document.getElementById('filt-opp-stage');
+  if(stageFilter&&!stageFilter.dataset.v124){
+    const selected=stageFilter.value;
+    stageFilter.dataset.v124='1';
+    stageFilter.innerHTML=`<option value="">Todas las etapas</option>${OPP_STAGES_V124.map(s=>`<option value="${s}">${OPP_STAGE_LABELS_V124[s]}</option>`).join('')}`;
+    stageFilter.value=OPP_STAGES_V124.includes(selected)?selected:'';
+  }
   const service=document.getElementById('opp-service');
   if(service&&!document.getElementById('opp-industry')){
     service.closest('.form-group')?.insertAdjacentHTML('afterend',`
