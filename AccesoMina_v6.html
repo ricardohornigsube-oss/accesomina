@@ -8016,6 +8016,125 @@ exportHoteles=function(){ensureHoteleriaV122();const rows=[['Persona','RUT','Cli
 const initV122Base=init;
 init=function(){initV122Base();ensureHoteleriaV122();};
 
+// Nexo Klar V10.24 - CRM comercial para LEAD / Oportunidades
+const OPP_STAGES_V124=['prospecto','contactada','reunion','levantamiento','propuesta','negociacion','ganada','perdida','pausa'];
+const OPP_STAGE_LABELS_V124={prospecto:'Nuevo lead',contactada:'Contactado',reunion:'Reunión agendada',levantamiento:'Levantamiento',propuesta:'Propuesta enviada',negociacion:'Negociación',ganada:'Ganada',perdida:'Perdida',pausa:'En pausa'};
+function ensureOpportunityV124(o){
+  ensureOpportunityV96?.(o);
+  if(!o)return o;
+  if(!Array.isArray(o.tasks))o.tasks=[];
+  if(!Array.isArray(o.followUps))o.followUps=[];
+  if(!Array.isArray(o.history))o.history=[];
+  if(!o.stage)o.stage='prospecto';
+  if(o.stage==='calificada')o.stage='levantamiento';
+  if(!o.industry)o.industry='';
+  if(!o.source)o.source='';
+  if(!o.need)o.need=o.notes||'';
+  if(!o.lossReason)o.lossReason='';
+  o.score=opportunityScoreV124(o);
+  return o;
+}
+function opportunityScoreV124(o){
+  let s=0;
+  if(o.company)s+=8;if(o.rut)s+=8;if(o.contact)s+=8;if(o.email||o.phone)s+=10;
+  if(o.role)s+=5;if(o.region||o.comuna)s+=5;if(o.industry)s+=6;if(o.service||o.need)s+=10;
+  if(Number(o.amount)>0)s+=8;if(Number(o.probability)>0)s+=5;if(o.expectedClose)s+=7;if(o.nextAction)s+=7;
+  if((o.documents||[]).length)s+=7;if((o.followUps||[]).length)s+=7;
+  if(['propuesta','negociacion','ganada'].includes(o.stage))s+=7;
+  return Math.min(100,s);
+}
+function opportunityHeatV124(o){
+  const s=Number(o.score||opportunityScoreV124(o));
+  if(o.stage==='ganada')return {label:'Ganada',cls:'badge-ok'};
+  if(o.stage==='perdida')return {label:'Perdida',cls:'badge-err'};
+  if(o.nextAction&&o.nextAction<hoy())return {label:'Seguimiento vencido',cls:'badge-err'};
+  if(s>=80)return {label:'Caliente',cls:'badge-ok'};
+  if(s>=50)return {label:'Media',cls:'badge-warn'};
+  return {label:'Débil',cls:'badge-na'};
+}
+function installOpportunityV124Ui(){
+  installOpportunityV96Ui?.();
+  const stage=document.getElementById('opp-stage');
+  if(stage&&!stage.dataset.v124){
+    stage.dataset.v124='1';
+    stage.innerHTML=OPP_STAGES_V124.map(s=>`<option value="${s}">${OPP_STAGE_LABELS_V124[s]}</option>`).join('');
+  }
+  const service=document.getElementById('opp-service');
+  if(service&&!document.getElementById('opp-industry')){
+    service.closest('.form-group')?.insertAdjacentHTML('afterend',`
+      <div class="form-group"><label class="form-label">Industria</label><select class="form-select" id="opp-industry"><option value="">Seleccionar...</option><option>Minería</option><option>Energía</option><option>Construcción</option><option>Mantenimiento industrial</option><option>Facilities</option><option>Logística</option><option>Seguridad privada</option><option>Agroindustria</option><option>Servicios técnicos</option><option>Otra</option></select></div>
+      <div class="form-group"><label class="form-label">Origen del lead</label><select class="form-select" id="opp-source"><option value="">Seleccionar...</option><option>LinkedIn</option><option>Referido</option><option>Cliente existente</option><option>Web</option><option>Llamado</option><option>Licitación</option><option>Evento</option><option>Prospección directa</option></select></div>
+      <div class="form-group full"><label class="form-label">Necesidad / dolor detectado</label><textarea class="form-textarea" id="opp-need" placeholder="Qué problema quiere resolver el cliente, urgencia, alcance, áreas involucradas..."></textarea></div>
+      <div class="form-group"><label class="form-label">Motivo de pérdida</label><select class="form-select" id="opp-lossReason"><option value="">No aplica</option><option>Precio</option><option>Plazo</option><option>Competidor</option><option>Sin presupuesto</option><option>No responde</option><option>No calza con el servicio</option><option>Decisión postergada</option><option>Otra razón</option></select></div>`);
+  }
+  const filters=document.querySelector('#page-oportunidades .filters');
+  if(filters&&!document.getElementById('filt-opp-industry')){
+    filters.insertAdjacentHTML('beforeend',`<select class="filter-select" id="filt-opp-industry" onchange="renderOpportunitiesV82()"><option value="">Todas las industrias</option><option>Minería</option><option>Energía</option><option>Construcción</option><option>Mantenimiento industrial</option><option>Facilities</option><option>Logística</option><option>Seguridad privada</option><option>Agroindustria</option><option>Servicios técnicos</option><option>Otra</option></select><select class="filter-select" id="filt-opp-heat" onchange="renderOpportunitiesV82()"><option value="">Todos los scores</option><option value="hot">Calientes</option><option value="medium">Medias</option><option value="weak">Débiles</option><option value="late">Seguimiento vencido</option></select>`);
+  }
+}
+const openOpportunityV124Base=openOpportunityV82;
+openOpportunityV82=function(id=''){
+  openOpportunityV124Base(id);installOpportunityV124Ui();
+  const o=ensureOpportunityV124(S.opportunities.find(x=>x.id===id)||{});
+  ['industry','source','need','lossReason'].forEach(k=>{const el=document.getElementById('opp-'+k);if(el)el.value=o[k]||'';});
+  const stage=document.getElementById('opp-stage');if(stage)stage.value=o.stage||'prospecto';
+};
+const saveOpportunityV124Base=saveOpportunityV82;
+saveOpportunityV82=async function(){
+  installOpportunityV124Ui();
+  const idBefore=editingOpportunityV82,idsBefore=new Set((S.opportunities||[]).map(o=>o.id));
+  await saveOpportunityV124Base();
+  if(document.getElementById('modal-oportunidad')?.classList.contains('open'))return;
+  const o=idBefore?S.opportunities.find(x=>x.id===idBefore):S.opportunities.find(x=>!idsBefore.has(x.id));
+  if(!o)return;
+  ensureOpportunityV124(o);
+  ['industry','source','need','lossReason'].forEach(k=>o[k]=document.getElementById('opp-'+k)?.value||o[k]||'');
+  if(o.stage==='perdida'&&!o.lossReason){toast('Sugerencia: registra motivo de pérdida para mejorar el análisis comercial','warn');}
+  o.score=opportunityScoreV124(o);
+  o.updatedAt=new Date().toISOString();
+  persistTenant();renderOpportunitiesV82();
+};
+function opportunityFilteredListV124(){
+  ensureTraceabilityV106?.();installOpportunityV124Ui();
+  const txt=(document.getElementById('filt-opp-txt')?.value||'').toLowerCase(),type=document.getElementById('filt-opp-type')?.value||'',stage=document.getElementById('filt-opp-stage')?.value||'',region=document.getElementById('filt-opp-region')?.value||'',comuna=document.getElementById('filt-opp-comuna')?.value||'',industry=document.getElementById('filt-opp-industry')?.value||'',heat=document.getElementById('filt-opp-heat')?.value||'',year=document.getElementById('filt-opp-year')?.value||'',month=document.getElementById('filt-opp-month')?.value||'';
+  return (S.opportunities||[]).map(ensureOpportunityV124).filter(o=>{
+    const searchable=`${o.company} ${o.contact} ${o.service} ${o.rut} ${o.region} ${o.comuna} ${o.industry} ${o.need}`.toLowerCase();
+    const score=Number(o.score||opportunityScoreV124(o));
+    if(txt&&!searchable.includes(txt))return false;
+    if(type&&o.type!==type)return false;if(stage&&o.stage!==stage)return false;if(region&&o.region!==region)return false;if(comuna&&o.comuna!==comuna)return false;if(industry&&o.industry!==industry)return false;
+    if(year&&String(o.openedAt||o.createdAt||'').slice(0,4)!==year)return false;
+    if(month&&String(o.openedAt||o.createdAt||'').slice(5,7)!==month)return false;
+    if(heat==='hot'&&score<80)return false;if(heat==='medium'&&(score<50||score>=80))return false;if(heat==='weak'&&score>=50)return false;if(heat==='late'&&!(o.nextAction&&o.nextAction<hoy()&&!['ganada','perdida'].includes(o.stage)))return false;
+    return true;
+  });
+}
+function opportunityStageMoveV124(id,stage){
+  const o=ensureOpportunityV124((S.opportunities||[]).find(x=>x.id===id));if(!o)return;
+  const before=o.stage;o.stage=stage;o.score=opportunityScoreV124(o);o.history.push({at:new Date().toISOString(),action:'cambio_etapa',from:before,to:stage,user:currentTenantUser?.email||'usuario'});o.followUps.unshift({id:'of_'+Date.now(),type:'cambio_etapa',date:hoy(),detail:`Etapa cambiada de ${OPP_STAGE_LABELS_V124[before]||before} a ${OPP_STAGE_LABELS_V124[stage]||stage}`,owner:currentTenantUser?.email||'usuario',at:new Date().toISOString()});
+  persistTenant();renderOpportunitiesV82();toast('Etapa actualizada');
+}
+function opportunityNextStageV124(stage){const i=OPP_STAGES_V124.indexOf(stage);return OPP_STAGES_V124[Math.min(OPP_STAGES_V124.length-3,Math.max(0,i+1))]||'contactada';}
+function opportunityKanbanV124(list){
+  const stages=['prospecto','contactada','reunion','levantamiento','propuesta','negociacion','ganada','perdida'];
+  return `<div class="card" id="opp-kanban-v124" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Embudo comercial visual</div><div class="card-subtitle">Arranque comercial previo a cliente, contrato o proyecto. Prioriza oportunidades por score y próxima gestión.</div></div><button class="btn btn-secondary btn-sm" onclick="exportOpportunitiesV124()">Exportar oportunidades</button></div><div style="display:grid;grid-template-columns:repeat(${stages.length},minmax(190px,1fr));gap:10px;overflow:auto;margin-top:12px;">${stages.map(st=>{const rows=list.filter(o=>o.stage===st),amount=rows.reduce((n,o)=>n+Number(o.amount||0),0);return `<div style="background:var(--bg-soft);border:1px solid var(--border);border-radius:8px;padding:10px;min-height:170px;"><div style="display:flex;justify-content:space-between;gap:8px;"><b>${escV122(OPP_STAGE_LABELS_V124[st])}</b><span class="badge badge-blue">${rows.length}</span></div><div class="worker-rut" style="margin:4px 0 8px;">${amount.toLocaleString('es-CL')} CLP/UF/USD</div>${rows.slice(0,8).map(o=>{const heat=opportunityHeatV124(o),next=opportunityNextStageV124(o.stage);return `<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:8px;"><b>${escV122(o.company)}</b><div class="worker-rut">${escV122(o.service||o.need||'Sin necesidad')}</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;"><span class="badge ${heat.cls}">${heat.label}</span><span class="badge badge-na">${o.score||0}/100</span></div><div class="worker-rut" style="margin-top:5px;">Próx: ${escV122(o.nextAction||'sin fecha')}</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;"><button class="btn btn-secondary btn-sm" onclick="openOpportunityFollowUpV96('${o.id}')">Bitácora</button>${!['ganada','perdida'].includes(o.stage)?`<button class="btn btn-primary btn-sm" onclick="opportunityStageMoveV124('${o.id}','${next}')">Avanzar</button>`:''}</div></div>`;}).join('')||'<div class="worker-rut">Sin oportunidades</div>'}</div>`;}).join('')}</div></div>`;
+}
+function exportOpportunitiesV124(){
+  const rows=[['Empresa','RUT','Industria','Origen','Tipo','Etapa','Score','Contacto','Correo','Teléfono','Servicio','Necesidad','Monto','Moneda','Probabilidad','Cierre','Próxima gestión','Responsable','Motivo pérdida','Convertida']];
+  (S.opportunities||[]).map(ensureOpportunityV124).forEach(o=>rows.push([o.company,o.rut,o.industry,o.source,o.type,o.stage,o.score,o.contact,o.email,o.phone,o.service,o.need,o.amount,o.currency,o.probability,o.expectedClose,o.nextAction,o.owner,o.lossReason,o.convertedId?'sí':'no']));
+  exportCSV(rows,`oportunidades_comerciales_${hoy()}.csv`);
+}
+const renderOpportunitiesV124Base=renderOpportunitiesV82;
+renderOpportunitiesV82=function(){
+  ensureV82Collections();installOpportunityV96Ui?.();installOpportunityFiltersV106?.();installOpportunityV124Ui();
+  const list=opportunityFilteredListV124();
+  const pipeline=list.filter(o=>!['ganada','perdida'].includes(o.stage)).reduce((n,o)=>n+Number(o.amount||0),0),weighted=list.filter(o=>!['ganada','perdida'].includes(o.stage)).reduce((n,o)=>n+Number(o.amount||0)*Number(o.probability||0)/100,0),hot=list.filter(o=>opportunityHeatV124(o).label==='Caliente').length,late=list.filter(o=>o.nextAction&&o.nextAction<hoy()&&!['ganada','perdida'].includes(o.stage)).length;
+  const kpis=document.getElementById('opp-kpis');if(kpis)kpis.innerHTML=`<div class="kpi kpi-blue"><div class="kpi-value">${list.length}</div><div class="kpi-label">Oportunidades</div></div><div class="kpi kpi-orange"><div class="kpi-value">${pipeline.toLocaleString('es-CL')}</div><div class="kpi-label">Pipeline bruto</div></div><div class="kpi kpi-green"><div class="kpi-value">${Math.round(weighted).toLocaleString('es-CL')}</div><div class="kpi-label">Pipeline ponderado</div></div><div class="kpi ${late?'kpi-red':'kpi-blue'}"><div class="kpi-value">${late}</div><div class="kpi-label">Gestiones vencidas</div></div><div class="kpi kpi-green"><div class="kpi-value">${hot}</div><div class="kpi-label">Calientes</div></div>`;
+  const tableCard=document.getElementById('opp-table')?.closest('.card');if(tableCard&&!document.getElementById('opp-kanban-v124'))tableCard.insertAdjacentHTML('beforebegin',opportunityKanbanV124(list));else{const old=document.getElementById('opp-kanban-v124');if(old)old.outerHTML=opportunityKanbanV124(list);}
+  const table=document.getElementById('opp-table');if(table)table.innerHTML=`<thead><tr><th>Empresa / oportunidad</th><th>Industria</th><th>Contacto</th><th>Etapa / score</th><th>Monto / prob.</th><th>Próxima gestión</th><th>Seguimiento</th><th>Acciones</th></tr></thead><tbody>${list.map(o=>{const heat=opportunityHeatV124(o),next=opportunityNextStageV124(o.stage);return `<tr><td><b>${escV122(o.company)}</b><div class="worker-rut">${escV122(o.service||o.rut||'')}</div><div class="worker-rut">${escV122([o.comuna,o.region].filter(Boolean).join(' · '))}</div></td><td>${escV122(o.industry||'—')}<div class="worker-rut">${escV122(o.source||'')}</div></td><td>${escV122(o.contact||'—')}<div class="worker-rut">${escV122(o.email||o.phone||'')}</div></td><td><span class="badge ${o.stage==='ganada'?'badge-ok':o.stage==='perdida'?'badge-err':'badge-orange'}">${escV122(OPP_STAGE_LABELS_V124[o.stage]||o.stage)}</span><div style="margin-top:5px;"><span class="badge ${heat.cls}">${heat.label}</span> <span class="badge badge-na">${o.score||0}/100</span></div>${o.lossReason?`<div class="worker-rut">Pérdida: ${escV122(o.lossReason)}</div>`:''}</td><td>${Number(o.amount||0).toLocaleString('es-CL')} ${o.currency||'CLP'}<div class="worker-rut">${o.probability||0}% ponderado</div></td><td>${escV122(o.nextAction||'—')} ${o.nextAction&&o.nextAction<hoy()&&!['ganada','perdida'].includes(o.stage)?'<span class="badge badge-err">Vencida</span>':''}</td><td><button class="btn btn-secondary btn-sm" onclick="openOpportunityFollowUpV96('${o.id}')">Bitácora (${(o.followUps||[]).length})</button><div class="worker-rut">${docsButtonV81('opportunities',o)}</div></td><td><button class="btn btn-secondary btn-sm" onclick="openOpportunityV82('${o.id}')">Editar</button> ${!['ganada','perdida'].includes(o.stage)?`<button class="btn btn-primary btn-sm" onclick="opportunityStageMoveV124('${o.id}','${next}')">Avanzar</button>`:''} ${o.stage==='ganada'&&!o.convertedId?`<button class="btn btn-primary btn-sm" onclick="convertOpportunityV82('${o.id}')">Convertir</button>`:o.convertedId?'<span class="badge badge-ok">Convertida</span>':''}</td></tr>`;}).join('')||'<tr><td colspan="8">Sin oportunidades</td></tr>'}</tbody>`;
+};
+const initV124Base=init;
+init=function(){initV124Base();(S.opportunities||[]).forEach(ensureOpportunityV124);};
+
 // Close modal on ESC
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
 document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#sidebar')&&!e.target.closest('.mobile-menu-button'))closeMobileMenu();});
