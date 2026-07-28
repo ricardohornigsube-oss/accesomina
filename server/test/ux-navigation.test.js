@@ -29,7 +29,7 @@ test('professional cloud forms replace critical company and permission prompts',
 
 test('visible terminology supports multiple industries without changing legacy data keys', () => {
   for (const neutralLabel of [
-    'Clientes 360°',
+    "'Cliente'",
     'Gestión de personal temporal',
     'Personal permanente',
     'Habilitación por cliente',
