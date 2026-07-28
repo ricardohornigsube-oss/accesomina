@@ -8481,9 +8481,8 @@ function preferredWorkspaceV126(){
 function workspaceStorageKeyV126(){return `nexo_klar_workspace_${currentTenantId||'local'}`;}
 function installWorkspaceV126(){
   const logo=document.querySelector('#sidebar .sidebar-logo');if(!logo||document.getElementById('workspace-v126'))return;
-  logo.insertAdjacentHTML('afterend',`<div id="workspace-v126" style="padding:10px 14px 12px;border-bottom:1px solid var(--border);"><label for="workspace-select-v126" style="display:block;font-size:10px;font-weight:800;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Espacio de trabajo</label><select class="form-select" id="workspace-select-v126" onchange="applyWorkspaceV126(this.value)" style="width:100%;font-size:12px;">${Object.entries(NK_WORKSPACES_V126).map(([key,row])=>`<option value="${key}">${row.label}</option>`).join('')}</select><div class="worker-rut" id="workspace-help-v126" style="margin-top:6px;">Muestra los módulos más útiles para tu tarea actual.</div></div>`);
-  let selected=preferredWorkspaceV126();try{selected=localStorage.getItem(workspaceStorageKeyV126())||selected;}catch{}
-  document.getElementById('workspace-select-v126').value=NK_WORKSPACES_V126[selected]?selected:'todo';applyWorkspaceV126(selected,false);
+  logo.insertAdjacentHTML('afterend',`<div id="workspace-v126" hidden><select id="workspace-select-v126"><option value="todo">Todos los módulos</option></select><div id="workspace-help-v126"></div></div>`);
+  document.getElementById('workspace-select-v126').value='todo';applyWorkspaceV126('todo',false);
 }
 function navPageV126(item){return item.getAttribute('onclick')?.match(/nav\('([^']+)'\)/)?.[1]||'';}
 function allowedAdminPageV126(page){
