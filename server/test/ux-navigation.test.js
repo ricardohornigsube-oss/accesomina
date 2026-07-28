@@ -26,3 +26,19 @@ test('professional cloud forms replace critical company and permission prompts',
   assert.match(html, /AccesoMinaCloud\.createTenantAdmin=openCloudTenantV126/);
   assert.match(html, /AccesoMinaCloud\.editUser=openCloudUserV126/);
 });
+
+test('visible terminology supports multiple industries without changing legacy data keys', () => {
+  for (const neutralLabel of [
+    'Clientes 360°',
+    'Gestión de personal temporal',
+    'Personal permanente',
+    'Habilitación por cliente',
+    'Cumplimiento corporativo',
+    'Alojamiento y estadías',
+    'Credenciales de acceso',
+    'Registro operacional'
+  ]) assert.ok(html.includes(neutralLabel), `missing neutral label: ${neutralLabel}`);
+
+  assert.match(html, /function translateClientTerminology/);
+  assert.match(html, /const plural=.*replacement=plural\?'clientes':'cliente'/);
+});
