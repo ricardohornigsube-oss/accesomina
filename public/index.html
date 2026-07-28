@@ -440,21 +440,42 @@ body.private #main { display:block; }
   <script>
     document.getElementById('access-panel-mount')?.appendChild(document.getElementById('access-panel'));
     (() => {
-      const links = Array.from(document.querySelectorAll('.public-progress-nav [data-public-section]'));
+      const nav = document.querySelector('.public-progress-nav');
+      const links = Array.from(nav?.querySelectorAll('[data-public-section]') || []);
       const sections = links.map(link => document.getElementById(link.dataset.publicSection)).filter(Boolean);
-      if (!links.length || !sections.length || !('IntersectionObserver' in window)) return;
+      if (!nav || !links.length || !sections.length) return;
+      let activeId = '';
+      let scheduled = false;
       const activate = id => {
+        if (!id || activeId === id) return;
+        activeId = id;
         links.forEach(link => {
           const active = link.dataset.publicSection === id;
           link.classList.toggle('active', active);
-          if (active) link.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+          if (active) {
+            const left = link.offsetLeft - (nav.clientWidth - link.clientWidth) / 2;
+            nav.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+          }
         });
       };
-      const observer = new IntersectionObserver(entries => {
-        const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (visible) activate(visible.target.id);
-      }, { rootMargin: '-125px 0px -55% 0px', threshold: [0.05, 0.2, 0.45] });
-      sections.forEach(section => observer.observe(section));
+      const update = () => {
+        scheduled = false;
+        const marker = window.scrollY + 150;
+        let current = sections[0];
+        sections.forEach(section => {
+          if (section.offsetTop <= marker) current = section;
+        });
+        activate(current.id);
+      };
+      const schedule = () => {
+        if (scheduled) return;
+        scheduled = true;
+        requestAnimationFrame(update);
+      };
+      links.forEach(link => link.addEventListener('click', () => activate(link.dataset.publicSection)));
+      window.addEventListener('scroll', schedule, { passive: true });
+      window.addEventListener('resize', schedule);
+      update();
     })();
   </script>
 </section>
