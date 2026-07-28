@@ -5694,10 +5694,51 @@ function enhanceAccessibility() {
   document.querySelectorAll('.nav-item').forEach(item=>{item.tabIndex=0;item.setAttribute('role','button');item.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();item.click();}});});
 }
 function translateClientTerminology(value) {
-  return String(value||'').replace(/\b(mineras|minas|minera|mina)\b/gi,match=>{
+  let translated=String(value||'').replace(/\b(mineras|minas|minera|mina)\b/gi,match=>{
     const plural=/as$|s$/i.test(match),replacement=plural?'clientes':'cliente';
     return match[0]===match[0].toUpperCase()?replacement[0].toUpperCase()+replacement.slice(1):replacement;
   });
+  const terms=[
+    [/\bLEAD\s*\/\s*Oportunidades\b/gi,'Prospectos / Oportunidades'],
+    [/\bLEAD\b/gi,'Prospecto'],
+    [/\bPool Esporádico\b/gi,'Base de personal esporádico'],
+    [/\bReclutamiento Spot\b/gi,'Reclutamiento de personal esporádico'],
+    [/\bPersonal spot\b/gi,'Personal esporádico'],
+    [/\bspot\b/gi,'esporádico'],
+    [/\bDashboard\b/gi,'Panel de control'],
+    [/\bChecklist\b/gi,'Lista de verificación'],
+    [/\bCheck-in\b/gi,'Fecha de ingreso'],
+    [/\bCheck-out\b/gi,'Fecha de salida'],
+    [/\bWhatsApp Phone Number ID\b/gi,'Identificador del número de WhatsApp'],
+    [/\bAPI cloud\b/gi,'API de nube'],
+    [/\bSesión cloud\b/gi,'Sesión en la nube'],
+    [/\bcloud\b/gi,'nube'],
+    [/\bToken\b/gi,'Clave de acceso'],
+    [/\bArc Flash\b/gi,'Arco eléctrico'],
+    [/\bSLA\b/g,'Acuerdo de nivel de servicio'],
+    [/\bScores\b/gi,'Puntajes'],
+    [/\bScore\b/gi,'Puntaje'],
+    [/\bPipeline bruto\b/gi,'Cartera comercial bruta'],
+    [/\bPipeline ponderado\b/gi,'Cartera comercial ponderada'],
+    [/\bPipeline\b/gi,'Cartera comercial'],
+    [/\bStock\b/gi,'Existencias'],
+    [/\bFacilities\b/gi,'Gestión de instalaciones'],
+    [/\bSuite productiva\b/gi,'Conjunto de herramientas productivas'],
+    [/\bSuite\b/gi,'Conjunto de herramientas'],
+    [/\bBI y reportes\b/gi,'Inteligencia empresarial y reportes'],
+    [/\bBI\b/g,'Inteligencia empresarial'],
+    [/\bAcciones correctivas CAPA\b/g,'Acciones correctivas y preventivas'],
+    [/\bCAPA\b/g,'Acciones correctivas y preventivas'],
+    [/\bKanban\b/gi,'Tablero de etapas'],
+    [/\bData limpia\b/gi,'Información limpia'],
+    [/\bla data\b/gi,'los datos'],
+    [/\bData\b/gi,'Datos'],
+    [/\bDemo\b/gi,'Demostración'],
+    [/\bDocs\b/gi,'Documentos'],
+    [/\bWeb\b/gi,'Sitio web']
+  ];
+  terms.forEach(([pattern,replacement])=>{translated=translated.replace(pattern,replacement);});
+  return translated;
 }
 function applyClientTerminology(root) {
   if(!root)return;
@@ -6646,7 +6687,7 @@ function renderInventoryMovementCardV104(){
 }
 function injectInventoryMovementCardV104(){
   const page=document.getElementById('page-operaciones-cloud');if(!page||document.getElementById('ops-v104-inv-movement'))return;
-  const stockCard=[...page.querySelectorAll('.card')].find(card=>card.querySelector('.card-title')?.textContent?.trim()==='Inventario y stock');
+  const stockCard=[...page.querySelectorAll('.card')].find(card=>['Inventario y stock','Inventario y existencias'].includes(card.querySelector('.card-title')?.textContent?.trim()));
   if(stockCard)stockCard.insertAdjacentHTML('afterend',renderInventoryMovementCardV104());
 }
 function saveInventoryMovementV104(){
@@ -6746,7 +6787,7 @@ function injectOpsTraceFiltersV106(){
     if(title==='Libro diario por servicio'&&!document.getElementById('v106-dl-year')){
       card.querySelector('.card-header')?.insertAdjacentHTML('afterend',monthOptionsV106('v106-dl'));
     }
-    if(title==='Acciones correctivas CAPA'&&!document.getElementById('v106-capa-year')){
+    if(['Acciones correctivas CAPA','Acciones correctivas y preventivas'].includes(title)&&!document.getElementById('v106-capa-year')){
       card.querySelector('.card-header')?.insertAdjacentHTML('afterend',monthOptionsV106('v106-capa'));
     }
   });
@@ -6854,9 +6895,9 @@ function renderOpsTraceCardV107(){
 }
 function setOpsTabV107(tab){opsTabV107=tab;applyOpsTabsV107();}
 function sectionForOpsCardV107(title,id){
-  if(id==='ops-v104-inv-movement'||id==='ops-v105-warehouse-real'||['Inventario y stock','Inventario real por bodega','Registrar movimiento con firma'].includes(title))return 'inventario';
+  if(id==='ops-v104-inv-movement'||id==='ops-v105-warehouse-real'||['Inventario y stock','Inventario y existencias','Inventario real por bodega','Registrar movimiento con firma'].includes(title))return 'inventario';
   if(title==='Libro diario por servicio')return 'libro';
-  if(title==='Acciones correctivas CAPA')return 'capa';
+  if(['Acciones correctivas CAPA','Acciones correctivas y preventivas'].includes(title))return 'capa';
   if(title==='Alertas operativas')return 'alertas';
   if(title==='Bitácora operativa')return 'bitacora';
   return '';
@@ -7014,6 +7055,7 @@ function hideOpsDuplicateCardsV110(){
   };
   hideDuplicates('Libro diario por servicio','#v98-dl-mant');
   hideDuplicates('Acciones correctivas CAPA','#v98-capa-source');
+  hideDuplicates('Acciones correctivas y preventivas','#v98-capa-source');
 }
 const renderFocusedOperationsV110Base=renderFocusedOperationsV98;
 renderFocusedOperationsV98=function(){renderFocusedOperationsV110Base();hideOpsDuplicateCardsV110();};
