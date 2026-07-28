@@ -547,7 +547,7 @@ body.private #main { display:block; }
   </div>
   <div class="nav-group-label">Vista General</div>
   <div class="nav-item active" onclick="nav('dashboard')">🏠 Dashboard</div>
-  <div class="nav-item" onclick="nav('reclutamiento')">📋 Centro Reclutamiento</div>
+  <div class="nav-item" onclick="nav('reclutamiento')">📋 Gestión de personal temporal</div>
   <div class="nav-item" onclick="nav('mineras')">🏔️ Por Cliente</div>
   <div class="nav-item" onclick="nav('alertas')">🔔 Alertas <span class="nav-badge" id="badge-alertas">0</span></div>
   <div class="nav-item" onclick="nav('oportunidades')">💼 LEAD / Oportunidades</div>
@@ -932,15 +932,16 @@ body.private #main { display:block; }
     </div>
   </div>
 
-  <!-- PAGE: RECLUTAMIENTO SPOT -->
+  <!-- PAGE: GESTION DE PERSONAL TEMPORAL -->
   <div id="page-reclutamiento" class="page">
     <div class="section-header">
-      <div><div class="section-title">📋 Centro de Reclutamiento Spot</div><div class="section-sub" id="rec-sub">Vista central tipo planilla para coordinar cupos, llamados, contratos y acreditación</div></div>
+      <div><div class="section-title">📋 Gestión de personal temporal</div><div class="section-sub" id="rec-sub">Coordina necesidades, candidatos, contratación y habilitación por orden de servicio</div></div>
       <div class="section-actions">
         <button class="btn btn-secondary" onclick="exportRecruitmentV84()">⬇ Exportar vista</button>
         <button class="btn btn-primary" onclick="openModal('modal-callout')">+ Llamado WA</button>
       </div>
     </div>
+    <div class="cloud-note" style="margin-bottom:16px;"><b>Ruta recomendada:</b> 1. Selecciona una orden de servicio · 2. Revisa cargos y brechas · 3. Contacta candidatos disponibles · 4. Valida antecedentes · 5. Genera y firma el contrato · 6. Completa la habilitación del cliente.</div>
     <div class="filters">
       <select class="filter-select" id="rec-mant" onchange="renderReclutamientoV84()"><option value="">Seleccionar mantención / proyecto</option></select>
       <input class="filter-input" id="rec-search" placeholder="Buscar persona, RUT, cargo o especialidad" oninput="renderReclutamientoV84()" style="min-width:240px;">
@@ -951,16 +952,16 @@ body.private #main { display:block; }
     <div class="kpi-grid" id="rec-kpis"></div>
     <div class="grid-2" style="margin-bottom:16px;">
       <div class="card">
-        <div class="card-header"><div><div class="card-title">Resumen por especialidad</div><div class="card-subtitle">Requeridos, reclutados, contratos y acreditación</div></div></div>
+        <div class="card-header"><div><div class="card-title">Cobertura por especialidad</div><div class="card-subtitle">Compara la dotación requerida con el avance real de contratación</div></div></div>
         <div class="table-wrap"><table id="rec-summary-table"></table></div>
       </div>
       <div class="card">
-        <div class="card-header"><div><div class="card-title">Flujo de contratación</div><div class="card-subtitle">Avance agrupado de la mantención seleccionada</div></div></div>
+        <div class="card-header"><div><div class="card-title">Flujo de contratación</div><div class="card-subtitle">Personas que alcanzaron cada etapa de la orden seleccionada</div></div></div>
         <div id="rec-flow"></div>
       </div>
     </div>
     <div class="card">
-      <div class="card-header"><div><div class="card-title">Base de candidatos spot y personas disponibles</div><div class="card-subtitle">Permite asignar, llamar, validar, generar contrato y avanzar acreditación</div></div></div>
+      <div class="card-header"><div><div class="card-title">Candidatos y personas disponibles</div><div class="card-subtitle">Revisa por qué califican, contacta, realiza seguimiento y completa su habilitación</div></div></div>
       <div class="table-wrap"><table id="rec-workers-table"></table></div>
     </div>
   </div>
@@ -1647,6 +1648,8 @@ body.private #main { display:block; }
 
 <!-- Modal: WhatsApp individual -->
 <div class="modal-overlay" id="modal-wa-individual"><div class="modal"><div class="modal-header"><div class="modal-title">Mensaje individual por WhatsApp</div><button class="modal-close" onclick="closeModal('modal-wa-individual')">✕</button></div><div class="modal-body"><div class="form-grid"><div class="form-group full"><label class="form-label">Persona</label><select class="form-select" id="wi-trab"></select></div><div class="form-group full"><label class="form-label">Mensaje</label><textarea class="form-textarea" id="wi-msg" placeholder="Escribe el mensaje para esta persona"></textarea></div></div></div><div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-wa-individual')">Cancelar</button><button class="btn btn-blue" onclick="sendWaIndividual()">Abrir WhatsApp</button></div></div></div>
+
+<div class="modal-overlay" id="modal-rec-seguimiento"><div class="modal"><div class="modal-header"><div class="modal-title">Seguimiento de contratación</div><button class="modal-close" onclick="closeModal('modal-rec-seguimiento')">✕</button></div><div class="modal-body"><input type="hidden" id="rec-follow-worker"><input type="hidden" id="rec-follow-service"><div class="form-grid"><div class="form-group full"><label class="form-label">Persona y orden de servicio</label><div class="cloud-note" id="rec-follow-context">Selecciona una persona.</div></div><div class="form-group"><label class="form-label">Responsable</label><input class="form-input" id="rec-follow-owner" placeholder="Nombre o correo del responsable"></div><div class="form-group"><label class="form-label">Próximo seguimiento</label><input class="form-input" type="date" id="rec-follow-date"></div><div class="form-group full"><label class="form-label">Resultado, acuerdo o próxima acción</label><textarea class="form-textarea" id="rec-follow-note" placeholder="Ej.: confirmó disponibilidad; solicitar examen pendiente el viernes"></textarea></div><div class="form-group full"><label class="form-label">Historial reciente</label><div id="rec-follow-history" class="cloud-note">Sin seguimientos registrados.</div></div></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-rec-seguimiento')">Cancelar</button><button class="btn btn-primary" onclick="saveRecruitmentFollowUpV84()">Guardar seguimiento</button></div></div></div>
 
 <!-- Modal: Entrega EPP -->
 <div class="modal-overlay" id="modal-oportunidad"><div class="modal modal-wide">
@@ -4835,7 +4838,7 @@ const ONBOARDING_STEPS=[
   {icon:'📝',label:'4. Contrato',page:'contratos',title:'Agrega el contrato del cliente',description:'Después del cliente, registra el contrato: número, vigencia, alcance, monto, responsables, condiciones, documentos asociados y estado operativo.',points:['El contrato queda asociado al cliente correspondiente.','Desde la ficha puedes modificar datos, registrar bitácora y controlar documentos/versiones.','El sistema alerta vencimientos y permite conectar proyectos o servicios al contrato.'],tip:'Incluye alcance, exclusiones, responsables y fechas. Esa información evita pérdidas de contexto cuando cambian las personas.'},
   {icon:'🔧',label:'5. Proyecto',page:'mantenciones',title:'Crea proyectos, servicios o mantenciones',description:'Luego se crea el trabajo real a ejecutar: proyecto, servicio, operación o mantención. Aquí se definen fechas, especialidades requeridas, dotación, HH, criticidad, permisos y estado.',points:['El proyecto queda conectado a cliente y contrato.','Puedes asignar o retirar trabajadores sin perder historial.','La ficha permite revisar personal, hotelería, documentos, timeline y bitácora.'],tip:'La ruta correcta es cliente → contrato → proyecto/servicio. Esa cascada mantiene ordenada toda la operación.'},
   {icon:'👷',label:'6. Personal',page:'trabajadores',title:'Carga personal de planta y personal spot',description:'Registra a cada trabajador con RUT único, datos personales, contacto, cargo, especialidad, tipo de trabajador, turno, documentos, exámenes, cursos, EPP, alojamiento y asignaciones.',points:['El sistema bloquea RUT duplicados dentro de la empresa.','Separa personal permanente de personal spot por mantención o proyecto.','Desde la ficha puedes cargar documentos faltantes y moverlo entre servicios.'],tip:'Para personal spot, usa estados como reclutamiento, confirmado, contrato enviado, firmado, acreditación enviada y aprobado.'},
-  {icon:'📋',label:'7. Reclutamiento',page:'reclutamiento',title:'Coordina personal disponible para nuevos trabajos',description:'El Centro Reclutamiento ayuda a buscar personas que califican por cargo, especialidad, disponibilidad, documentos, exámenes y estado operativo para iniciar llamados y contratación.',points:['Filtra candidatos disponibles antes de llamar.','Controla quién confirmó, quién está en validación y quién tiene contrato firmado.','Agrupa personal spot por proyecto o mantención.'],tip:'Esta vista sirve para que quien contrata no trabaje con planillas separadas ni pierda el estado de cada candidato.'},
+  {icon:'📋',label:'7. Personal temporal',page:'reclutamiento',title:'Coordina personal disponible para nuevos trabajos',description:'Gestión de personal temporal permite buscar personas compatibles por cargo, especialidad, disponibilidad, documentos, exámenes y estado operativo para iniciar su contratación.',points:['Filtra candidatos disponibles y muestra por qué cumplen o requieren revisión.','Controla confirmación, validación, contrato, firma y habilitación.','Registra responsable, próximo seguimiento y acuerdos por persona.'],tip:'Sigue la ruta necesidad → candidatos → contacto → validación → contrato → habilitación para no perder el estado de cada persona.'},
   {icon:'📄',label:'8. Documentos',page:'auditoria',title:'Valida documentos, cursos y exámenes',description:'Cada documento debe pasar por un flujo: requerido, cargado, enviado, en revisión, observado, corregido, aprobado, rechazado, vencido o renovado. Auditoría permite controlar trazabilidad y faltantes.',points:['Carga documentos desde la ficha del trabajador o módulo correspondiente.','Filtra cursos y exámenes por cliente, contrato o proyecto.','La auditoría deja registro de observaciones, correcciones, aprobaciones y evidencia.'],tip:'En producción, el motor documental puede conectarse a OCR, firma electrónica, QR, emisor y revisión humana final.'},
   {icon:'🦺',label:'9. EPP',page:'epp',title:'Entrega EPP según cargo y talla',description:'Registra las tallas del trabajador y cada entrega de EPP: casco, lentes, guantes, polera, pantalón, zapatos, respirador, arnés u otros elementos según cargo y riesgo.',points:['Cada entrega guarda fecha, estado, talla, costo, vida útil y evidencia.','Permite reposición por desgaste, daño o pérdida sin perder historial.','El EPP queda conectado al trabajador y al proyecto/servicio cuando corresponde.'],tip:'Carga las tallas en la ficha del trabajador para que aparezcan visibles al entregar y controlar EPP.'},
   {icon:'🚙',label:'10. Recursos',page:'vehiculos',title:'Controla vehículos, equipos y herramientas críticas',description:'Registra camionetas, buses, grúas, manlift, equipos de levante, herramientas críticas y maquinaria con patente o serie, propiedad, operador, costos y vencimientos.',points:['Controla revisión técnica, permiso de circulación, SOAP/seguro, autorización, certificación y arriendo.','El sistema genera alertas cuando faltan 30 días para un vencimiento.','Asocia recursos a clientes, contratos o servicios para saber dónde están operando.'],tip:'Usa la ficha del vehículo/equipo para renovar documentos y mantener historial de respaldo.'},
@@ -5119,7 +5122,7 @@ const renderContratosV83Base=renderContratos;renderContratos=function(){renderCo
 const convertOpportunityV83Base=convertOpportunityV82;convertOpportunityV82=function(id){convertOpportunityV83Base(id);const o=S.opportunities.find(x=>x.id===id);if(!o?.convertedId)return;const c=S.contratos.find(x=>x.id===o.convertedId);if(c){c.montoCLP=o.currency==='CLP'?o.amount:0;c.montoUF=0;persistTenant();}};
 const initSelectsV83Base=initSelects;initSelects=function(){initSelectsV83Base();bindPhonesV83();};
 
-// ===================== V8.4: RECLUTAMIENTO SPOT POR SERVICIO =====================
+// ===================== V8.4: GESTION DE PERSONAL TEMPORAL POR SERVICIO =====================
 const RECRUITMENT_STAGES_V84=[
   {id:'reclutamiento',label:'Reclutamiento'},
   {id:'disponible_confirmado',label:'Confirma disponibilidad'},
@@ -5129,8 +5132,8 @@ const RECRUITMENT_STAGES_V84=[
   {id:'contrato_firmado',label:'Contrato firmado'},
   {id:'acreditacion_cliente',label:'Acreditación cliente'}
 ];
-pageLabels.reclutamiento='Reclutamiento Spot';
-pageSubs.reclutamiento='Búsqueda, llamado, contrato y acreditación de personal por servicio';
+pageLabels.reclutamiento='Gestión de personal temporal';
+pageSubs.reclutamiento='Búsqueda, contacto, contratación y habilitación por orden de servicio';
 function recruitmentStageLabelV84(stage){return RECRUITMENT_STAGES_V84.find(s=>s.id===stage)?.label||'Libre';}
 function recruitmentStageIndexV84(stage){const index=RECRUITMENT_STAGES_V84.findIndex(s=>s.id===stage);return index<0?-1:index;}
 function selectedRecruitmentMantV84(){const id=document.getElementById('rec-mant')?.value||'';return S.mantenciones.find(m=>m.id===id)||S.mantenciones.find(m=>m.estado!=='cerrada')||S.mantenciones[0]||null;}
@@ -5161,8 +5164,29 @@ function workerValidationV84(worker){
   const examIssues=alerts.filter(a=>a.tipo==='examen').length;
   const courseIssues=alerts.filter(a=>a.tipo==='curso').length;
   const docIssues=alerts.filter(a=>['doc','documento','contrato','firma'].includes(a.tipo)).length;
-  const ok=pct>=70&&!examIssues&&!courseIssues;
+  const ok=pct>=70&&!examIssues&&!courseIssues&&!docIssues;
   return {pct,examIssues,courseIssues,docIssues,ok,totalIssues:alerts.length};
+}
+function recruitmentQualificationV84(worker,mant,validation,matches,other){
+  const reasons=[];
+  if(!matches.matchRequired)reasons.push('Especialidad no requerida');
+  if(other)reasons.push(`Asignado a ${other.nombre||'otra orden'}`);
+  if(validation.examIssues)reasons.push(`${validation.examIssues} examen(es) pendiente(s)`);
+  if(validation.courseIssues)reasons.push(`${validation.courseIssues} formación(es) pendiente(s)`);
+  if(validation.docIssues)reasons.push(`${validation.docIssues} documento(s) pendiente(s)`);
+  if(worker.bloqueado)reasons.push('Persona bloqueada');
+  const qualified=matches.matchRequired&&!other&&!worker.bloqueado;
+  return {qualified,reasons:reasons.length?reasons:['Especialidad y disponibilidad compatibles']};
+}
+function recruitmentContractV84(workerId,mantId){return S.firmas.find(f=>f.trabId===workerId&&f.mantId===mantId&&String(f.tipo||'').toLowerCase().includes('contrato'));}
+function recruitmentStageGuardV84(workerId,mantId,nextStage){
+  const worker=S.trabajadores.find(t=>t.id===workerId),validation=worker?workerValidationV84(worker):null,contract=recruitmentContractV84(workerId,mantId),next=recruitmentStageIndexV84(nextStage);
+  if(!worker)return 'No se encontró la persona.';
+  if(worker.bloqueado)return 'La persona está bloqueada y no puede avanzar.';
+  if(next>=recruitmentStageIndexV84('contrato_generado')&&!contract)return 'Primero genera o carga el contrato de trabajo.';
+  if(next>=recruitmentStageIndexV84('contrato_firmado')&&!['firmado','aprobado'].includes(String(contract?.estado||'').toLowerCase()))return 'El contrato todavía no figura firmado o aprobado.';
+  if(next>=recruitmentStageIndexV84('acreditacion_cliente')&&!validation?.ok)return 'No puede enviarse a habilitación: existen documentos, exámenes o formaciones pendientes.';
+  return '';
 }
 function filteredRecruitmentWorkersV84(mant){
   if(!mant)return [];
@@ -5232,9 +5256,9 @@ function renderRecruitmentSummaryV84(mant){
 }
 function renderRecruitmentFlowV84(stats){
   document.getElementById('rec-flow').innerHTML=RECRUITMENT_STAGES_V84.map((stage,index)=>{
-    const count=stats.byStage[stage.id]||0;
+    const count=stats.asigs.filter(a=>recruitmentStageIndexV84(a.recruitmentStage||'reclutamiento')>=index).length;
     const pct=stats.asigs.length?Math.round(count/stats.asigs.length*100):0;
-    return `<div style="padding:10px 0;border-bottom:1px solid var(--border);"><div style="display:flex;justify-content:space-between;gap:10px;"><b>${index+1}. ${stage.label}</b><span>${count} persona${count===1?'':'s'}</span></div><div class="prog" style="margin-top:7px;"><div class="prog-fill ${progColor(pct)}" style="width:${pct}%;"></div></div></div>`;
+    return `<div style="padding:10px 0;border-bottom:1px solid var(--border);"><div style="display:flex;justify-content:space-between;gap:10px;"><b>${index+1}. ${stage.label}</b><span>${count} de ${stats.asigs.length}</span></div><div class="prog" style="margin-top:7px;"><div class="prog-fill ${progColor(pct)}" style="width:${pct}%;"></div></div></div>`;
   }).join('');
 }
 function renderReclutamientoV84(){
@@ -5250,18 +5274,19 @@ function renderReclutamientoV84(){
   document.getElementById('rec-kpis').innerHTML=`<div class="kpi kpi-blue"><div class="kpi-value">${stats.required}</div><div class="kpi-label">Personas requeridas</div></div><div class="kpi kpi-orange"><div class="kpi-value">${stats.asigs.length}</div><div class="kpi-label">En reclutamiento/asignadas</div></div><div class="kpi kpi-green"><div class="kpi-value">${stats.confirmed}</div><div class="kpi-label">Confirmaron disponibilidad</div></div><div class="kpi kpi-yellow"><div class="kpi-value">${stats.signed}</div><div class="kpi-label">Contrato firmado</div></div><div class="kpi kpi-red"><div class="kpi-value">${Math.max(0,stats.required-stats.asigs.length)}</div><div class="kpi-label">Brecha por cubrir</div></div>`;
   renderRecruitmentSummaryV84(mant);
   renderRecruitmentFlowV84(stats);
-  document.getElementById('rec-workers-table').innerHTML=`<thead><tr><th>Persona</th><th>Cargo / especialidad</th><th>Califica</th><th>Estado contratación</th><th>Acreditación</th><th>Faltantes</th><th>Acciones</th></tr></thead><tbody>${workers.map(worker=>{
+  document.getElementById('rec-workers-table').innerHTML=`<thead><tr><th>Persona</th><th>Cargo / especialidad</th><th>Compatibilidad</th><th>Etapa de contratación</th><th>Habilitación</th><th>Brechas</th><th>Seguimiento</th><th>Acciones</th></tr></thead><tbody>${workers.map(worker=>{
     const asig=recruitmentAssignmentV84(worker.id,mant.id),validation=workerValidationV84(worker),matches=workerMatchesReqV84(worker,mant,document.getElementById('rec-esp')?.value||''),stage=asig?.recruitmentStage||'',other=workerOtherServiceV86(worker.id,mant.id);
+    const qualification=recruitmentQualificationV84(worker,mant,validation,matches,other),lastFollow=asig?.recruitmentFollowUps?.[0];
     const missing=[validation.examIssues?`${validation.examIssues} exámenes`:null,validation.courseIssues?`${validation.courseIssues} cursos`:null,validation.docIssues?`${validation.docIssues} documentos/firma`:null].filter(Boolean).join(', ')||'Sin alertas críticas';
-    return `<tr><td><b>${eppEsc(worker.nombre)}</b><div class="worker-rut">${eppEsc(worker.rut||'')} · ${worker.tipo==='permanente'?'Planta':'Spot'}</div></td><td>${eppEsc(worker.cargo||'—')}<div class="worker-rut">${eppEsc(worker.especialidad||'Sin especialidad')}</div></td><td><span class="badge ${matches.matchRequired?'badge-ok':'badge-warn'}">${matches.matchRequired?'Califica':'Revisar perfil'}</span><div class="worker-rut">Nota ${calLetra(worker.calificacion||0)}</div></td><td>${asig?`<select class="form-select" onchange="updateRecruitmentStageV84('${worker.id}','${mant.id}',this.value)">${RECRUITMENT_STAGES_V84.map(s=>`<option value="${s.id}" ${stage===s.id?'selected':''}>${s.label}</option>`).join('')}</select>`:other?`<span class="badge badge-warn">Ocupado</span><div class="worker-rut">${eppEsc(other.nombre||'otro servicio')}</div>`:'<span class="badge badge-na">Libre / sin asignar</span>'}</td><td><div style="display:flex;align-items:center;gap:8px;"><div class="prog" style="min-width:90px;"><div class="prog-fill ${progColor(validation.pct)}" style="width:${validation.pct}%;"></div></div><b>${validation.pct}%</b></div></td><td>${eppEsc(missing)}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap;">${asig?'<span class="badge badge-blue">Asignado</span>':other?'<span class="badge badge-warn">No disponible</span>':`<button class="btn btn-primary btn-sm" onclick="assignRecruitmentWorkerV84('${worker.id}','${mant.id}')">Reclutar</button>`}<button class="btn btn-secondary btn-sm" onclick="callRecruitmentWorkerV84('${worker.id}','${mant.id}')">WA</button><button class="btn btn-ghost btn-sm" onclick="generateRecruitmentContractV84('${worker.id}','${mant.id}')">Contrato</button><button class="btn btn-ghost btn-sm" onclick="openFicha('${worker.id}')">Ficha</button></div></td></tr>`;
-  }).join('')||'<tr><td colspan="7">No hay candidatos para los filtros seleccionados</td></tr>'}</tbody>`;
+    return `<tr><td><b>${eppEsc(worker.nombre)}</b><div class="worker-rut">${eppEsc(worker.rut||'')} · ${worker.tipo==='permanente'?'Personal permanente':'Personal temporal'}</div></td><td>${eppEsc(worker.cargo||'—')}<div class="worker-rut">${eppEsc(worker.especialidad||'Sin especialidad')}</div></td><td><span class="badge ${qualification.qualified?'badge-ok':'badge-warn'}">${qualification.qualified?'Compatible':'Requiere revisión'}</span><div class="worker-rut" title="${eppEsc(qualification.reasons.join(' · '))}">${eppEsc(qualification.reasons.join(' · '))}</div></td><td>${asig?`<select class="form-select" aria-label="Etapa de contratación de ${eppEsc(worker.nombre)}" onchange="updateRecruitmentStageV84('${worker.id}','${mant.id}',this.value)">${RECRUITMENT_STAGES_V84.map(s=>`<option value="${s.id}" ${stage===s.id?'selected':''}>${s.label}</option>`).join('')}</select>`:other?`<span class="badge badge-warn">No disponible</span><div class="worker-rut">${eppEsc(other.nombre||'otra orden')}</div>`:'<span class="badge badge-na">Disponible</span>'}</td><td><div style="display:flex;align-items:center;gap:8px;"><div class="prog" style="min-width:90px;"><div class="prog-fill ${progColor(validation.pct)}" style="width:${validation.pct}%;"></div></div><b>${validation.pct}%</b></div></td><td><span class="badge ${validation.ok?'badge-ok':'badge-warn'}">${eppEsc(missing)}</span></td><td>${asig?`<button class="btn btn-secondary btn-sm" onclick="openRecruitmentFollowUpV84('${worker.id}','${mant.id}')">Seguimiento</button><div class="worker-rut">${lastFollow?`${eppEsc(lastFollow.owner||'Sin responsable')} · ${eppEsc(lastFollow.nextDate||'sin fecha')}`:'Sin seguimiento'}</div>`:'—'}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap;">${asig?'<span class="badge badge-blue">En proceso</span>':other?'<span class="badge badge-warn">Ocupado</span>':`<button class="btn btn-primary btn-sm" onclick="assignRecruitmentWorkerV84('${worker.id}','${mant.id}')">Iniciar proceso</button>`}<button class="btn btn-secondary btn-sm" onclick="callRecruitmentWorkerV84('${worker.id}','${mant.id}')">WhatsApp</button><button class="btn btn-ghost btn-sm" onclick="generateRecruitmentContractV84('${worker.id}','${mant.id}')">Contrato</button><button class="btn btn-ghost btn-sm" onclick="openFicha('${worker.id}')">Ficha</button></div></td></tr>`;
+  }).join('')||'<tr><td colspan="8">No hay candidatos para los filtros seleccionados. Revisa la especialidad, disponibilidad o crea nuevas personas.</td></tr>'}</tbody>`;
 }
 function assignRecruitmentWorkerV84(workerId,mantId){
   const worker=S.trabajadores.find(t=>t.id===workerId),mant=S.mantenciones.find(m=>m.id===mantId);
   if(!worker||!mant)return;
   const other=workerOtherServiceV86(workerId,mantId);
   if(other){toast(`Persona ocupada en ${other.nombre}. Retírala o muévela antes de reclutarla aquí.`,'warn');return false;}
-  if(!recruitmentAssignmentV84(workerId,mantId))S.asignaciones.push({id:typeof assignmentIdV78==='function'?assignmentIdV78(workerId,mantId):`asig_${Date.now()}`,trabId:workerId,mantId,turno:'día',estado:'preasignado',recruitmentStage:'reclutamiento',recruitmentUpdatedAt:new Date().toISOString()});
+  if(!recruitmentAssignmentV84(workerId,mantId))S.asignaciones.push({id:typeof assignmentIdV78==='function'?assignmentIdV78(workerId,mantId):`asig_${Date.now()}`,trabId:workerId,mantId,turno:'día',estado:'preasignado',recruitmentStage:'reclutamiento',recruitmentUpdatedAt:new Date().toISOString(),recruitmentFollowUps:[]});
   worker.disponibilidad='asignado';
   if(mant.minaId&&!worker.mineras?.includes(mant.minaId))worker.mineras=[...(worker.mineras||[]),mant.minaId];
   persistTenant();renderReclutamientoV84();toast('Persona agregada al flujo de reclutamiento');return true;
@@ -5269,8 +5294,11 @@ function assignRecruitmentWorkerV84(workerId,mantId){
 function updateRecruitmentStageV84(workerId,mantId,stage){
   const asig=recruitmentAssignmentV84(workerId,mantId);
   if(!asig)return;
+  const previous=asig.recruitmentStage||'reclutamiento',guard=recruitmentStageGuardV84(workerId,mantId,stage);
+  if(guard){toast(guard,'err');renderReclutamientoV84();return false;}
   asig.recruitmentStage=stage;asig.recruitmentUpdatedAt=new Date().toISOString();
   if(stage==='contrato_firmado')asig.estado='confirmado';
+  recordHistoryV90?.('trabajador',workerId,'Etapa de contratación actualizada',{etapa:recruitmentStageLabelV84(previous)},{etapa:recruitmentStageLabelV84(stage)},`Orden de servicio: ${mantNombre(mantId)}`);
   persistTenant();renderReclutamientoV84();toast(`Etapa actualizada: ${recruitmentStageLabelV84(stage)}`);
 }
 function callRecruitmentWorkerV84(workerId,mantId){
@@ -5286,21 +5314,43 @@ function generateRecruitmentContractV84(workerId,mantId){
   const worker=S.trabajadores.find(t=>t.id===workerId),mant=S.mantenciones.find(m=>m.id===mantId);
   if(!worker||!mant)return;
   if(!recruitmentAssignmentV84(workerId,mantId)&&assignRecruitmentWorkerV84(workerId,mantId)===false)return;
-  if(!S.firmas.some(f=>f.trabId===workerId&&f.mantId===mantId&&f.tipo==='Contrato por obra/faena'))S.firmas.push({id:'f'+Date.now(),trabId:workerId,mantId,tipo:'Contrato por obra/faena',estado:'enviado',canal:'whatsapp',fecha:hoy(),vence:mant.inicio||hoy(),observacion:`Generado desde Reclutamiento Spot para ${mant.nombre}`});
+  if(!recruitmentContractV84(workerId,mantId))S.firmas.push({id:'f'+Date.now(),trabId:workerId,mantId,tipo:'Contrato de trabajo temporal',estado:'enviado',canal:'whatsapp',fecha:hoy(),vence:mant.termino||mant.inicio||hoy(),observacion:`Generado desde Gestión de personal temporal para ${mant.nombre}`});
   updateRecruitmentStageV84(workerId,mantId,'contrato_generado');
+}
+function openRecruitmentFollowUpV84(workerId,mantId){
+  const worker=S.trabajadores.find(t=>t.id===workerId),mant=S.mantenciones.find(m=>m.id===mantId),asig=recruitmentAssignmentV84(workerId,mantId);
+  if(!worker||!mant||!asig)return toast('Primero inicia el proceso de contratación','err');
+  asig.recruitmentFollowUps=Array.isArray(asig.recruitmentFollowUps)?asig.recruitmentFollowUps:[];
+  document.getElementById('rec-follow-worker').value=workerId;document.getElementById('rec-follow-service').value=mantId;
+  document.getElementById('rec-follow-context').innerHTML=`<b>${eppEsc(worker.nombre)}</b><br>${eppEsc(mant.nombre)} · ${eppEsc(recruitmentStageLabelV84(asig.recruitmentStage))}`;
+  document.getElementById('rec-follow-owner').value=asig.recruitmentOwner||currentTenantUser?.email||'';
+  document.getElementById('rec-follow-date').value=asig.recruitmentNextDate||'';document.getElementById('rec-follow-note').value='';
+  document.getElementById('rec-follow-history').innerHTML=asig.recruitmentFollowUps.slice(0,6).map(f=>`<div style="padding:7px 0;border-bottom:1px solid var(--border);"><b>${eppEsc(f.date||'')}</b> · ${eppEsc(f.owner||'Sin responsable')}<br>${eppEsc(f.note||'')}</div>`).join('')||'Sin seguimientos registrados.';
+  openModal('modal-rec-seguimiento');
+}
+function saveRecruitmentFollowUpV84(){
+  const workerId=document.getElementById('rec-follow-worker').value,mantId=document.getElementById('rec-follow-service').value,asig=recruitmentAssignmentV84(workerId,mantId);
+  const owner=document.getElementById('rec-follow-owner').value.trim(),nextDate=document.getElementById('rec-follow-date').value,note=document.getElementById('rec-follow-note').value.trim();
+  if(!asig)return toast('No se encontró la asignación','err');
+  if(!owner||!note)return toast('Indica responsable y resultado del seguimiento','err');
+  asig.recruitmentFollowUps=Array.isArray(asig.recruitmentFollowUps)?asig.recruitmentFollowUps:[];
+  asig.recruitmentFollowUps.unshift({id:'rf_'+Date.now(),date:hoy(),at:new Date().toISOString(),owner,nextDate,note});
+  asig.recruitmentOwner=owner;asig.recruitmentNextDate=nextDate;asig.recruitmentUpdatedAt=new Date().toISOString();
+  recordHistoryV90?.('trabajador',workerId,'Seguimiento de contratación registrado',{}, {responsable:owner,proximoSeguimiento:nextDate,nota:note},`Orden de servicio: ${mantNombre(mantId)}`);
+  closeModal('modal-rec-seguimiento');persistTenant();renderReclutamientoV84();toast('Seguimiento guardado');
 }
 function exportRecruitmentV84(){
   const mant=selectedRecruitmentMantV84();if(!mant)return toast('Selecciona un servicio','err');
-  const rows=[['Servicio','Cliente','Trabajador','RUT','Cargo','Especialidad','Etapa','Acreditación','Faltantes']];
-  filteredRecruitmentWorkersV84(mant).forEach(worker=>{const asig=recruitmentAssignmentV84(worker.id,mant.id),v=workerValidationV84(worker);rows.push([mant.nombre,minaNombre(mant.minaId),worker.nombre,worker.rut,worker.cargo,worker.especialidad,recruitmentStageLabelV84(asig?.recruitmentStage),`${v.pct}%`,v.totalIssues]);});
+  const rows=[['Orden de servicio','Cliente','Persona','RUT','Cargo','Especialidad','Etapa','Habilitación','Faltantes','Responsable','Próximo seguimiento']];
+  filteredRecruitmentWorkersV84(mant).forEach(worker=>{const asig=recruitmentAssignmentV84(worker.id,mant.id),v=workerValidationV84(worker);rows.push([mant.nombre,minaNombre(mant.minaId),worker.nombre,worker.rut,worker.cargo,worker.especialidad,recruitmentStageLabelV84(asig?.recruitmentStage),`${v.pct}%`,v.totalIssues,asig?.recruitmentOwner||'',asig?.recruitmentNextDate||'']);});
   exportCSV(rows,`reclutamiento_${(mant.nombre||'servicio').replace(/\s+/g,'_')}.csv`);
 }
 const renderPageV84Base=renderPage;renderPage=function(page){if(page==='reclutamiento')renderReclutamientoV84();else renderPageV84Base(page);};
 const initSelectsV84Base=initSelects;initSelects=function(){initSelectsV84Base();renderRecruitmentSelectsV84();};
 
 // ===================== V8.5: ACCESO CENTRALIZADO A RECLUTAMIENTO =====================
-pageLabels.reclutamiento='Centro Reclutamiento';
-pageSubs.reclutamiento='Planilla operativa para contratar, llamar, firmar y acreditar personal spot';
+pageLabels.reclutamiento='Gestión de personal temporal';
+pageSubs.reclutamiento='Coordina candidatos, contratación y habilitación por orden de servicio';
 function openRecruitmentForMantV85(mantId){
   nav('reclutamiento');
   setTimeout(()=>{const sel=document.getElementById('rec-mant');if(sel){sel.value=mantId;renderReclutamientoV84();}},0);
@@ -5319,14 +5369,14 @@ function renderRecruitmentDashboardV85(){
   const totalAsig=rows.reduce((n,r)=>n+r.stats.asigs.length,0);
   const totalSigned=rows.reduce((n,r)=>n+r.stats.signed,0);
   const totalGap=rows.reduce((n,r)=>n+r.gap,0);
-  host.innerHTML=`<div class="card-header"><div><div class="card-title">📋 Centro de Reclutamiento Spot</div><div class="card-subtitle">Vista central tipo planilla: requeridos, llamados, confirmados, contratos y acreditación por servicio.</div></div><button class="btn btn-primary btn-sm" onclick="nav('reclutamiento')">Abrir centro completo</button></div>
+  host.innerHTML=`<div class="card-header"><div><div class="card-title">📋 Gestión de personal temporal</div><div class="card-subtitle">Controla cupos, contactos, confirmaciones, contratos y habilitación por orden de servicio.</div></div><button class="btn btn-primary btn-sm" onclick="nav('reclutamiento')">Abrir gestión</button></div>
     <div class="kpi-grid" style="margin:10px 0 14px;">
       <div class="kpi kpi-blue"><div class="kpi-value">${totalReq}</div><div class="kpi-label">Cupos requeridos</div></div>
       <div class="kpi kpi-orange"><div class="kpi-value">${totalAsig}</div><div class="kpi-label">En reclutamiento</div></div>
       <div class="kpi kpi-green"><div class="kpi-value">${totalSigned}</div><div class="kpi-label">Contratos firmados</div></div>
       <div class="kpi kpi-red"><div class="kpi-value">${totalGap}</div><div class="kpi-label">Brecha por cubrir</div></div>
     </div>
-    <div class="table-wrap"><table><thead><tr><th>Servicio / mantención</th><th>Cliente</th><th>Requeridos</th><th>Reclutados</th><th>Confirmados</th><th>Contrato firmado</th><th>Acreditación</th><th>Brecha</th><th></th></tr></thead><tbody>${rows.map(row=>`<tr><td><b>${eppEsc(row.mant.nombre)}</b><div class="worker-rut">${row.mant.inicio||'sin inicio'} → ${row.mant.termino||'sin término'}</div></td><td>${eppEsc(minaNombre(row.mant.minaId))}</td><td>${row.stats.required}</td><td><div style="display:flex;align-items:center;gap:8px;"><div class="prog" style="min-width:95px;"><div class="prog-fill ${progColor(row.progress)}" style="width:${row.progress}%;"></div></div><b>${row.stats.asigs.length}</b></div></td><td>${row.stats.confirmed}</td><td>${row.stats.signed}</td><td>${row.stats.accredited}</td><td><span class="badge ${row.gap?'badge-warn':'badge-ok'}">${row.gap}</span></td><td><button class="btn btn-secondary btn-sm" onclick="openRecruitmentForMantV85('${row.mant.id}')">Coordinar</button></td></tr>`).join('')||'<tr><td colspan="9">No hay servicios activos. Crea un servicio para iniciar reclutamiento.</td></tr>'}</tbody></table></div>`;
+    <div class="table-wrap"><table><thead><tr><th>Orden de servicio</th><th>Cliente</th><th>Requeridos</th><th>En proceso</th><th>Confirmados</th><th>Contrato firmado</th><th>Habilitados</th><th>Brecha</th><th></th></tr></thead><tbody>${rows.map(row=>`<tr><td><b>${eppEsc(row.mant.nombre)}</b><div class="worker-rut">${row.mant.inicio||'sin inicio'} → ${row.mant.termino||'sin término'}</div></td><td>${eppEsc(minaNombre(row.mant.minaId))}</td><td>${row.stats.required}</td><td><div style="display:flex;align-items:center;gap:8px;"><div class="prog" style="min-width:95px;"><div class="prog-fill ${progColor(row.progress)}" style="width:${row.progress}%;"></div></div><b>${row.stats.asigs.length}</b></div></td><td>${row.stats.confirmed}</td><td>${row.stats.signed}</td><td>${row.stats.accredited}</td><td><span class="badge ${row.gap?'badge-warn':'badge-ok'}">${row.gap}</span></td><td><button class="btn btn-secondary btn-sm" onclick="openRecruitmentForMantV85('${row.mant.id}')">Coordinar</button></td></tr>`).join('')||'<tr><td colspan="9">No hay órdenes activas. Crea una orden de servicio para iniciar la contratación.</td></tr>'}</tbody></table></div>`;
 }
 const renderDashboardV85Base=renderDashboard;renderDashboard=function(){renderDashboardV85Base();renderRecruitmentDashboardV85();};
 
