@@ -520,7 +520,7 @@ body.private #main { display:block; }
   <div class="nav-item" onclick="nav('auditoria')">📋 Auditoría</div>
   <div class="nav-item" onclick="nav('acreditacion-empresa')">🏢 Acreditación Empresa</div>
   <div class="nav-group-label">Operaciones</div>
-  <div class="nav-item" onclick="nav('mantenciones')">🔧 Servicios</div>
+  <div class="nav-item" onclick="nav('mantenciones')">🔧 Órdenes de Servicio</div>
   <div class="nav-item" onclick="nav('contratos')">📝 Contratos y Firmas <span class="nav-badge nav-badge-orange" id="badge-firmas">0</span></div>
   <div class="nav-item" onclick="nav('hoteleria')">🛏️ Hotelería</div>
   <div class="nav-item" onclick="nav('llamados')">📲 Llamados WA</div>
@@ -814,7 +814,7 @@ body.private #main { display:block; }
   <!-- PAGE: MANTENCIONES -->
   <div id="page-mantenciones" class="page">
     <div class="section-header">
-      <div><div class="section-title">🔧 Servicios</div><div class="section-sub" id="mant-sub"></div></div>
+      <div><div class="section-title">🔧 Órdenes de Servicio</div><div class="section-sub" id="mant-sub"></div></div>
       <button class="btn btn-secondary" onclick="openModal('modal-nueva-mina')">+ Minera</button>
         <button class="btn btn-primary" onclick="openModal('modal-nueva-mant')">+ Servicio</button>
     </div>
@@ -5726,16 +5726,20 @@ function translateClientTerminology(value) {
     [/\bÁrea en faena\b/gi,'Área o sector de trabajo'],
     [/\bFaenas\b/gi,'Centros de trabajo'],
     [/\bFaena\b/gi,'Centro de trabajo'],
-    [/\bProyecto\s*\/\s*Mantención\b/gi,'Proyecto / Servicio'],
-    [/\bProyectos\s*\/\s*Mantenciones\b/gi,'Proyectos / Servicios'],
-    [/\bproyectos y mantenciones\b/gi,'proyectos y servicios'],
-    [/\bMantenciones Próximas\b/gi,'Servicios próximos'],
-    [/\bReporte por Mantención\b/gi,'Reporte por servicio'],
-    [/\bMantención Relacionada\b/gi,'Servicio relacionado'],
-    [/\bMantención programada\b/gi,'Servicio programado'],
+    [/\bProyectos y servicios\b/gi,'Órdenes de servicio'],
+    [/\bProyecto\s*\/\s*servicio\b/gi,'Orden de servicio'],
+    [/\bProyecto\/servicio\b/gi,'Orden de servicio'],
+    [/\bProyecto o servicio\b/gi,'Orden de servicio'],
+    [/\bProyecto\s*\/\s*Mantención\b/gi,'Orden de Servicio'],
+    [/\bProyectos\s*\/\s*Mantenciones\b/gi,'Órdenes de Servicio'],
+    [/\bproyectos y mantenciones\b/gi,'órdenes de servicio'],
+    [/\bMantenciones Próximas\b/gi,'Órdenes próximas'],
+    [/\bReporte por Mantención\b/gi,'Reporte por orden de servicio'],
+    [/\bMantención Relacionada\b/gi,'Orden de servicio relacionada'],
+    [/\bMantención programada\b/gi,'Orden de servicio programada'],
     [/\bMantención mayor\b/gi,'Intervención mayor'],
-    [/\bMantenciones\b/gi,'Servicios'],
-    [/\bMantención\b/gi,'Servicio'],
+    [/\bMantenciones\b/gi,'Órdenes de servicio'],
+    [/\bMantención\b/gi,'Orden de servicio'],
     [/\bParadas de Planta\b/gi,'Intervenciones programadas'],
     [/\bParada de Planta\b/gi,'Intervención programada'],
     [/\bShutdowns\b/gi,'Suspensiones programadas'],
