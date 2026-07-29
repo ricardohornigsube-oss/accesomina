@@ -45,6 +45,46 @@ API:
 - `GET /api/work-books/entries/:id`
 - `POST /api/work-books/entries`
 - `PATCH /api/work-books/entries/:id`
+- `POST /api/work-books/entries/:id/signature-requests`
+
+## Solicitud de firma electrónica
+
+Cada anotación abierta permite solicitar firma indicando:
+
+- Nombre del firmante.
+- Correo electrónico.
+- Teléfono celular.
+- Canal: correo, WhatsApp o ambos.
+- Mensaje personalizado.
+
+El endpoint de solicitud:
+
+1. Valida el firmante y los datos exigidos por el canal.
+2. Comprueba que la anotación pertenezca a la empresa autenticada.
+3. Rechaza anotaciones ya firmadas o cerradas.
+4. Envía el sobre al proveedor configurado en `signature`.
+5. Registra el identificador del sobre y el enlace seguro devuelto.
+6. Notifica por SMTP y/o WhatsApp Cloud API.
+7. Actualiza la anotación a `pendiente_firma`.
+8. Conserva el evento en historial y auditoría.
+
+Contrato esperado del proveedor de firma:
+
+```json
+{
+  "envelopeId": "referencia-del-proveedor",
+  "signingUrl": "https://proveedor.example/firmar/...",
+  "provider": "nombre-proveedor"
+}
+```
+
+Si el proveedor no está configurado, la solicitud queda en estado
+`pendiente_configuracion`. Nexo Klar no informa un envío ni una firma que no
+hayan ocurrido realmente.
+
+Las solicitudes se almacenan en `work_book_signature_requests`, aisladas por
+empresa mediante Row Level Security. Solo puede existir una solicitud activa por
+anotación para evitar envíos duplicados.
 
 ## Permisos
 
@@ -66,6 +106,7 @@ Antes del despliegue debe aplicarse la migración
 privado existente, con revisión antivirus y almacenamiento S3 compatible en
 producción.
 
-La integración de firma electrónica puede utilizar el conector de firma ya
-definido por empresa. Hasta configurar un proveedor productivo, el estado
-`pendiente_firma` mantiene el proceso controlado sin simular una firma válida.
+La integración utiliza el conector de firma definido por empresa y puede
+combinarse con SMTP y Meta WhatsApp Cloud API. Antes de operar debe realizarse
+una prueba de extremo a extremo con el proveedor contratado, incluyendo firma,
+rechazo, expiración, evidencia y conciliación del identificador del sobre.

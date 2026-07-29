@@ -1,7 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { canTransitionWorkBookEntry, workBookFolio } from '../work-book.js';
 import { validateTenantState } from '../validation.js';
+
+const workBookRoute = fs.readFileSync(new URL('../routes/work-books.js', import.meta.url), 'utf8');
+const frontend = fs.readFileSync(new URL('../../AccesoMina_v6.html', import.meta.url), 'utf8');
+const signatureMigration = fs.readFileSync(new URL('../../database/postgres/018_work_book_signature_requests.sql', import.meta.url), 'utf8');
 
 function validState() {
   return {
@@ -62,4 +67,20 @@ test('tenant state rejects duplicate work book entry numbers', () => {
   const state = validState();
   state.workBookEntries.push({ ...state.workBookEntries[0], id: 'entry-2' });
   assert.throws(() => validateTenantState(state), error => error.code === 'DUPLICATE_WORK_BOOK_ENTRY');
+});
+
+test('work book signature requests connect provider, email and mobile channels', () => {
+  assert.match(workBookRoute, /entries\/:id\/signature-requests/);
+  assert.match(workBookRoute, /sendSignatureEmail/);
+  assert.match(workBookRoute, /sendSignatureWhatsapp/);
+  assert.match(workBookRoute, /work_book\.signature\.requested/);
+  assert.match(frontend, /Solicitar firma electrónica/);
+  assert.match(frontend, /sendWorkBookSignatureRequestV127/);
+});
+
+test('work book signature requests are tenant isolated and deduplicated', () => {
+  assert.match(signatureMigration, /ENABLE ROW LEVEL SECURITY/);
+  assert.match(signatureMigration, /FORCE ROW LEVEL SECURITY/);
+  assert.match(signatureMigration, /idx_work_book_signature_active/);
+  assert.match(signatureMigration, /pendiente_configuracion/);
 });

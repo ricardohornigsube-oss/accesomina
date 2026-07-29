@@ -1,10 +1,13 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import nodemailer from 'nodemailer';
+import { config } from '../config.js';
 import { withTenant } from '../db.js';
 import { allowRoles } from '../middleware.js';
 import { appendAudit } from '../audit.js';
 import { sanitizeJson } from '../validation.js';
 import { canTransitionWorkBookEntry, workBookFolio } from '../work-book.js';
+import { tenantIntegration } from './settings.js';
 
 export const workBooksRouter = Router();
 const editors = allowRoles('domian_admin', 'client_admin', 'rrhh', 'prevencion', 'acreditacion');
@@ -43,6 +46,66 @@ const updateSchema = z.object({
   reason: text(3, 2000),
   evidenceFiles: evidenceSchema.optional()
 });
+
+const signatureRequestSchema = z.object({
+  signerName: text(2, 200),
+  signerEmail: z.string().trim().email().max(254).optional().or(z.literal('')),
+  signerPhone: z.string().trim().max(30).optional().or(z.literal('')),
+  channel: z.enum(['email', 'whatsapp', 'ambos']),
+  message: z.string().trim().max(2000).optional().default('')
+}).superRefine((value, ctx) => {
+  if (['email', 'ambos'].includes(value.channel) && !value.signerEmail) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['signerEmail'], message: 'El correo es obligatorio para este canal' });
+  }
+  const phone = String(value.signerPhone || '').replace(/\D/g, '');
+  if (['whatsapp', 'ambos'].includes(value.channel) && phone.length < 10) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['signerPhone'], message: 'El teléfono es obligatorio para este canal' });
+  }
+});
+
+function resolvedIntegration(tenant, fallback) {
+  return tenant ? (tenant.enabled ? { ...tenant.publicConfig, ...tenant.secret } : {}) : fallback;
+}
+
+function safeSigningUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' ? url.toString() : '';
+  } catch {
+    return '';
+  }
+}
+
+async function sendSignatureEmail(settings, { to, signerName, subject, signingUrl, message }) {
+  if (!settings.host) return { status: 'no_configurado' };
+  const transport = nodemailer.createTransport({
+    host: settings.host,
+    port: Number(settings.port || 587),
+    secure: settings.secure === true,
+    auth: settings.user ? { user: settings.user, pass: settings.pass } : undefined,
+    connectionTimeout: 15_000,
+    greetingTimeout: 15_000,
+    socketTimeout: 30_000
+  });
+  const textBody = `${message || `Hola ${signerName}, tienes una anotación del Libro de Obra pendiente de firma.`}${signingUrl ? `\n\nFirmar de forma segura: ${signingUrl}` : ''}`;
+  const info = await transport.sendMail({ from: settings.from || config.smtp.from, to, subject: `Firma requerida: ${subject}`.slice(0, 200), text: textBody });
+  return { status: 'enviado', reference: info.messageId };
+}
+
+async function sendSignatureWhatsapp(settings, { to, signerName, subject, signingUrl, message }) {
+  if (!settings.phoneNumberId || !settings.token) return { status: 'no_configurado' };
+  const phone = String(to || '').replace(/\D/g, '');
+  const body = `${message || `Hola ${signerName}, tienes una anotación del Libro de Obra pendiente de firma: ${subject}.`}${signingUrl ? `\n${signingUrl}` : ''}`.slice(0, 4096);
+  const response = await fetch(`https://graph.facebook.com/${settings.version || config.whatsapp.version}/${settings.phoneNumberId}/messages`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${settings.token}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ messaging_product: 'whatsapp', to: phone, type: 'text', text: { body } }),
+    signal: AbortSignal.timeout(15_000)
+  });
+  const result = await response.json();
+  if (!response.ok) throw Object.assign(new Error('WhatsApp no pudo entregar la solicitud'), { status: 502, code: 'WHATSAPP_SIGNATURE_DELIVERY_FAILED' });
+  return { status: 'enviado', reference: result.messages?.[0]?.id || '' };
+}
 
 
 async function tenantRefs(client, tenantId) {
@@ -104,10 +167,140 @@ workBooksRouter.get('/entries/:id', async (req, res) => {
        WHERE h.tenant_id=$1 AND h.entry_id=$2 ORDER BY h.changed_at DESC`,
       [req.auth.tenantId, req.params.id]
     )).rows;
-    return { ...entry, history };
+    const signatureRequests = (await client.query(
+      `SELECT id,signer_name,signer_email,signer_phone,channel,status,provider,provider_envelope_id,
+              signing_url,delivery_status,requested_at,updated_at
+       FROM work_book_signature_requests
+       WHERE tenant_id=$1 AND entry_id=$2 ORDER BY requested_at DESC`,
+      [req.auth.tenantId, req.params.id]
+    )).rows;
+    return { ...entry, history, signature_requests: signatureRequests };
   });
   if (!result) return res.status(404).json({ error: 'WORK_BOOK_ENTRY_NOT_FOUND' });
   res.json(result);
+});
+
+workBooksRouter.post('/entries/:id/signature-requests', editors, async (req, res) => {
+  const body = signatureRequestSchema.parse(req.body);
+  const signatureTenant = await tenantIntegration(req.auth.tenantId, 'signature');
+  const signature = resolvedIntegration(signatureTenant, config.integrations.signature);
+  const initialStatus = signature.url ? 'enviando' : 'pendiente_configuracion';
+  const context = await withTenant(req.auth.tenantId, async client => {
+    const entry = (await client.query(`${selectEntries} WHERE e.tenant_id=$1 AND e.id=$2`, [req.auth.tenantId, req.params.id])).rows[0];
+    if (!entry) return null;
+    if (['firmado', 'cerrado'].includes(entry.status)) {
+      throw Object.assign(new Error('La anotación ya está firmada o cerrada'), { status: 409, code: 'WORK_BOOK_ENTRY_ALREADY_LOCKED' });
+    }
+    const active = (await client.query(
+      `SELECT id FROM work_book_signature_requests
+       WHERE tenant_id=$1 AND entry_id=$2 AND status IN ('enviando','enviada','entregada','vista') LIMIT 1`,
+      [req.auth.tenantId, req.params.id]
+    )).rows[0];
+    if (active) {
+      throw Object.assign(new Error('Esta anotación ya tiene una solicitud de firma activa'), { status: 409, code: 'ACTIVE_WORK_BOOK_SIGNATURE_EXISTS' });
+    }
+    const request = (await client.query(
+      `INSERT INTO work_book_signature_requests
+       (tenant_id,entry_id,signer_name,signer_email,signer_phone,channel,status,requested_by)
+       VALUES($1,$2,$3,NULLIF($4,''),NULLIF($5,''),$6,$7,$8)
+       RETURNING *`,
+      [req.auth.tenantId, req.params.id, body.signerName, body.signerEmail, body.signerPhone, body.channel, initialStatus, req.auth.userId]
+    )).rows[0];
+    return { entry, request };
+  });
+  if (!context) return res.status(404).json({ error: 'WORK_BOOK_ENTRY_NOT_FOUND' });
+
+  if (!signature.url) {
+    await withTenant(req.auth.tenantId, async client => {
+      await client.query(
+        `INSERT INTO work_book_entry_history(tenant_id,entry_id,action,reason,new_value,changed_by)
+         VALUES($1,$2,'firma_pendiente_configuracion','Proveedor de firma no configurado',$3::jsonb,$4)`,
+        [req.auth.tenantId, req.params.id, JSON.stringify({ requestId: context.request.id, signer: body.signerName, channel: body.channel }), req.auth.userId]
+      );
+      await appendAudit(client, { tenantId: req.auth.tenantId, userId: req.auth.userId, entityType: 'work_book_entry', entityId: req.params.id, action: 'work_book.signature.pending_configuration', newValue: { requestId: context.request.id, channel: body.channel } });
+    });
+    return res.status(202).json({ ...context.request, status: 'pendiente_configuracion', message: 'Configure el proveedor de firma electrónica para efectuar el envío.' });
+  }
+
+  let providerResult;
+  try {
+    const providerResponse = await fetch(signature.url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', ...(signature.token ? { authorization: `Bearer ${signature.token}` } : {}) },
+      body: JSON.stringify({
+        tenantId: req.auth.tenantId,
+        requestedBy: req.auth.userId,
+        entityType: 'work_book_entry',
+        entityId: context.entry.id,
+        folio: context.entry.folio,
+        entryNumber: context.entry.entry_number,
+        document: {
+          title: context.entry.subject,
+          content: context.entry.body,
+          evidenceFiles: context.entry.evidence_files || []
+        },
+        signer: { name: body.signerName, email: body.signerEmail || null, phone: body.signerPhone || null },
+        delivery: { channel: body.channel },
+        metadata: {
+          clientRef: context.entry.mine_ref,
+          contractRef: context.entry.contract_ref,
+          serviceRef: context.entry.project_ref
+        }
+      }),
+      signal: AbortSignal.timeout(30_000)
+    });
+    const responseText = await providerResponse.text();
+    let responseBody = {};
+    try { responseBody = responseText ? JSON.parse(responseText) : {}; } catch { responseBody = { message: responseText.slice(0, 1000) }; }
+    if (!providerResponse.ok) throw Object.assign(new Error('El proveedor de firma rechazó la solicitud'), { status: 502, code: 'SIGNATURE_PROVIDER_FAILED', providerBody: responseBody });
+    providerResult = {
+      envelopeId: String(responseBody.envelopeId || responseBody.envelope_id || responseBody.id || '').slice(0, 300),
+      signingUrl: safeSigningUrl(responseBody.signingUrl || responseBody.signing_url || responseBody.url || ''),
+      provider: String(responseBody.provider || signature.provider || 'firma_api').slice(0, 120)
+    };
+  } catch (error) {
+    await withTenant(req.auth.tenantId, client => client.query(
+      `UPDATE work_book_signature_requests SET status='error',delivery_status=$3::jsonb,updated_at=now()
+       WHERE tenant_id=$1 AND id=$2`,
+      [req.auth.tenantId, context.request.id, JSON.stringify({ signature: 'error', message: error.message })]
+    ));
+    throw error;
+  }
+
+  const delivery = { signature: 'enviada' };
+  const smtp = resolvedIntegration(await tenantIntegration(req.auth.tenantId, 'smtp'), config.smtp);
+  const whatsapp = resolvedIntegration(await tenantIntegration(req.auth.tenantId, 'whatsapp'), config.whatsapp);
+  if (['email', 'ambos'].includes(body.channel)) {
+    try { delivery.email = await sendSignatureEmail(smtp, { to: body.signerEmail, signerName: body.signerName, subject: context.entry.subject, signingUrl: providerResult.signingUrl, message: body.message }); }
+    catch (error) { delivery.email = { status: 'error', message: error.message }; }
+  }
+  if (['whatsapp', 'ambos'].includes(body.channel)) {
+    try { delivery.whatsapp = await sendSignatureWhatsapp(whatsapp, { to: body.signerPhone, signerName: body.signerName, subject: context.entry.subject, signingUrl: providerResult.signingUrl, message: body.message }); }
+    catch (error) { delivery.whatsapp = { status: 'error', message: error.message }; }
+  }
+
+  const saved = await withTenant(req.auth.tenantId, async client => {
+    const updated = (await client.query(
+      `UPDATE work_book_signature_requests
+       SET status='enviada',provider=$3,provider_envelope_id=NULLIF($4,''),signing_url=NULLIF($5,''),
+           delivery_status=$6::jsonb,updated_at=now()
+       WHERE tenant_id=$1 AND id=$2 RETURNING *`,
+      [req.auth.tenantId, context.request.id, providerResult.provider, providerResult.envelopeId, providerResult.signingUrl, JSON.stringify(delivery)]
+    )).rows[0];
+    await client.query(
+      `UPDATE work_book_entries SET status='pendiente_firma',signature_state='pendiente',updated_at=now()
+       WHERE tenant_id=$1 AND id=$2`,
+      [req.auth.tenantId, req.params.id]
+    );
+    await client.query(
+      `INSERT INTO work_book_entry_history(tenant_id,entry_id,action,reason,new_value,changed_by)
+       VALUES($1,$2,'firma_solicitada','Solicitud enviada mediante API',$3::jsonb,$4)`,
+      [req.auth.tenantId, req.params.id, JSON.stringify({ requestId: updated.id, signer: body.signerName, channel: body.channel, provider: providerResult.provider, envelopeId: providerResult.envelopeId, delivery }), req.auth.userId]
+    );
+    await appendAudit(client, { tenantId: req.auth.tenantId, userId: req.auth.userId, entityType: 'work_book_entry', entityId: req.params.id, action: 'work_book.signature.requested', newValue: { requestId: updated.id, channel: body.channel, provider: providerResult.provider, envelopeId: providerResult.envelopeId } });
+    return updated;
+  });
+  res.status(202).json(saved);
 });
 
 workBooksRouter.post('/entries', editors, async (req, res) => {
