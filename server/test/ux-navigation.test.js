@@ -37,9 +37,22 @@ test('visible terminology supports multiple industries without changing legacy d
     'Cumplimiento corporativo',
     'Alojamiento y estadías',
     'Credenciales de acceso',
-    'Registro operacional'
+    'Libro de Obra'
   ]) assert.ok(html.includes(neutralLabel), `missing neutral label: ${neutralLabel}`);
 
   assert.match(html, /function translateClientTerminology/);
   assert.match(html, /const plural=.*replacement=plural\?'clientes':'cliente'/);
+});
+
+test('work book remains visible in the General View group', () => {
+  const generalStart = html.indexOf('<div class="nav-group-label">Vista General</div>');
+  const peopleStart = html.indexOf('<div class="nav-group-label">Personal</div>');
+  const generalNavigation = html.slice(generalStart, peopleStart);
+
+  assert.match(generalNavigation, /id="nav-work-book-v125"/);
+  assert.match(generalNavigation, /📖 Libro de Obra/);
+  assert.ok(
+    generalNavigation.indexOf("nav('libro-obras')") > generalNavigation.indexOf("nav('operaciones-cloud')"),
+    'Libro de Obra must appear after Centro Operativo'
+  );
 });

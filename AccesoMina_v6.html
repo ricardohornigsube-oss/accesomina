@@ -552,6 +552,7 @@ body.private #main { display:block; }
   <div class="nav-item" onclick="nav('alertas')">🔔 Alertas <span class="nav-badge" id="badge-alertas">0</span></div>
   <div class="nav-item" onclick="nav('oportunidades')">💼 LEAD / Oportunidades</div>
   <div class="nav-item" onclick="nav('operaciones-cloud')">📡 Centro Operativo</div>
+  <div class="nav-item" id="nav-work-book-v125" onclick="nav('libro-obras')">📖 Libro de Obra <span class="nav-badge" id="badge-work-book-v125">0</span></div>
   <div class="nav-group-label">Personal</div>
   <div class="nav-item" onclick="nav('trabajadores')">👷 Trabajadores</div>
   <div class="nav-item" onclick="nav('personal-planta')">🏭 Personal de Planta</div>
@@ -5863,7 +5864,6 @@ function translateClientTerminology(value) {
     [/\bProtocolos Salud\b/gi,'Salud ocupacional'],
     [/\bCursos\b/gi,'Formación y certificaciones'],
     [/\bExámenes\b(?!\s+y aptitudes)/gi,'Exámenes y aptitudes'],
-    [/\bLibro de Obra\b/gi,'Registro operacional'],
     [/\bLibro diario de obra\b/gi,'Registro diario del servicio'],
     [/\bLEAD\s*\/\s*Oportunidades\b/gi,'Prospectos y oportunidades'],
     [/\bLEAD\b/gi,'Prospecto'],
@@ -8505,7 +8505,7 @@ function installWorkBookUiV125(){
   ensureWorkBookStateV125();
   if(!document.getElementById('nav-work-book-v125')){
     const center=[...document.querySelectorAll('#sidebar .nav-item')].find(el=>el.getAttribute('onclick')==="nav('operaciones-cloud')");
-    center?.insertAdjacentHTML('beforebegin','<div class="nav-item" id="nav-work-book-v125" onclick="nav(\'libro-obras\')">📖 Libro de Obra <span class="nav-badge" id="badge-work-book-v125">0</span></div>');
+    center?.insertAdjacentHTML('afterend','<div class="nav-item" id="nav-work-book-v125" onclick="nav(\'libro-obras\')">📖 Libro de Obra <span class="nav-badge" id="badge-work-book-v125">0</span></div>');
   }
   if(!document.getElementById('page-libro-obras')){
     document.getElementById('main')?.insertAdjacentHTML('beforeend',`
