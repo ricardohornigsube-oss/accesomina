@@ -22,7 +22,8 @@ test('requested management improvements are implemented as tenant state', () => 
   for (const stateCollection of [
     'uiRolePreferences', 'alertWorkflow', 'operationTasks', 'signatureReminders',
     'communicationTemplates', 'communicationHistory', 'portalReviews',
-    'trainingMatrices', 'healthRiskMatrices', 'importValidations'
+    'trainingMatrices', 'healthRiskMatrices', 'importValidations',
+    'temporalPreferences', 'monthlyClosures'
   ]) {
     assert.match(script, new RegExp(`S\\.${stateCollection}`), `missing tenant collection ${stateCollection}`);
   }
@@ -35,10 +36,26 @@ test('commercial, people, compliance and operational enhancements are available'
     'renderSubcontractCompliance', 'renderRecruitmentKanban', 'renderPermanentStructure',
     'renderEppInventoryBridge', 'renderTrainingMatrix', 'renderHealthMatrix',
     'renderCommunicationsGovernance', 'renderPortalReviewQueue',
-    'renderAuditConfidence', 'installImportPreview'
+    'renderAuditConfidence', 'installImportPreview', 'installTemporalToolbar',
+    'renderTemporalAnalysis'
   ]) {
     assert.match(script, new RegExp(`function ${feature}\\(`), `missing feature ${feature}`);
   }
+});
+
+test('temporal analysis and immutable monthly closure are available', () => {
+  assert.match(script, /Este mes/);
+  assert.match(script, /Últimos 12 meses/);
+  assert.match(script, /Rango personalizado/);
+  assert.match(script, /function periodMetrics\(/);
+  assert.match(script, /Cierre mensual operativo/);
+  assert.match(script, /Este mes ya tiene un cierre registrado/);
+  assert.match(script, /status: "cerrado"/);
+  assert.match(script, /function closureDigest\(/);
+  assert.match(script, /Solo administración puede realizar el cierre mensual/);
+  assert.match(script, /renderWithTemporalCollection\("turnos"/);
+  assert.match(script, /renderWithTemporalCollection\("incidentes"/);
+  assert.match(script, /renderWithTemporalCollection\("callouts"/);
 });
 
 test('mass import checks the complete file and reports internal duplicates', () => {

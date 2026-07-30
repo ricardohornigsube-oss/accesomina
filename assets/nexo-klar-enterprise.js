@@ -1,13 +1,15 @@
 (function () {
   "use strict";
 
-  const VERSION = "12.8";
+  const VERSION = "12.9";
   const ENTERPRISE_KEYS = [
     "uiRolePreferences", "alertWorkflow", "operationTasks", "signatureReminders",
     "communicationTemplates", "communicationHistory", "portalReviews",
     "trainingMatrices", "healthRiskMatrices", "importValidations",
-    "inventory", "inventoryMovements", "warehouses"
+    "inventory", "inventoryMovements", "warehouses", "temporalPreferences",
+    "monthlyClosures"
   ];
+  const ENTERPRISE_OBJECT_KEYS = new Set(["uiRolePreferences", "alertWorkflow", "temporalPreferences"]);
   let modalSave = null;
   let recruitmentSpecialty = "";
 
@@ -34,6 +36,8 @@
     S.inventory ||= [];
     S.inventoryMovements ||= [];
     S.warehouses ||= [];
+    S.temporalPreferences = { mode: "current_month", from: "", to: "", ...(S.temporalPreferences || {}) };
+    S.monthlyClosures ||= [];
   }
 
   function save() {
@@ -79,9 +83,111 @@
     return document.getElementById(id);
   }
 
+  function isoDate(date) {
+    const value = new Date(date);
+    if (Number.isNaN(value.getTime())) return "";
+    return value.toISOString().slice(0, 10);
+  }
+
+  function monthBounds(value = today().slice(0, 7)) {
+    const [year, month] = value.split("-").map(Number);
+    const from = `${year}-${String(month).padStart(2, "0")}-01`;
+    const to = isoDate(new Date(year, month, 0));
+    return { from, to };
+  }
+
+  function temporalRange() {
+    ensureState();
+    const preference = S.temporalPreferences;
+    const current = new Date(`${today()}T12:00:00`);
+    if (preference.mode === "all") return { from: "", to: "", label: "Todo el historial" };
+    if (preference.mode === "custom") return { from: preference.from || "", to: preference.to || "", label: `${preference.from || "Inicio"} a ${preference.to || "hoy"}` };
+    if (preference.mode === "previous_month") {
+      current.setMonth(current.getMonth() - 1);
+      const bounds = monthBounds(isoDate(current).slice(0, 7));
+      return { ...bounds, label: "Mes anterior" };
+    }
+    if (preference.mode === "last_3" || preference.mode === "last_6" || preference.mode === "last_12") {
+      const months = Number(preference.mode.split("_")[1]);
+      const fromDate = new Date(current.getFullYear(), current.getMonth() - months + 1, 1);
+      return { from: isoDate(fromDate), to: today(), label: `Últimos ${months} meses` };
+    }
+    if (preference.mode === "current_year") return { from: `${current.getFullYear()}-01-01`, to: `${current.getFullYear()}-12-31`, label: `Año ${current.getFullYear()}` };
+    return { ...monthBounds(today().slice(0, 7)), label: "Mes actual" };
+  }
+
+  function dateInside(date, range = temporalRange()) {
+    const value = String(date || "").slice(0, 10);
+    if (!value) return false;
+    return (!range.from || value >= range.from) && (!range.to || value <= range.to);
+  }
+
+  function overlapsPeriod(start, end, range = temporalRange()) {
+    const first = String(start || end || "").slice(0, 10);
+    const last = String(end || start || "").slice(0, 10);
+    if (!first && !last) return false;
+    return (!range.to || first <= range.to) && (!range.from || last >= range.from);
+  }
+
+  window.nkPeriodRows128 = function (rows, fields = ["fecha", "createdAt", "updatedAt"]) {
+    return (rows || []).filter((row) => fields.some((field) => dateInside(row?.[field])));
+  };
+
+  function periodOptions(selected) {
+    return [
+      ["current_month", "Este mes"], ["previous_month", "Mes anterior"],
+      ["last_3", "Últimos 3 meses"], ["last_6", "Últimos 6 meses"],
+      ["last_12", "Últimos 12 meses"], ["current_year", "Este año"],
+      ["custom", "Rango personalizado"], ["all", "Todo el historial"]
+    ].map(([value, label]) => `<option value="${value}" ${selected === value ? "selected" : ""}>${label}</option>`).join("");
+  }
+
+  function installTemporalToolbar() {
+    ensureState();
+    const topbar = document.getElementById("topbar");
+    const right = topbar?.querySelector(".topbar-right");
+    if (!topbar || !right) return;
+    let host = document.getElementById("nk128-temporal-toolbar");
+    if (!host) {
+      host = document.createElement("div");
+      host.id = "nk128-temporal-toolbar";
+      host.className = "nk128-temporal-toolbar";
+      right.insertAdjacentElement("beforebegin", host);
+    }
+    const preference = S.temporalPreferences;
+    const range = temporalRange();
+    host.innerHTML = `<label for="nk128-period-mode">Periodo</label>
+      <select class="filter-select" id="nk128-period-mode" onchange="changeTemporalPeriod128(this.value)">${periodOptions(preference.mode)}</select>
+      <span class="nk128-period-label">${esc(range.label)}</span>
+      ${preference.mode === "custom" ? `<input class="filter-input" id="nk128-period-from" type="date" value="${esc(preference.from || "")}" onchange="changeTemporalCustom128()"><input class="filter-input" id="nk128-period-to" type="date" value="${esc(preference.to || "")}" onchange="changeTemporalCustom128()">` : ""}`;
+  }
+
+  window.changeTemporalPeriod128 = function (mode) {
+    ensureState();
+    S.temporalPreferences.mode = mode;
+    if (mode !== "custom") {
+      S.temporalPreferences.from = "";
+      S.temporalPreferences.to = "";
+    }
+    save(); installTemporalToolbar();
+    if (typeof renderCurrentPageSoft === "function") renderCurrentPageSoft();
+    toast("Periodo de análisis actualizado");
+  };
+
+  window.changeTemporalCustom128 = function () {
+    ensureState();
+    const from = document.getElementById("nk128-period-from")?.value || "";
+    const to = document.getElementById("nk128-period-to")?.value || "";
+    if (from && to && from > to) return toast("La fecha inicial no puede superar la fecha final", "err");
+    Object.assign(S.temporalPreferences, { mode: "custom", from, to });
+    save();
+    if (typeof renderCurrentPageSoft === "function") renderCurrentPageSoft();
+  };
+
   function dashboardMetrics() {
     const alerts = typeof computeAlertas === "function" ? computeAlertas() : [];
-    const services = S.mantenciones || [];
+    const range = temporalRange();
+    const services = (S.mantenciones || []).filter((service) => overlapsPeriod(service.inicio, service.termino, range));
     const ready = services.filter((service) => typeof serviceStatusV107 === "function" && serviceStatusV107(service).status === "Lista para ejecutar").length;
     return {
       personas: (S.trabajadores || []).length,
@@ -134,6 +240,113 @@
       S.uiRolePreferences[role] = { kpis, shortcuts };
       save(); closeModal("nk128-modal"); renderDashboardPreferences(); toast("Panel del rol actualizado");
     });
+  };
+
+  function periodMetrics(range = temporalRange()) {
+    const services = (S.mantenciones || []).filter((row) => overlapsPeriod(row.inicio, row.termino, range));
+    const serviceIds = new Set(services.map((row) => row.id));
+    const shifts = (S.turnos || []).filter((row) => dateInside(row.fecha, range));
+    const epp = (S.eppDeliveries || []).filter((row) => dateInside(row.deliveredAt || row.fecha, range));
+    const lodgings = (S.hotelAsig || []).filter((row) => overlapsPeriod(row.checkin, row.checkout, range));
+    const incidents = (S.incidentes || []).filter((row) => dateInside(row.fecha || row.createdAt, range));
+    const opportunities = (S.opportunities || []).filter((row) => dateInside(row.expectedClose || row.createdAt, range));
+    const calls = (S.callouts || []).filter((row) => dateInside(row.fecha, range));
+    const signatures = (S.firmas || []).filter((row) => dateInside(row.firmado || row.enviado || row.fecha, range));
+    const people = new Set((S.asignaciones || []).filter((row) => serviceIds.has(row.mantId)).map((row) => row.trabId));
+    const eppCost = epp.reduce((sum, row) => sum + (Number(row.totalCost || row.cost || row.unitCost || 0) * Number(row.qty || row.quantity || 1)), 0);
+    const hotelCost = lodgings.reduce((sum, row) => {
+      const hotel = (S.hoteles || []).find((item) => item.id === row.hotelId);
+      const start = new Date(`${row.checkin || range.from}T12:00:00`);
+      const end = new Date(`${row.checkout || row.checkin || range.to}T12:00:00`);
+      const nights = Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) ? 0 : Math.max(1, Math.ceil((end - start) / 86400000));
+      return sum + nights * Number(row.pricePerNight || hotel?.tarifa || 0);
+    }, 0);
+    return {
+      services: services.length,
+      people: people.size,
+      hours: shifts.reduce((sum, row) => sum + Number(row.hh || 0), 0),
+      attendance: shifts.filter((row) => row.asistencia === "presente").length,
+      incidents: incidents.length,
+      openIncidents: incidents.filter((row) => row.estado !== "cerrado").length,
+      eppDeliveries: epp.length,
+      eppCost,
+      lodgingAssignments: lodgings.length,
+      hotelCost,
+      calls: calls.length,
+      signatures: signatures.length,
+      opportunities: opportunities.length,
+      projectedRevenue: opportunities.reduce((sum, row) => sum + Number(row.amount || 0) * Number(row.probability || 0) / 100, 0),
+      alerts: activeAlerts().filter((row) => dateInside(row.fecha || row.vence || row.workflow?.dueAt, range)).length
+    };
+  }
+
+  function closureDigest(value) {
+    const text = JSON.stringify(value);
+    let hash = 2166136261;
+    for (let index = 0; index < text.length; index += 1) {
+      hash ^= text.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return `NK-${(hash >>> 0).toString(16).padStart(8, "0").toUpperCase()}`;
+  }
+
+  function canCloseMonth() {
+    return currentRole().includes("admin");
+  }
+
+  function renderTemporalAnalysis() {
+    const range = temporalRange();
+    const metrics = periodMetrics(range);
+    const latest = (S.monthlyClosures || [])[0];
+    upsertAfterHeader("dashboard", "nk128-temporal-analysis", `<div class="card" id="nk128-temporal-analysis" style="margin-bottom:16px;">
+      <div class="card-header"><div><div class="card-title">Análisis del periodo · ${esc(range.label)}</div><div class="card-subtitle">${esc(range.from || "Desde el inicio")} → ${esc(range.to || "hoy")} · información conectada de operación, personas y costos.</div></div><div class="nk128-actions">${canCloseMonth() ? '<button class="btn btn-secondary btn-sm" onclick="openMonthlyClosure128()">Realizar cierre mensual</button>' : ""}<button class="btn btn-ghost btn-sm" onclick="openClosureHistory128()">Historial</button></div></div>
+      <div class="kpi-grid" style="margin-top:12px;">
+        <div class="kpi kpi-blue"><div class="kpi-value">${metrics.services}</div><div class="kpi-label">Órdenes del periodo</div></div>
+        <div class="kpi kpi-green"><div class="kpi-value">${metrics.people}</div><div class="kpi-label">Personas asignadas</div></div>
+        <div class="kpi kpi-orange"><div class="kpi-value">${metrics.hours}</div><div class="kpi-label">Horas hombre</div></div>
+        <div class="kpi kpi-red"><div class="kpi-value">${metrics.openIncidents}</div><div class="kpi-label">Incidentes abiertos</div></div>
+        <div class="kpi kpi-blue"><div class="kpi-value">${money(metrics.eppCost + metrics.hotelCost)}</div><div class="kpi-label">EPP + alojamiento</div></div>
+        <div class="kpi kpi-orange"><div class="kpi-value">${money(metrics.projectedRevenue)}</div><div class="kpi-label">Proyección ponderada</div></div>
+      </div>
+      <div class="nk128-period-detail">
+        <span>Entregas EPP: <b>${metrics.eppDeliveries}</b></span><span>Estadías: <b>${metrics.lodgingAssignments}</b></span><span>Convocatorias: <b>${metrics.calls}</b></span><span>Firmas gestionadas: <b>${metrics.signatures}</b></span><span>Alertas del periodo: <b>${metrics.alerts}</b></span>
+      </div>${latest ? `<div class="nk128-muted" style="margin-top:10px;">Último cierre: ${esc(latest.period)} · ${esc(latest.createdBy)} · ${esc(latest.createdAt.slice(0, 16).replace("T", " "))}</div>` : ""}
+    </div>`);
+  }
+
+  window.openMonthlyClosure128 = function () {
+    ensureState();
+    if (!canCloseMonth()) return toast("Solo administración puede realizar el cierre mensual", "err");
+    const defaultPeriod = temporalRange().from?.slice(0, 7) || today().slice(0, 7);
+    openForm("Cierre mensual operativo", `<div class="cloud-note">El cierre guarda una fotografía inmutable de los indicadores. No reemplaza los registros originales.</div><div class="form-grid" style="margin-top:14px;">
+      <div class="form-group"><label class="form-label">Mes a cerrar</label><input class="form-input" id="nk128-close-period" type="month" min="2025-01" max="2040-12" value="${esc(defaultPeriod)}"></div>
+      <div class="form-group"><label class="form-label">Responsable</label><input class="form-input" id="nk128-close-owner" value="${esc(tenantUser()?.nombre || tenantUser()?.email || "")}"></div>
+      <div class="form-group full"><label class="form-label">Observaciones del cierre</label><textarea class="form-textarea" id="nk128-close-notes" placeholder="Resultados, desviaciones, compromisos y decisiones del periodo"></textarea></div>
+      <div class="form-group full"><label><input type="checkbox" id="nk128-close-confirm"> Confirmo que los datos del periodo fueron revisados</label></div>
+    </div>`, () => {
+      const period = document.getElementById("nk128-close-period").value;
+      const owner = document.getElementById("nk128-close-owner").value.trim();
+      if (!period || !owner || !document.getElementById("nk128-close-confirm").checked) return toast("Indica mes, responsable y confirma la revisión", "err");
+      if (S.monthlyClosures.some((row) => row.period === period)) return toast("Este mes ya tiene un cierre registrado", "err");
+      const bounds = monthBounds(period);
+      const metrics = periodMetrics(bounds);
+      const closure = {
+        id: `mc_${Date.now()}`, period, range: bounds, metrics,
+        notes: document.getElementById("nk128-close-notes").value.trim(),
+        status: "cerrado", createdAt: new Date().toISOString(),
+        createdBy: tenantUser()?.email || owner, responsible: owner,
+        version: 1
+      };
+      closure.integrity = closureDigest({ period: closure.period, range: closure.range, metrics: closure.metrics, createdAt: closure.createdAt, createdBy: closure.createdBy });
+      S.monthlyClosures.unshift(closure);
+      if (typeof recordHistoryV90 === "function") recordHistoryV90("empresa", S.empresa?.rut || "empresa", "Cierre mensual creado", {}, { period, metrics }, closure.notes || "Cierre operativo");
+      save(); closeModal("nk128-modal"); renderTemporalAnalysis(); toast(`Cierre ${period} registrado`);
+    }, "Cerrar periodo");
+  };
+
+  window.openClosureHistory128 = function () {
+    ensureState();
+    openForm("Historial de cierres mensuales", `<div class="table-wrap"><table><thead><tr><th>Periodo</th><th>Responsable</th><th>Órdenes</th><th>Personas</th><th>HH</th><th>Incidentes</th><th>Costos</th><th>Fecha cierre</th><th>Integridad</th></tr></thead><tbody>${S.monthlyClosures.map((row) => `<tr><td><b>${esc(row.period)}</b></td><td>${esc(row.responsible)}</td><td>${row.metrics.services}</td><td>${row.metrics.people}</td><td>${row.metrics.hours}</td><td>${row.metrics.incidents}</td><td>${money(row.metrics.eppCost + row.metrics.hotelCost)}</td><td>${esc(row.createdAt.slice(0, 10))}</td><td><span class="badge badge-ok">${esc(row.integrity || "Histórico")}</span></td></tr>`).join("") || '<tr><td colspan="9">Todavía no existen cierres mensuales.</td></tr>'}</tbody></table></div>`, () => closeModal("nk128-modal"), "Cerrar");
   };
 
   function alertKey(row) {
@@ -233,7 +446,8 @@
   }
 
   function renderOpportunityProjection() {
-    const active = (S.opportunities || []).filter((row) => !["ganada", "perdida"].includes(row.stage));
+    const range = temporalRange();
+    const active = (S.opportunities || []).filter((row) => !["ganada", "perdida"].includes(row.stage) && (range.from || range.to ? dateInside(row.expectedClose || row.createdAt, range) : true));
     const months = {};
     active.forEach((row) => {
       const month = String(row.expectedClose || "Sin fecha").slice(0, 7) || "Sin fecha";
@@ -447,9 +661,18 @@
     exportCSV([["Archivo", "Error"], ...latest.errors.map((error) => [latest.fileName, error])], `errores_importacion_${today()}.csv`);
   };
 
+  function renderWithTemporalCollection(key, fields, renderer, args) {
+    const original = S[key];
+    const range = temporalRange();
+    S[key] = (original || []).filter((row) => fields.some((field) => dateInside(row?.[field], range)));
+    try { return renderer(...args); }
+    finally { S[key] = original; }
+  }
+
   function enhance(page) {
     ensureState();
-    if (page === "dashboard") renderDashboardPreferences();
+    installTemporalToolbar();
+    if (page === "dashboard") { renderDashboardPreferences(); renderTemporalAnalysis(); }
     if (page === "alertas") renderManagedAlerts();
     if (page === "operaciones-cloud") renderOperationsPlanning();
     if (page === "oportunidades") renderOpportunityProjection();
@@ -479,7 +702,7 @@
     applyState = function (data) {
       baseApplyState(data);
       ENTERPRISE_KEYS.forEach((key) => {
-        const emptyValue = key === "uiRolePreferences" || key === "alertWorkflow" ? {} : [];
+        const emptyValue = ENTERPRISE_OBJECT_KEYS.has(key) ? {} : [];
         S[key] = data?.[key] !== undefined ? data[key] : emptyValue;
       });
       ensureState();
@@ -491,6 +714,18 @@
     openMantDetalle = function (id) { baseOpenMant(id); window.setTimeout(() => injectServiceManagement(id), 0); };
     const baseRenderAlerts = renderAlertas;
     renderAlertas = function () { baseRenderAlerts(); renderManagedAlerts(); };
+    if (typeof renderTurnos === "function") {
+      const baseRenderTurnos = renderTurnos;
+      renderTurnos = function (...args) { return renderWithTemporalCollection("turnos", ["fecha"], baseRenderTurnos, args); };
+    }
+    if (typeof renderIncidentes === "function") {
+      const baseRenderIncidentes = renderIncidentes;
+      renderIncidentes = function (...args) { return renderWithTemporalCollection("incidentes", ["fecha", "createdAt"], baseRenderIncidentes, args); };
+    }
+    if (typeof renderLlamados === "function") {
+      const baseRenderLlamados = renderLlamados;
+      renderLlamados = function (...args) { return renderWithTemporalCollection("callouts", ["fecha", "createdAt"], baseRenderLlamados, args); };
+    }
     const page = document.querySelector(".page.active")?.id?.replace("page-", "") || "dashboard";
     window.setTimeout(() => enhance(page), 0);
     window.NexoKlarEnterprise = { version: VERSION, enhance };
