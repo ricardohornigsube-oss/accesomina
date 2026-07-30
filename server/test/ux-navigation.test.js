@@ -44,10 +44,10 @@ test('visible terminology supports multiple industries without changing legacy d
   assert.match(html, /const plural=.*replacement=plural\?'clientes':'cliente'/);
 });
 
-test('work book remains visible in the General View group', () => {
-  const generalStart = html.indexOf('<div class="nav-group-label">Vista General</div>');
-  const peopleStart = html.indexOf('<div class="nav-group-label">Personal</div>');
-  const generalNavigation = html.slice(generalStart, peopleStart);
+test('work book remains visible in the Inicio group', () => {
+  const generalStart = html.indexOf('<div class="nav-group-label">Inicio</div>');
+  const commercialStart = html.indexOf('<div class="nav-group-label">Relación comercial</div>');
+  const generalNavigation = html.slice(generalStart, commercialStart);
 
   assert.match(generalNavigation, /id="nav-work-book-v125"/);
   assert.match(generalNavigation, /📖 Libro de Obra/);
