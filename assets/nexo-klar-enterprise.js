@@ -36,7 +36,7 @@
     S.inventory ||= [];
     S.inventoryMovements ||= [];
     S.warehouses ||= [];
-    S.temporalPreferences = { mode: "current_month", from: "", to: "", ...(S.temporalPreferences || {}) };
+    S.temporalPreferences = { mode: "all", from: "", to: "" };
     S.monthlyClosures ||= [];
   }
 
@@ -144,22 +144,7 @@
 
   function installTemporalToolbar() {
     ensureState();
-    const topbar = document.getElementById("topbar");
-    const right = topbar?.querySelector(".topbar-right");
-    if (!topbar || !right) return;
-    let host = document.getElementById("nk128-temporal-toolbar");
-    if (!host) {
-      host = document.createElement("div");
-      host.id = "nk128-temporal-toolbar";
-      host.className = "nk128-temporal-toolbar";
-      right.insertAdjacentElement("beforebegin", host);
-    }
-    const preference = S.temporalPreferences;
-    const range = temporalRange();
-    host.innerHTML = `<label for="nk128-period-mode">Periodo</label>
-      <select class="filter-select" id="nk128-period-mode" onchange="changeTemporalPeriod128(this.value)">${periodOptions(preference.mode)}</select>
-      <span class="nk128-period-label">${esc(range.label)}</span>
-      ${preference.mode === "custom" ? `<input class="filter-input" id="nk128-period-from" type="date" value="${esc(preference.from || "")}" onchange="changeTemporalCustom128()"><input class="filter-input" id="nk128-period-to" type="date" value="${esc(preference.to || "")}" onchange="changeTemporalCustom128()">` : ""}`;
+    document.getElementById("nk128-temporal-toolbar")?.remove();
   }
 
   window.changeTemporalPeriod128 = function (mode) {

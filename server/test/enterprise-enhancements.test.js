@@ -18,6 +18,15 @@ test('enterprise enhancements are loaded and production assets stay synchronized
   assert.equal(styles, productionStyles);
 });
 
+test('V4 magenta and indigo is the default light identity with a complete dark alternative', () => {
+  assert.match(html, /--orange:\s*#e4006e/i);
+  assert.match(html, /--blue:\s*#2a2a8c/i);
+  assert.match(html, /--text:\s*#14121f/i);
+  assert.match(html, /--bg:\s*#f9f7fb/i);
+  assert.match(html, /body\.dark\s*\{/);
+  assert.match(html, /<option value="light">Fondo claro<\/option><option value="dark">Fondo oscuro<\/option>/);
+});
+
 test('requested management improvements are implemented as tenant state', () => {
   for (const stateCollection of [
     'uiRolePreferences', 'alertWorkflow', 'operationTasks', 'signatureReminders',
