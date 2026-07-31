@@ -42,7 +42,7 @@ test('commercial, people, compliance and operational enhancements are available'
   for (const feature of [
     'renderDashboardPreferences', 'renderManagedAlerts', 'renderOperationsPlanning',
     'renderOpportunityProjection', 'renderContractReminders', 'injectServiceManagement',
-    'renderSubcontractCompliance', 'renderPermanentStructure',
+    'renderSubcontractCompliance',
     'renderEppInventoryBridge', 'renderTrainingMatrix', 'renderHealthMatrix',
     'renderCommunicationsGovernance', 'renderPortalReviewQueue',
     'renderAuditConfidence', 'installImportPreview', 'installTemporalToolbar',
@@ -50,7 +50,7 @@ test('commercial, people, compliance and operational enhancements are available'
   ]) {
     assert.match(script, new RegExp(`function ${feature}\\(`), `missing feature ${feature}`);
   }
-  assert.doesNotMatch(script, /Vista Kanban de contratación|renderRecruitmentKanban/);
+  assert.doesNotMatch(script, /Vista Kanban de contratación|renderRecruitmentKanban|Estructura, centro de costo y reemplazos|renderPermanentStructure/);
 });
 
 test('temporal analysis and immutable monthly closure are available', () => {

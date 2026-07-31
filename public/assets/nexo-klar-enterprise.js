@@ -499,19 +499,6 @@
     upsertAfterHeader("subcontratos", "nk128-subcontract-compliance", `<div class="card" id="nk128-subcontract-compliance" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Cumplimiento y bloqueo automático</div><div class="card-subtitle">Un tercero queda bloqueado operacionalmente cuando falta o vence documentación crítica.</div></div></div><div class="table-wrap"><table><thead><tr><th>Tercero</th><th>Cumplimiento</th><th>Faltantes críticos</th><th>Estado operativo</th></tr></thead><tbody>${rows.map(({ row, status }) => `<tr><td><b>${esc(row.razon)}</b><div class="worker-rut">${esc(row.rut)}</div></td><td><b>${status.score}%</b></td><td>${status.missing.map((key) => `<span class="badge badge-err">${esc(key.toUpperCase())}</span>`).join(" ") || '<span class="badge badge-ok">Sin brechas</span>'}</td><td><span class="badge ${status.blocked ? "badge-err" : "badge-ok"}">${status.blocked ? "Bloqueado" : "Habilitado"}</span></td></tr>`).join("") || '<tr><td colspan="4">Sin terceros registrados.</td></tr>'}</tbody></table></div></div>`);
   }
 
-  function renderPermanentStructure() {
-    const workers = (S.trabajadores || []).filter((row) => row.tipo === "permanente" && !row.bloqueado);
-    const groups = {};
-    workers.forEach((row) => { const area = row.area || row.rol || "Sin área"; groups[area] ||= []; groups[area].push(row); });
-    upsertAfterHeader("personal-planta", "nk128-permanent-structure", `<div class="card" id="nk128-permanent-structure" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Estructura, centro de costo y reemplazos</div><div class="card-subtitle">Vista organizacional de la dotación permanente.</div></div></div><div class="nk128-board">${Object.entries(groups).map(([area, rows]) => `<div class="nk128-column"><div class="nk128-column-title"><span>${esc(area)}</span><span class="badge badge-blue">${rows.length}</span></div>${rows.map((worker) => `<div class="nk128-item"><b>${esc(worker.nombre)}</b><div class="nk128-muted">${esc(worker.cargo || worker.especialidad || "Sin cargo")}</div><label class="nk128-muted">Centro de costo<input class="form-input" value="${esc(worker.costCenter || "")}" onchange="saveWorkerStructure128('${worker.id}','costCenter',this.value)"></label><label class="nk128-muted">Reemplazo<select class="form-select" onchange="saveWorkerStructure128('${worker.id}','replacementId',this.value)"><option value="">Sin reemplazo</option>${workers.filter((item) => item.id !== worker.id).map((item) => `<option value="${item.id}" ${worker.replacementId === item.id ? "selected" : ""}>${esc(item.nombre)}</option>`).join("")}</select></label></div>`).join("")}</div>`).join("") || '<div class="empty">Sin personal permanente.</div>'}</div></div>`);
-  }
-
-  window.saveWorkerStructure128 = function (id, field, value) {
-    const worker = S.trabajadores.find((row) => row.id === id);
-    if (!worker) return;
-    worker[field] = value; save(); toast("Estructura de personal actualizada");
-  };
-
   function renderEppInventoryBridge() {
     const stock = S.inventory.filter((row) => String(row.category || row.type || "").toLowerCase().includes("epp"));
     const pending = (S.trabajadores || []).filter((worker) => typeof eppStatus === "function" && (eppStatus(worker).missing.length || eppStatus(worker).expired.length));
@@ -646,7 +633,6 @@
     if (page === "oportunidades") renderOpportunityProjection();
     if (page === "contratos") renderContractReminders();
     if (page === "subcontratos") renderSubcontractCompliance();
-    if (page === "personal-planta") renderPermanentStructure();
     if (page === "epp") renderEppInventoryBridge();
     if (page === "cursos") renderTrainingMatrix();
     if (page === "protocolos") renderHealthMatrix();
