@@ -920,7 +920,6 @@ body.private #main { display:block; }
   <!-- PAGE: GESTION DE PERSONAL TEMPORAL -->
   <div id="page-reclutamiento" class="page">
     <div class="section-header">
-      <div><div class="section-title">📋 Gestión de personal temporal</div><div class="section-sub" id="rec-sub">Coordina necesidades, candidatos, contratación y habilitación por orden de servicio</div></div>
       <div class="section-actions">
         <button class="btn btn-secondary" onclick="exportRecruitmentV84()">⬇ Exportar vista</button>
         <button class="btn btn-primary" onclick="openModal('modal-callout')">+ Llamado WA</button>
@@ -5216,7 +5215,6 @@ function renderReclutamientoV84(){
     return;
   }
   const stats=recruitmentStatsV84(mant),workers=filteredRecruitmentWorkersV84(mant);
-  document.getElementById('rec-sub').textContent=`${minaNombre(mant.minaId)} · ${contratoNombre(mant.contratoId)} · ${mant.inicio||'sin inicio'} a ${mant.termino||'sin término'}`;
   document.getElementById('rec-kpis').innerHTML=`<div class="kpi kpi-blue"><div class="kpi-value">${stats.required}</div><div class="kpi-label">Personas requeridas</div></div><div class="kpi kpi-orange"><div class="kpi-value">${stats.asigs.length}</div><div class="kpi-label">En reclutamiento/asignadas</div></div><div class="kpi kpi-green"><div class="kpi-value">${stats.confirmed}</div><div class="kpi-label">Confirmaron disponibilidad</div></div><div class="kpi kpi-yellow"><div class="kpi-value">${stats.signed}</div><div class="kpi-label">Contrato firmado</div></div><div class="kpi kpi-red"><div class="kpi-value">${Math.max(0,stats.required-stats.asigs.length)}</div><div class="kpi-label">Brecha por cubrir</div></div>`;
   renderRecruitmentSummaryV84(mant);
   renderRecruitmentFlowV84(stats);
