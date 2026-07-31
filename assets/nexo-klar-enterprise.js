@@ -535,6 +535,68 @@
     });
   };
 
+  function normalized129(value) {
+    return String(value || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  function workerMatchesRole129(worker, role) {
+    const candidate = normalized129(`${worker?.cargo || ""} ${worker?.especialidad || ""} ${worker?.rol || ""}`);
+    const expected = normalized129(role);
+    return !expected || candidate.includes(expected) || expected.includes(candidate);
+  }
+
+  function expiredOrMissing129(date) {
+    const state = typeof estadoFecha === "function" ? estadoFecha(date) : "vigente";
+    return !date || ["vencido", "falta", "critico"].includes(state);
+  }
+
+  function readinessForWorker129(worker) {
+    const active = (S.asignaciones || []).find((row) => row.trabId === worker.id && !["baja", "cerrado", "cancelado"].includes(row.estado));
+    const trainingRules = (S.trainingMatrices || []).filter((row) => workerMatchesRole129(worker, row.role) && (!row.serviceId || row.serviceId === active?.mantId));
+    const courseRows = typeof buildCursoRows === "function" ? buildCursoRows().filter((row) => row.trabId === worker.id) : [];
+    const trainingMissing = trainingRules.filter((rule) => !courseRows.some((row) => normalized129(row.label).includes(normalized129(rule.course)) && !expiredOrMissing129(row.vence))).map((rule) => rule.course);
+    const healthRules = (S.healthRiskMatrices || []).filter((row) => workerMatchesRole129(worker, row.role));
+    const protocols = (S.protocolosSalud || []).filter((row) => row.trabId === worker.id);
+    const healthMissing = healthRules.filter((rule) => !protocols.some((row) => {
+      const detail = normalized129(`${row.tipo || ""} ${row.examen || ""} ${row.curso || ""}`);
+      return detail.includes(normalized129(rule.protocol)) && !expiredOrMissing129(row.vence);
+    })).map((rule) => rule.protocol);
+    const shift = (S.turnos || []).find((row) => row.trabId === worker.id && row.fecha === today());
+    const operational = typeof computeOperationalStatusV90 === "function" ? computeOperationalStatusV90(worker) : { blocked: Boolean(worker.bloqueado), reasons: [] };
+    const reasons = [...new Set([...(operational.reasons || []), ...trainingMissing.map((item) => `Formación: ${item}`), ...healthMissing.map((item) => `Aptitud: ${item}`)])];
+    return {
+      worker, active, shift, trainingMissing, healthMissing, reasons,
+      ready: !worker.bloqueado && !operational.blocked && !trainingMissing.length && !healthMissing.length
+    };
+  }
+
+  function readinessBadge129(ok, positive, pending) {
+    return `<span class="badge ${ok ? "badge-ok" : "badge-warn"}">${esc(ok ? positive : pending)}</span>`;
+  }
+
+  function readinessRows129() {
+    return (S.trabajadores || []).filter((worker) => !worker.bloqueado).map(readinessForWorker129);
+  }
+
+  function renderReadiness129(page) {
+    const rows = readinessRows129();
+    const ready = rows.filter((row) => row.ready).length;
+    const training = rows.filter((row) => row.trainingMissing.length).length;
+    const health = rows.filter((row) => row.healthMissing.length).length;
+    const attendance = rows.filter((row) => row.shift?.asistencia === "presente").length;
+    const focus = page === "turnos"
+      ? { title: "Disponibilidad y asistencia de hoy", subtitle: "Cruza el turno registrado con la habilitación de cada persona antes de ejecutar.", metric: [attendance, "Presentes hoy"] }
+      : page === "cursos"
+        ? { title: "Formación que habilita el trabajo", subtitle: "Las reglas por cargo y orden muestran qué certificaciones deben renovarse.", metric: [training, "Con formación pendiente"] }
+        : { title: "Aptitud operativa y vigilancia", subtitle: "La operación consulta aptitud y vigencia; los antecedentes clínicos permanecen restringidos.", metric: [health, "Con aptitud pendiente"] };
+    upsertAfterHeader(page, `nk129-readiness-${page}`, `<div class="card" id="nk129-readiness-${page}" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">${focus.title}</div><div class="card-subtitle">${focus.subtitle}</div></div><button class="btn btn-secondary btn-sm" onclick="openReadinessReview129()">Revisar personas</button></div><div class="kpi-grid" style="margin-top:12px;"><div class="kpi kpi-green"><div class="kpi-value">${ready}</div><div class="kpi-label">Listas para asignar</div></div><div class="kpi kpi-orange"><div class="kpi-value">${focus.metric[0]}</div><div class="kpi-label">${focus.metric[1]}</div></div><div class="kpi kpi-blue"><div class="kpi-value">${rows.filter((row) => row.shift).length}</div><div class="kpi-label">Turnos registrados hoy</div></div><div class="kpi kpi-red"><div class="kpi-value">${rows.filter((row) => !row.ready).length}</div><div class="kpi-label">Pendientes de habilitación</div></div></div><div class="cloud-note" style="margin-top:12px;">La habilitación considera documentación, contrato, formación y aptitud configurada. Los requisitos críticos continúan controlándose desde la matriz de requisitos de la empresa.</div></div>`);
+  }
+
+  window.openReadinessReview129 = function () {
+    const rows = readinessRows129().filter((row) => !row.ready || row.shift?.asistencia === "ausente");
+    openForm("Personas pendientes de habilitación", `<div class="cloud-note">Revise la causa y abra la ficha para regularizar formación, aptitud, documentos o asignación. No se muestran antecedentes médicos.</div><div class="table-wrap" style="margin-top:12px;"><table><thead><tr><th>Persona</th><th>Formación</th><th>Aptitud</th><th>Turno hoy</th><th>Qué falta</th><th></th></tr></thead><tbody>${rows.map((row) => `<tr><td><b>${esc(row.worker.nombre)}</b><div class="worker-rut">${esc(row.worker.cargo || row.worker.especialidad || "Sin cargo")}</div></td><td>${readinessBadge129(!row.trainingMissing.length, "Al día", "Pendiente")}</td><td>${readinessBadge129(!row.healthMissing.length, "Apta", "Revisar")}</td><td>${esc(row.shift?.asistencia || "Sin registro")}</td><td>${esc(row.reasons.slice(0, 3).join(" · ") || "Regularizar asistencia")}</td><td><button class="btn btn-secondary btn-sm" onclick="closeModal('nk128-modal');openFicha('${row.worker.id}')">Ficha</button></td></tr>`).join("") || '<tr><td colspan="6">No hay personas pendientes en esta vista.</td></tr>'}</tbody></table></div>`, () => closeModal("nk128-modal"), "Cerrar");
+  };
+
   function renderCommunicationsGovernance() {
     upsertAfterHeader("llamados", "nk128-communications", `<div class="card" id="nk128-communications" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Plantillas, consentimiento e historial de entrega</div><div class="card-subtitle">Comunicación individual o grupal con trazabilidad.</div></div><button class="btn btn-primary btn-sm" onclick="openCommunicationTemplate128()">+ Plantilla aprobada</button></div><div class="grid-2"><div class="table-wrap"><table><thead><tr><th>Plantilla</th><th>Canal</th><th>Estado</th></tr></thead><tbody>${S.communicationTemplates.map((row) => `<tr><td><b>${esc(row.name)}</b><div class="worker-rut">${esc(row.body)}</div></td><td>${esc(row.channel)}</td><td><span class="badge ${row.approved ? "badge-ok" : "badge-warn"}">${row.approved ? "Aprobada" : "Borrador"}</span></td></tr>`).join("") || '<tr><td colspan="3">Sin plantillas.</td></tr>'}</tbody></table></div><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Destinatarios</th><th>Canal</th><th>Resultado</th></tr></thead><tbody>${S.communicationHistory.slice(0, 10).map((row) => `<tr><td>${esc(row.sentAt?.slice(0, 16).replace("T", " "))}</td><td>${row.recipients}</td><td>${esc(row.channel)}</td><td>${esc(row.status)}</td></tr>`).join("") || '<tr><td colspan="4">Sin entregas registradas.</td></tr>'}</tbody></table></div></div><div class="cloud-note">Antes de enviar, valide consentimiento y datos de contacto. Los envíos reales requieren el proveedor de correo o WhatsApp configurado.</div></div>`);
   }
@@ -634,8 +696,9 @@
     if (page === "contratos") renderContractReminders();
     if (page === "subcontratos") renderSubcontractCompliance();
     if (page === "epp") renderEppInventoryBridge();
-    if (page === "cursos") renderTrainingMatrix();
-    if (page === "protocolos") renderHealthMatrix();
+    if (page === "turnos") renderReadiness129("turnos");
+    if (page === "cursos") { renderTrainingMatrix(); renderReadiness129("cursos"); }
+    if (page === "protocolos") { renderHealthMatrix(); renderReadiness129("protocolos"); }
     if (page === "llamados") renderCommunicationsGovernance();
     if (page === "acreditacion-mandante") renderPortalReviewQueue();
     if (page === "auditoria") renderAuditConfidence();
