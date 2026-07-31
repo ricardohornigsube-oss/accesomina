@@ -11,7 +11,6 @@
   ];
   const ENTERPRISE_OBJECT_KEYS = new Set(["uiRolePreferences", "alertWorkflow", "temporalPreferences"]);
   let modalSave = null;
-  let recruitmentSpecialty = "";
 
   const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -500,22 +499,6 @@
     upsertAfterHeader("subcontratos", "nk128-subcontract-compliance", `<div class="card" id="nk128-subcontract-compliance" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Cumplimiento y bloqueo automático</div><div class="card-subtitle">Un tercero queda bloqueado operacionalmente cuando falta o vence documentación crítica.</div></div></div><div class="table-wrap"><table><thead><tr><th>Tercero</th><th>Cumplimiento</th><th>Faltantes críticos</th><th>Estado operativo</th></tr></thead><tbody>${rows.map(({ row, status }) => `<tr><td><b>${esc(row.razon)}</b><div class="worker-rut">${esc(row.rut)}</div></td><td><b>${status.score}%</b></td><td>${status.missing.map((key) => `<span class="badge badge-err">${esc(key.toUpperCase())}</span>`).join(" ") || '<span class="badge badge-ok">Sin brechas</span>'}</td><td><span class="badge ${status.blocked ? "badge-err" : "badge-ok"}">${status.blocked ? "Bloqueado" : "Habilitado"}</span></td></tr>`).join("") || '<tr><td colspan="4">Sin terceros registrados.</td></tr>'}</tbody></table></div></div>`);
   }
 
-  function renderRecruitmentKanban() {
-    const serviceId = document.getElementById("rec-mant")?.value || "";
-    const service = S.mantenciones.find((row) => row.id === serviceId);
-    if (!service) return;
-    const specialties = [...new Set((S.trabajadores || []).map((row) => row.especialidad).filter(Boolean))].sort();
-    const assignments = (S.asignaciones || []).filter((row) => row.mantId === serviceId);
-    const stages = typeof RECRUITMENT_STAGES_V84 !== "undefined" ? RECRUITMENT_STAGES_V84 : [];
-    upsertAfterHeader("reclutamiento", "nk128-recruitment-kanban", `<div class="card" id="nk128-recruitment-kanban" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Vista Kanban de contratación</div><div class="card-subtitle">Seguimiento visual por etapa y especialidad.</div></div><div class="nk128-toolbar"><select class="form-select" id="nk128-recruit-specialty" onchange="saveRecruitmentFilter128(this.value)"><option value="">Todas las especialidades</option>${specialties.map((item) => `<option ${item === recruitmentSpecialty ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></div></div><div class="nk128-board">${stages.map((stage) => { const rows = assignments.filter((assignment) => (assignment.recruitmentStage || "reclutamiento") === stage.id).filter((assignment) => { const worker = S.trabajadores.find((item) => item.id === assignment.trabId); return !recruitmentSpecialty || worker?.especialidad === recruitmentSpecialty; }); return `<div class="nk128-column"><div class="nk128-column-title"><span>${esc(stage.label)}</span><span class="badge badge-blue">${rows.length}</span></div>${rows.map((assignment) => { const worker = S.trabajadores.find((item) => item.id === assignment.trabId); return `<div class="nk128-item"><b>${esc(worker?.nombre || "Persona")}</b><div class="nk128-muted">${esc(worker?.especialidad || "Sin especialidad")}</div></div>`; }).join("") || '<div class="nk128-muted">Sin personas</div>'}</div>`; }).join("")}</div></div>`);
-  }
-
-  window.saveRecruitmentFilter128 = function (value) {
-    recruitmentSpecialty = value;
-    try { localStorage.setItem(`nk128_recruitment_specialty_${currentTenantId || "local"}`, value); } catch {}
-    renderRecruitmentKanban();
-  };
-
   function renderPermanentStructure() {
     const workers = (S.trabajadores || []).filter((row) => row.tipo === "permanente" && !row.bloqueado);
     const groups = {};
@@ -663,7 +646,6 @@
     if (page === "oportunidades") renderOpportunityProjection();
     if (page === "contratos") renderContractReminders();
     if (page === "subcontratos") renderSubcontractCompliance();
-    if (page === "reclutamiento") renderRecruitmentKanban();
     if (page === "personal-planta") renderPermanentStructure();
     if (page === "epp") renderEppInventoryBridge();
     if (page === "cursos") renderTrainingMatrix();
@@ -692,7 +674,6 @@
       });
       ensureState();
     };
-    try { recruitmentSpecialty = localStorage.getItem(`nk128_recruitment_specialty_${currentTenantId || "local"}`) || ""; } catch {}
     const baseRenderPage = renderPage;
     renderPage = function (page) { baseRenderPage(page); window.setTimeout(() => enhance(page), 0); };
     const baseOpenMant = openMantDetalle;
