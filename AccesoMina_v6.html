@@ -588,6 +588,16 @@ td { padding:12px 14px; }
   background:var(--bg2);
 }
 .implementation-privacy > div:first-child { grid-column:1 / -1; padding-bottom:12px; border-bottom:1px solid var(--border); }
+.implementation-privacy .privacy-points {
+  grid-column:1 / -1;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  width:100%;
+}
+.implementation-privacy .privacy-point { min-height:112px; padding:16px; border-left-color:var(--blue); }
+.implementation-privacy .privacy-point b { font-size:14px; line-height:1.35; }
+.implementation-privacy .privacy-point span { font-size:12px; line-height:1.45; }
 .implementation-privacy h3 { font-size:28px; line-height:1.25; letter-spacing:0; }
 .implementation-privacy .public-lead { margin-top:12px; }
 .implementation-privacy .privacy-points { margin:0; }
@@ -602,6 +612,7 @@ td { padding:12px 14px; }
   .hero-title,.public-heading,.final-cta .public-heading { font-size:34px; }
   .hero-copy,.public-lead { font-size:16px; }
   .implementation-privacy { grid-template-columns:1fr; padding:var(--space-4); }
+  .implementation-privacy .privacy-points { grid-template-columns:1fr; }
   .implementation-privacy h3 { font-size:26px; }
   #industrias.public-band { padding:56px 24px; }
 }
@@ -627,6 +638,7 @@ td { padding:12px 14px; }
   #implementacion .implementation-layout { gap:28px; }
   #implementacion .implementation-privacy { margin:0; padding:18px; gap:10px; }
   #implementacion .implementation-privacy > div:first-child { padding-bottom:10px; }
+  #implementacion .implementation-privacy .privacy-point { min-height:96px; padding:13px; }
   #implementacion .privacy-points { gap:12px; }
   #implementacion .privacy-point { padding:13px; }
   #proposito .purpose-statements { margin-top:24px; }
