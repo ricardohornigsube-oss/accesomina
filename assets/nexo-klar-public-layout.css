@@ -191,3 +191,20 @@
     margin-top:var(--public-nav-offset);
   }
 }
+
+/* Compact industry view for laptop-height screens: all nine industries stay visible. */
+@media (min-width:981px) and (max-height:779px) {
+  .public-shell #industrias.public-band {
+    box-sizing:border-box;
+    min-height:calc(100svh - var(--public-nav-offset));
+    padding:18px var(--public-gutter) 20px;
+    align-items:flex-start;
+  }
+  .public-shell #industrias .industry-head { gap:20px; }
+  .public-shell #industrias .industry-head .public-heading { font-size:clamp(32px,3.5vw,42px); line-height:1.05; }
+  .public-shell #industrias .industry-head .public-lead { margin-top:0; font-size:14px; line-height:1.42; }
+  .public-shell #industrias .industry-grid { gap:8px; margin-top:14px; }
+  .public-shell #industrias .industry-card { box-sizing:border-box; min-height:92px; height:92px; padding:11px 14px; }
+  .public-shell #industrias .industry-card b { margin-top:4px; font-size:14px; line-height:1.2; }
+  .public-shell #industrias .industry-card span { margin-top:4px; font-size:11px; line-height:1.28; }
+}
