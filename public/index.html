@@ -783,6 +783,19 @@ td { padding:12px 14px; }
   .public-shell #solucion .product-kpi strong { font-size:20px; }
   .public-shell #solucion .product-row { padding:7px 4px; font-size:11px; }
 }
+/* Benefits: a self-contained, centered reading screen. */
+@media (min-width:981px) and (min-height:780px) {
+  .public-shell #resultados.public-band {
+    min-height:calc(100svh - 108px);
+    align-items:center;
+    padding-top:40px;
+    padding-bottom:40px;
+  }
+  .public-shell #resultados > .public-inner { text-align:center; }
+  .public-shell #resultados .public-heading,
+  .public-shell #resultados .public-lead { margin-left:auto; margin-right:auto; }
+  .public-shell #resultados .outcome-grid { text-align:left; }
+}
 </style>
 <link rel="stylesheet" href="assets/nexo-klar-guidance.css">
 <link rel="stylesheet" href="assets/nexo-klar-enterprise.css">
