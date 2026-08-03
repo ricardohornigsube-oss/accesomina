@@ -95,6 +95,9 @@
     padding:16px;
   }
 
+  .public-shell #resultados.public-band,
+  .public-shell #industrias.public-band { align-items:center; }
+
   .public-shell #producto .real-product-layout { gap:32px; }
   .public-shell #producto .real-product-copy .public-heading { font-size:var(--public-heading-size); }
   .public-shell #producto .real-product-shot { max-height:calc(100svh - 260px); }
@@ -198,7 +201,7 @@
     box-sizing:border-box;
     min-height:calc(100svh - var(--public-nav-offset));
     padding:18px var(--public-gutter) 20px;
-    align-items:flex-start;
+    align-items:center;
   }
   .public-shell #industrias .industry-head { gap:20px; }
   .public-shell #industrias .industry-head .public-heading { font-size:clamp(32px,3.5vw,42px); line-height:1.05; }
