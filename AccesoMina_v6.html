@@ -886,42 +886,40 @@ td { padding:12px 14px; }
     function closePublicProductImage(){const box=document.getElementById('public-product-lightbox');if(!box)return;box.classList.remove('open');document.body.style.overflow='';publicProductImageReturnFocus?.focus?.();}
     document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.getElementById('public-product-lightbox')?.classList.contains('open'))closePublicProductImage();});
     (() => {
+      const shell = document.getElementById('public-site');
       const nav = document.querySelector('.public-progress-nav');
       const links = Array.from(nav?.querySelectorAll('[data-public-section]') || []);
-      const sections = links.map(link => document.getElementById(link.dataset.publicSection)).filter(Boolean);
-      if (!nav || !links.length || !sections.length) return;
-      let activeId = '';
-      let scheduled = false;
+      const primaryLinks = Array.from(document.querySelectorAll('.public-nav-links a[href^="#"]'));
+      const pages = new Set(links.map(link => link.dataset.publicSection));
+      if (!shell || !nav || !links.length) return;
+      const pageFromLink = link => link.dataset.publicSection || String(link.getAttribute('href') || '').replace(/^#/, '');
       const activate = id => {
-        if (!id || activeId === id) return;
-        activeId = id;
+        if (!pages.has(id)) return;
+        shell.dataset.publicPage = id;
         links.forEach(link => {
           const active = link.dataset.publicSection === id;
           link.classList.toggle('active', active);
-          if (active) {
-            const left = link.offsetLeft - (nav.clientWidth - link.clientWidth) / 2;
-            nav.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
-          }
+          link.toggleAttribute('aria-current', active);
+          if (active) nav.scrollTo({ left:Math.max(0,link.offsetLeft-(nav.clientWidth-link.clientWidth)/2), behavior:'smooth' });
         });
+        const resetViewport = () => window.scrollTo({ top:0, behavior:'auto' });
+        resetViewport();
+        requestAnimationFrame(() => requestAnimationFrame(resetViewport));
+        setTimeout(resetViewport, 0);
       };
-      const update = () => {
-        scheduled = false;
-        const marker = window.scrollY + 150;
-        let current = sections[0];
-        sections.forEach(section => {
-          if (section.offsetTop <= marker) current = section;
-        });
-        activate(current.id);
+      const select = (id, writeHash=true) => {
+        const page = pages.has(id) ? id : 'inicio';
+        activate(page);
+        if (writeHash && window.location.hash !== `#${page}`) history.pushState(null, '', `#${page}`);
       };
-      const schedule = () => {
-        if (scheduled) return;
-        scheduled = true;
-        requestAnimationFrame(update);
-      };
-      links.forEach(link => link.addEventListener('click', () => activate(link.dataset.publicSection)));
-      window.addEventListener('scroll', schedule, { passive: true });
-      window.addEventListener('resize', schedule);
-      update();
+      [...links, ...primaryLinks].forEach(link => link.addEventListener('click', event => {
+        const id = pageFromLink(link);
+        if (!pages.has(id)) return;
+        event.preventDefault();
+        select(id);
+      }));
+      window.addEventListener('hashchange', () => select(decodeURIComponent(window.location.hash || '').replace(/^#/, ''), false));
+      select(decodeURIComponent(window.location.hash || '').replace(/^#/, ''), false);
     })();
   </script>
 </section>
@@ -2285,7 +2283,21 @@ function renderCurrentPageSoft() {
 }
 function enterPrivate() { document.body.classList.remove('public'); document.body.classList.add('private'); renderCurrentPageSoft(); }
 function showPublic() { document.body.classList.remove('private'); document.body.classList.add('public'); }
-function scrollToAccess() { document.getElementById('access-panel')?.scrollIntoView({behavior:'smooth',block:'center'}); }
+function scrollToAccess() {
+  const shell=document.getElementById('public-site');
+  if(document.body.classList.contains('public')&&shell){
+    shell.dataset.publicPage='clientes-access';
+    history.pushState(null,'','#clientes-access');
+    document.querySelectorAll('.public-progress-nav [data-public-section]').forEach(link=>{
+      const active=link.dataset.publicSection==='clientes-access';
+      link.classList.toggle('active',active);
+      link.toggleAttribute('aria-current',active);
+    });
+    window.scrollTo({top:0,behavior:'auto'});
+    return;
+  }
+  document.getElementById('access-panel')?.scrollIntoView({behavior:'smooth',block:'center'});
+}
 function showAccessTab(tab) { document.querySelectorAll('.access-tab').forEach(b=>b.classList.remove('active')); document.querySelectorAll('.access-view').forEach(v=>v.classList.remove('active')); document.getElementById(`tab-${tab}`)?.classList.add('active'); document.getElementById(`access-${tab}`)?.classList.add('active'); scrollToAccess(); }
 function loginTenant() {
   const rutRaw=document.getElementById('login-rut').value.trim();
