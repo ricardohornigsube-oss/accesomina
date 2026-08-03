@@ -708,6 +708,16 @@ td { padding:12px 14px; }
     min-height:auto;
     align-items:flex-start;
   }
+  /* Dense information sections begin below the navigation, never vertically centered. */
+  .public-shell #solucion.public-band,
+  .public-shell #capacidades.public-band,
+  .public-shell #industrias.public-band,
+  .public-shell #proposito.public-band {
+    min-height:auto;
+    align-items:flex-start;
+    padding-top:24px;
+    padding-bottom:48px;
+  }
 }
 @media (max-width:980px) {
   .public-shell { --public-gutter:24px; --public-section-y:56px; }
