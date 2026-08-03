@@ -12,6 +12,10 @@
 }
 
 .public-shell [id] { scroll-margin-top:var(--public-nav-offset); }
+.public-shell .public-band {
+  box-sizing:border-box;
+  max-width:100%;
+}
 .public-shell .public-inner,
 .public-shell .public-hero {
   width:min(100%,var(--public-content-max));
@@ -152,15 +156,29 @@
   .public-shell .public-band[id] { min-height:auto; }
 }
 
-/* Desktop navigation behaves as real, separate pages instead of a long mixed scroll. */
-@media (min-width:981px) and (min-height:780px) {
-  #public-site[data-public-page] > .public-hero,
-  #public-site[data-public-page] > .audience-strip,
-  #public-site[data-public-page] > .public-band,
-  #public-site[data-public-page] > .final-cta,
-  #public-site[data-public-page] > .public-footer { display:none!important; }
+/* Navigation behaves as real, separate pages instead of a long mixed scroll.
+   This intentionally applies at every viewport size: a selected tab must never
+   leave content from the next public view visible underneath it. */
+#public-site[data-public-page] > .public-hero,
+#public-site[data-public-page] > .audience-strip,
+#public-site[data-public-page] > .public-band,
+#public-site[data-public-page] > .final-cta,
+#public-site[data-public-page] > .public-footer { display:none!important; }
 
-  #public-site[data-public-page="inicio"] > #inicio { display:grid!important; }
+#public-site[data-public-page="inicio"] > #inicio { display:grid!important; }
+#public-site[data-public-page="solucion"] > #solucion,
+#public-site[data-public-page="resultados"] > #resultados,
+#public-site[data-public-page="producto"] > #producto,
+#public-site[data-public-page="capacidades"] > #capacidades,
+#public-site[data-public-page="industrias"] > #industrias,
+#public-site[data-public-page="implementacion"] > #implementacion,
+#public-site[data-public-page="proposito"] > #proposito,
+#public-site[data-public-page="clientes-access"] > #clientes-access {
+  display:flex!important;
+  margin-top:var(--public-nav-offset);
+}
+
+@media (max-width:980px) {
   #public-site[data-public-page="solucion"] > #solucion,
   #public-site[data-public-page="resultados"] > #resultados,
   #public-site[data-public-page="producto"] > #producto,
@@ -169,7 +187,7 @@
   #public-site[data-public-page="implementacion"] > #implementacion,
   #public-site[data-public-page="proposito"] > #proposito,
   #public-site[data-public-page="clientes-access"] > #clientes-access {
-    display:flex!important;
+    display:block!important;
     margin-top:var(--public-nav-offset);
   }
 }
