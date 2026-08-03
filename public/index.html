@@ -523,6 +523,85 @@ td { padding:12px 14px; }
   .public-heading { font-size:32px; }
   .public-lead { font-size:16px; }
 }
+/* Public site refinement: a single reading rhythm, unified typography and surfaces. */
+.public-shell,
+.public-band,
+.purpose-band,
+.privacy-band,
+.customer-access-band,
+.industry-band,
+.final-cta,
+.audience-strip { background:var(--bg)!important; }
+.public-inner { max-width:1320px; }
+.public-band { padding:80px clamp(24px,6vw,96px); }
+.public-band[id] { display:block; min-height:auto; }
+.public-hero { min-height:auto; max-width:1320px; padding:72px 0 64px; }
+.hero-title,
+.public-heading,
+.final-cta .public-heading {
+  max-width:860px;
+  font-size:clamp(34px,4vw,52px);
+  line-height:1.08;
+  letter-spacing:0;
+}
+.hero-copy,
+.public-lead { max-width:740px; font-size:17px; line-height:1.58; }
+.hero-points { margin-top:32px; }
+.hero-point,
+.outcome-card,
+.capability,
+.industry-card,
+.step,
+.purpose-statement,
+.purpose-value,
+.privacy-point {
+  background:var(--bg2);
+  box-shadow:0 1px 2px rgba(20,18,31,.04);
+}
+.solution-layout,
+.real-product-layout,
+.customer-access-layout { align-items:center; }
+.outcome-grid,
+.capability-grid,
+.industry-grid { margin-top:32px; }
+.industry-head { gap:32px; }
+#industrias.public-band { padding:80px clamp(24px,6vw,96px); }
+#industrias .industry-head { gap:32px; align-items:start; }
+#industrias .industry-head .public-heading { font-size:clamp(34px,4vw,52px); line-height:1.08; }
+#industrias .industry-head .public-lead { font-size:17px; line-height:1.58; }
+#industrias .industry-grid { gap:16px; margin-top:32px; }
+#industrias .industry-card { min-height:168px; padding:24px 22px; }
+#industrias .industry-card b { margin-top:18px; font-size:17px; }
+#industrias .industry-card span { margin-top:10px; font-size:13px; line-height:1.5; }
+.purpose-intro { max-width:860px; }
+.purpose-statement h3 { font-size:20px; line-height:1.3; }
+.purpose-statement p { font-size:14px; line-height:1.58; }
+.implementation-privacy {
+  display:grid;
+  grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);
+  gap:32px;
+  align-items:start;
+  margin-top:48px;
+  padding-top:48px;
+  border-top:1px solid var(--border);
+}
+.implementation-privacy h3 { font-size:28px; line-height:1.25; letter-spacing:0; }
+.implementation-privacy .public-lead { margin-top:12px; }
+.implementation-privacy .privacy-points { margin:0; }
+.final-cta { padding:80px clamp(24px,6vw,96px); }
+@media (max-width:980px) {
+  .public-hero { padding:56px 24px; }
+  .implementation-privacy { grid-template-columns:1fr; }
+}
+@media (max-width:600px) {
+  .public-band { padding:56px 24px; }
+  .public-hero { padding:48px 24px 56px; }
+  .hero-title,.public-heading,.final-cta .public-heading { font-size:34px; }
+  .hero-copy,.public-lead { font-size:16px; }
+  .implementation-privacy { margin-top:36px; padding-top:36px; }
+  .implementation-privacy h3 { font-size:26px; }
+  #industrias.public-band { padding:56px 24px; }
+}
 </style>
 <link rel="stylesheet" href="assets/nexo-klar-guidance.css">
 <link rel="stylesheet" href="assets/nexo-klar-enterprise.css">
@@ -543,9 +622,8 @@ td { padding:12px 14px; }
     <a href="#producto" data-public-section="producto">Producto</a>
     <a href="#capacidades" data-public-section="capacidades">Soluciones</a>
     <a href="#industrias" data-public-section="industrias">Industrias</a>
-    <a href="#implementacion" data-public-section="implementacion">Implementación</a>
+    <a href="#implementacion" data-public-section="implementacion">Implementación y privacidad</a>
     <a href="#proposito" data-public-section="proposito">Propósito</a>
-    <a href="#privacidad" data-public-section="privacidad">Privacidad</a>
     <a href="#clientes-access" data-public-section="clientes-access">Acceso</a>
   </nav>
   <div class="public-hero" id="inicio">
@@ -590,9 +668,8 @@ td { padding:12px 14px; }
       <div class="industry-card"><small>09</small><b>Servicios técnicos</b><span>Agenda, recursos, contratos, documentación, costos y margen operativo.</span></div>
     </div>
   </div></section>
-  <section class="public-band" id="implementacion" style="background:var(--bg4);"><div class="public-inner"><div class="public-eyebrow">Puesta en marcha simple</div><h2 class="public-heading">Ordena tu operación en tres pasos.</h2><div class="steps"><div class="step"><b>PASO 1</b><h3>Configura tu empresa</h3><p>Configura clientes, contratos, órdenes de servicio y los requisitos operacionales que necesitas controlar.</p></div><div class="step"><b>PASO 2</b><h3>Incorpora tu información</h3><p>Registra personas y recursos de forma individual o utiliza la importación masiva para comenzar más rápido.</p></div><div class="step"><b>PASO 3</b><h3>Gestiona desde el panel</h3><p>Asigna responsables, revisa alertas, actualiza documentos y consulta el avance desde una sola vista.</p></div></div></div></section>
+  <section class="public-band" id="implementacion"><div class="public-inner"><div class="public-eyebrow">Puesta en marcha simple</div><h2 class="public-heading">Ordena tu operación en tres pasos.</h2><p class="public-lead">Comienza con una estructura clara y conserva la información de tu empresa protegida, ordenada y disponible para cada equipo autorizado.</p><div class="steps"><div class="step"><b>PASO 1</b><h3>Configura tu empresa</h3><p>Configura clientes, contratos, órdenes de servicio y los requisitos operacionales que necesitas controlar.</p></div><div class="step"><b>PASO 2</b><h3>Incorpora tu información</h3><p>Registra personas y recursos de forma individual o utiliza la importación masiva para comenzar más rápido.</p></div><div class="step"><b>PASO 3</b><h3>Gestiona desde el panel</h3><p>Asigna responsables, revisa alertas, actualiza documentos y consulta el avance desde una sola vista.</p></div></div><div class="implementation-privacy"><div><div class="public-eyebrow">Privacidad integrada</div><h3>Tu información es de tu empresa.</h3><p class="public-lead">Cada empresa trabaja en un espacio privado e independiente. Sus usuarios, permisos, configuraciones y datos permanecen separados de las demás organizaciones.</p></div><div class="privacy-points"><div class="privacy-point"><b>Acceso individual</b><span>Cada integrante utiliza su propia cuenta autorizada.</span></div><div class="privacy-point"><b>Roles y permisos</b><span>Configura administración, edición o consulta según responsabilidades.</span></div><div class="privacy-point"><b>Datos separados</b><span>La información de una empresa no se mezcla con la de otra.</span></div><div class="privacy-point"><b>Respaldo y trazabilidad</b><span>Conserva registros para revisar cambios, estados y antecedentes.</span></div></div></div></div></section>
   <section class="public-band purpose-band" id="proposito"><div class="public-inner"><div class="purpose-intro"><div class="public-eyebrow">Nuestro propósito</div><h2 class="public-heading">Información clara que permanece y genera continuidad.</h2><p class="public-lead">Nexo Klar nace para simplificar, unificar y conectar la gestión diaria, evitando que la información crítica quede dispersa en personas, planillas, correos o carpetas.</p></div><div class="purpose-statements"><article class="purpose-statement"><small>Visión</small><h3>Una operación más simple y controlada</h3><p>Ser la plataforma que ayuda a las empresas a simplificar, unificar y controlar su información operativa, manteniendo los datos críticos dentro de la compañía.</p></article><article class="purpose-statement"><small>Misión</small><h3>Conectar la información que mueve a la empresa</h3><p>Conectar personas, documentos, contratos y operaciones en un sistema fácil de usar, con información clara, estructurada y trazable para reducir riesgos y tomar mejores decisiones.</p></article></div><div class="purpose-values" aria-label="Valores de Nexo Klar"><div class="purpose-value"><b>Claridad</b><span>Información fácil de entender, seguir y gestionar.</span></div><div class="purpose-value"><b>Conexión</b><span>Áreas, personas, documentos y procesos en una plataforma.</span></div><div class="purpose-value"><b>Control</b><span>Datos seguros, actualizados y dentro de la compañía.</span></div><div class="purpose-value"><b>Simplicidad</b><span>Una herramienta práctica y pensada para el uso diario.</span></div><div class="purpose-value"><b>Trazabilidad</b><span>Cada cambio, documento y vencimiento deja historial.</span></div><div class="purpose-value"><b>Continuidad</b><span>El conocimiento permanece aunque cambien los equipos.</span></div></div></div></section>
-  <section class="public-band privacy-band" id="privacidad"><div class="public-inner privacy-layout"><div><div class="public-eyebrow" style="color:var(--blue);">Tu información es de tu empresa</div><h2 class="public-heading">Un espacio privado para trabajar con confianza.</h2><p class="public-lead">Cada empresa usuaria opera en un entorno privado e independiente. Sus usuarios, permisos, configuraciones y datos permanecen separados de las demás organizaciones.</p></div><div class="privacy-points"><div class="privacy-point"><b>Acceso individual</b><span>Cada integrante utiliza su propia cuenta autorizada.</span></div><div class="privacy-point"><b>Roles y permisos</b><span>Configura administración, edición o consulta según responsabilidades.</span></div><div class="privacy-point"><b>Datos separados</b><span>La información de una empresa no se mezcla con la de otra.</span></div><div class="privacy-point"><b>Respaldo y trazabilidad</b><span>Conserva registros para revisar cambios, estados y antecedentes.</span></div></div></div></section>
   <section class="public-band customer-access-band" id="clientes-access"><div class="public-inner customer-access-layout"><div><div class="public-eyebrow">Clientes Nexo Klar</div><h2 class="public-heading">Ingresa a tu espacio privado.</h2><p class="public-lead">Cada integrante accede con su cuenta autorizada y trabaja únicamente con la información, permisos y configuración de su empresa.</p></div><div id="access-panel-mount"></div></div></section>
   <section class="final-cta"><div class="public-eyebrow">Conversemos</div><h2 class="public-heading">Descubre cómo Nexo Klar puede ordenar tu operación.</h2><p class="public-lead">Revisamos contigo tus procesos, equipos, contratos y órdenes de servicio para definir la configuración que realmente necesita tu empresa.</p><div class="final-actions"><a class="btn btn-primary" href="mailto:contacto@nexoklar.cl?subject=Solicitud%20de%20demostraci%C3%B3n%20Nexo%20Klar">Solicitar demostración</a><button class="btn btn-secondary" onclick="scrollToAccess()">Ingresar al sitio privado</button></div></section>
   <footer class="public-footer"><span>Nexo Klar · Gestión operativa, información y cumplimiento</span><a href="mailto:contacto@nexoklar.cl">contacto@nexoklar.cl</a></footer>
