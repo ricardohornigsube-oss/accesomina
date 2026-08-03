@@ -730,6 +730,29 @@ td { padding:12px 14px; }
   .public-shell .public-lead { font-size:16px; }
   .public-shell .industry-head { gap:20px; }
 }
+/* Compact content cards: their height follows the information they contain. */
+.public-shell #capacidades .capability-grid,
+.public-shell #industrias .industry-grid { align-items:start; }
+.public-shell #capacidades .capability,
+.public-shell #industrias .industry-card {
+  min-height:0;
+  padding:18px;
+  color:var(--text);
+}
+.public-shell #capacidades .capability h3,
+.public-shell #industrias .industry-card b {
+  color:var(--text);
+  font-size:16px;
+  line-height:1.32;
+}
+.public-shell #capacidades .capability p,
+.public-shell #industrias .industry-card span { color:var(--text-muted); }
+@media (min-width:981px) {
+  .public-shell #capacidades .capability,
+  .public-shell #industrias .industry-card { padding:16px 18px; }
+  .public-shell #capacidades .capability-grid,
+  .public-shell #industrias .industry-grid { gap:12px; }
+}
 </style>
 <link rel="stylesheet" href="assets/nexo-klar-guidance.css">
 <link rel="stylesheet" href="assets/nexo-klar-enterprise.css">
