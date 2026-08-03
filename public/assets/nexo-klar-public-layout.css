@@ -1,0 +1,153 @@
+/* Nexo Klar public site: canonical full-screen layout. */
+.public-shell {
+  --public-nav-offset:124px;
+  --public-content-max:1320px;
+  --public-gutter:clamp(24px,6vw,96px);
+  --public-section-top:20px;
+  --public-section-bottom:24px;
+  --public-heading-size:clamp(28px,2.8vw,38px);
+  --public-body-size:14px;
+  --public-body-line:1.48;
+  --public-card-gap:10px;
+}
+
+.public-shell [id] { scroll-margin-top:var(--public-nav-offset); }
+.public-shell .public-inner,
+.public-shell .public-hero {
+  width:min(100%,var(--public-content-max));
+  margin-inline:auto;
+}
+.public-shell .public-heading,
+.public-shell .final-cta .public-heading {
+  max-width:860px;
+  color:var(--text);
+  font-size:var(--public-heading-size);
+  line-height:1.08;
+  letter-spacing:0;
+}
+.public-shell .public-lead {
+  max-width:760px;
+  margin-top:12px;
+  color:var(--text-muted);
+  font-size:var(--public-body-size);
+  line-height:var(--public-body-line);
+}
+.public-shell .public-eyebrow {
+  margin-bottom:10px;
+  color:var(--orange);
+  font-size:11px;
+  font-weight:900;
+  line-height:1.3;
+  letter-spacing:.14em;
+}
+
+@media (min-width:981px) and (min-height:780px) {
+  .public-shell #solucion.public-band,
+  .public-shell #resultados.public-band,
+  .public-shell #producto.public-band,
+  .public-shell #capacidades.public-band,
+  .public-shell #industrias.public-band,
+  .public-shell #implementacion.public-band,
+  .public-shell #proposito.public-band,
+  .public-shell #clientes-access.public-band {
+    box-sizing:border-box;
+    display:flex;
+    align-items:flex-start;
+    min-height:calc(100svh - var(--public-nav-offset));
+    padding:var(--public-section-top) var(--public-gutter) var(--public-section-bottom);
+  }
+
+  .public-shell #inicio.public-hero {
+    box-sizing:border-box;
+    min-height:calc(100svh - var(--public-nav-offset));
+    margin-top:var(--public-nav-offset);
+    padding-top:20px;
+    padding-bottom:24px;
+  }
+
+  .public-shell #solucion .solution-layout { grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr); gap:32px; }
+  .public-shell #solucion .value-list { gap:12px; margin-top:20px; }
+  .public-shell #solucion .value-item { grid-template-columns:28px 1fr; gap:10px; }
+  .public-shell #solucion .value-item b { margin-bottom:2px; font-size:14px; line-height:1.3; }
+  .public-shell #solucion .value-item span { font-size:12px; line-height:1.38; }
+  .public-shell #solucion .product-body { grid-template-columns:126px 1fr; min-height:300px; }
+  .public-shell #solucion .product-menu { padding:12px; }
+  .public-shell #solucion .product-menu span { padding:5px 7px; font-size:11px; }
+  .public-shell #solucion .product-content { padding:16px; }
+  .public-shell #solucion .product-kpis { gap:8px; margin:12px 0; }
+  .public-shell #solucion .product-kpi { padding:10px; }
+  .public-shell #solucion .product-kpi strong { font-size:20px; }
+  .public-shell #solucion .product-row { padding:7px 4px; font-size:11px; }
+
+  .public-shell #resultados > .public-inner { text-align:center; }
+  .public-shell #resultados .public-heading,
+  .public-shell #resultados .public-lead { margin-inline:auto; }
+  .public-shell #resultados .outcome-grid { gap:var(--public-card-gap); margin-top:24px; text-align:left; }
+  .public-shell #resultados .outcome-card {
+    box-sizing:border-box;
+    display:flex;
+    flex-direction:column;
+    min-height:120px;
+    padding:16px;
+  }
+
+  .public-shell #producto .real-product-layout { gap:32px; }
+  .public-shell #producto .real-product-copy .public-heading { font-size:var(--public-heading-size); }
+  .public-shell #producto .real-product-shot { max-height:calc(100svh - 260px); }
+  .public-shell #producto .real-product-caption { font-size:11px; }
+  .public-shell #producto .public-image-action { margin-top:8px; }
+
+  .public-shell #capacidades .capability-grid { gap:var(--public-card-gap); margin-top:24px; }
+  .public-shell #capacidades .capability {
+    box-sizing:border-box;
+    display:flex;
+    flex-direction:column;
+    min-height:118px;
+    padding:14px;
+  }
+  .public-shell #capacidades .capability h3 { margin:6px 0 4px; font-size:14px; line-height:1.3; }
+  .public-shell #capacidades .capability p { font-size:11.5px; line-height:1.35; }
+
+  .public-shell #industrias .industry-head { gap:22px; align-items:start; }
+  .public-shell #industrias .industry-head .public-lead { margin-top:0; }
+  .public-shell #industrias .industry-grid { gap:var(--public-card-gap); margin-top:18px; }
+  .public-shell #industrias .industry-card {
+    box-sizing:border-box;
+    display:flex;
+    flex-direction:column;
+    height:116px;
+    min-height:116px;
+    padding:12px 14px;
+  }
+  .public-shell #industrias .industry-card small { line-height:1; }
+  .public-shell #industrias .industry-card b { margin-top:4px; font-size:14px; line-height:1.25; }
+  .public-shell #industrias .industry-card span { margin-top:3px; font-size:11.2px; line-height:1.3; }
+
+  .public-shell #implementacion .implementation-layout { gap:28px; }
+  .public-shell #implementacion .steps { gap:12px; margin-top:20px; }
+  .public-shell #implementacion .step { box-sizing:border-box; min-height:118px; padding:14px; }
+  .public-shell #implementacion .step h3 { margin:6px 0 4px; font-size:14px; }
+  .public-shell #implementacion .step p { font-size:11.5px; line-height:1.36; }
+  .public-shell #implementacion .implementation-privacy { gap:10px; padding:16px; }
+  .public-shell #implementacion .implementation-privacy h3 { font-size:24px; }
+  .public-shell #implementacion .implementation-privacy .privacy-point { min-height:84px; padding:12px; }
+  .public-shell #implementacion .implementation-privacy .privacy-point b { font-size:13px; }
+  .public-shell #implementacion .implementation-privacy .privacy-point span { font-size:11px; line-height:1.35; }
+
+  .public-shell #proposito .purpose-statements { gap:var(--public-card-gap); margin-top:22px; }
+  .public-shell #proposito .purpose-statement { box-sizing:border-box; min-height:132px; padding:16px; }
+  .public-shell #proposito .purpose-statement h3 { font-size:17px; line-height:1.28; }
+  .public-shell #proposito .purpose-statement p { font-size:12px; line-height:1.4; }
+  .public-shell #proposito .purpose-values { gap:10px; margin-top:10px; }
+  .public-shell #proposito .purpose-value { min-height:66px; padding:12px; }
+  .public-shell #proposito .purpose-value b { margin-bottom:3px; font-size:13px; }
+  .public-shell #proposito .purpose-value span { font-size:11px; line-height:1.32; }
+
+  .public-shell #clientes-access .customer-access-layout { gap:32px; }
+  .public-shell #clientes-access .access-panel { padding:20px; }
+}
+
+@media (max-width:980px) {
+  .public-shell { --public-nav-offset:124px; }
+  .public-shell .public-band[id] { min-height:auto; }
+}
