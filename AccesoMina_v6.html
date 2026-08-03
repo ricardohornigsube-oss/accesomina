@@ -753,6 +753,17 @@ td { padding:12px 14px; }
   .public-shell #capacidades .capability-grid,
   .public-shell #industrias .industry-grid { gap:12px; }
 }
+/* Industries: compact desktop composition that keeps every sector visible at once. */
+@media (min-width:981px) and (min-height:780px) {
+  .public-shell #industrias.public-band { padding-top:20px; padding-bottom:28px; }
+  .public-shell #industrias .industry-head { gap:22px; }
+  .public-shell #industrias .industry-head .public-heading { font-size:clamp(28px,2.8vw,38px); line-height:1.08; }
+  .public-shell #industrias .industry-head .public-lead { font-size:14px; line-height:1.45; }
+  .public-shell #industrias .industry-grid { gap:10px; margin-top:18px; }
+  .public-shell #industrias .industry-card { padding:13px 14px; }
+  .public-shell #industrias .industry-card b { margin-top:6px; font-size:14px; line-height:1.28; }
+  .public-shell #industrias .industry-card span { margin-top:4px; font-size:11.5px; line-height:1.35; }
+}
 </style>
 <link rel="stylesheet" href="assets/nexo-klar-guidance.css">
 <link rel="stylesheet" href="assets/nexo-klar-enterprise.css">
