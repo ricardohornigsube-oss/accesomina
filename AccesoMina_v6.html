@@ -602,6 +602,32 @@ td { padding:12px 14px; }
   .implementation-privacy h3 { font-size:26px; }
   #industrias.public-band { padding:56px 24px; }
 }
+/* Anchor sections read as complete, centered screens on desktop. */
+@media (min-width:981px) and (min-height:780px) {
+  .public-band[id] {
+    min-height:calc(100svh - 124px);
+    display:flex;
+    align-items:center;
+  }
+  .public-band[id] > .public-inner { width:100%; }
+  .public-band { padding-top:clamp(48px,6vh,72px); padding-bottom:clamp(48px,6vh,72px); }
+  #industrias .industry-card { min-height:132px; padding:17px 18px; }
+  #industrias .industry-card b { margin-top:9px; font-size:16px; }
+  #industrias .industry-card span { margin-top:6px; font-size:12px; line-height:1.42; }
+  #industrias .industry-grid { gap:12px; margin-top:24px; }
+  #capacidades .capability { min-height:145px; padding:18px; }
+  #capacidades .capability-grid { gap:12px; margin-top:24px; }
+  #implementacion .steps { gap:18px; margin-top:24px; }
+  #implementacion .step { padding:18px; }
+  #implementacion .step h3 { margin:8px 0 6px; font-size:16px; }
+  #implementacion .implementation-privacy { margin-top:30px; padding-top:30px; gap:24px; }
+  #implementacion .privacy-points { gap:12px; }
+  #implementacion .privacy-point { padding:13px; }
+  #proposito .purpose-statements { margin-top:24px; }
+  #proposito .purpose-statement { padding:18px; }
+  #proposito .purpose-values { gap:10px; }
+  #proposito .purpose-value { padding:13px; }
+}
 </style>
 <link rel="stylesheet" href="assets/nexo-klar-guidance.css">
 <link rel="stylesheet" href="assets/nexo-klar-enterprise.css">
