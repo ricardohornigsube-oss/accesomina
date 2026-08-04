@@ -9489,6 +9489,122 @@ function renderServiceStatusBoardV107(){
 }
 </script>
 
+<script>
+// V13.6 · Contratos y firmas: control previo, evidencia, trazabilidad y conexión de firma.
+const CONTRACT_SIGNATURE_STATES_V136={
+  borrador:'Borrador',validacion:'En validación',enviado:'Enviado',entregado:'Entregado',visto:'Visto',
+  observado:'Observado',rechazado:'Rechazado',vencido:'Vencido',firmado:'Firmado',cancelado:'Cancelado',
+  pendiente_configuracion:'Pendiente de configurar firma'
+};
+function contractEscV136(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
+function contractMoneyV136(contract){
+  const clp=Number(contract?.montoCLP||0),uf=Number(contract?.montoUF||0);
+  return clp?`$${clp.toLocaleString('es-CL')} CLP`:uf?`${uf.toLocaleString('es-CL')} UF`:'No informado';
+}
+function contractStateBadgeV136(state){
+  const normalized=String(state||'borrador').toLowerCase();
+  const css=['firmado'].includes(normalized)?'badge-ok':['observado','rechazado','vencido','cancelado'].includes(normalized)?'badge-err':['enviado','entregado','visto','validacion'].includes(normalized)?'badge-warn':'badge-na';
+  return `<span class="badge ${css}">${contractEscV136(CONTRACT_SIGNATURE_STATES_V136[normalized]||state||'Borrador')}</span>`;
+}
+function ensureContractLifecycleV136(){
+  S.contractTemplates=Array.isArray(S.contractTemplates)?S.contractTemplates:[];
+  S.firmas=Array.isArray(S.firmas)?S.firmas:[];
+  S.contratos=Array.isArray(S.contratos)?S.contratos:[];
+  S.contratos.forEach(contract=>{
+    if(contract.montoCLP===undefined)contract.montoCLP=0;
+    if(!contract.currency)contract.currency=Number(contract.montoCLP)>0?'CLP':Number(contract.montoUF)>0?'UF':'CLP';
+    if(!Array.isArray(contract.versionHistory))contract.versionHistory=[];
+  });
+  S.firmas.forEach(signature=>{
+    if(!signature.estado)signature.estado='borrador';
+    if(!Array.isArray(signature.history))signature.history=[];
+    if(!Array.isArray(signature.evidenceFiles))signature.evidenceFiles=[];
+    if(!Array.isArray(signature.signatureRequests))signature.signatureRequests=[];
+    if(!signature.version)signature.version='1.0';
+  });
+}
+function contractPreflightV136(workerId,serviceId){
+  const worker=(S.trabajadores||[]).find(row=>String(row.id)===String(workerId));
+  const service=(S.mantenciones||[]).find(row=>String(row.id)===String(serviceId));
+  const contract=(S.contratos||[]).find(row=>String(row.id)===String(service?.contratoId));
+  const missing=[];
+  if(!worker?.nombre)missing.push('nombre de la persona');
+  if(!worker?.rut)missing.push('RUT de la persona');
+  if(!worker?.email&&!worker?.tel)missing.push('correo o teléfono de la persona');
+  if(!worker?.especialidad&&!worker?.cargo)missing.push('cargo o especialidad');
+  if(!service?.inicio||!service?.termino)missing.push('fechas de la orden de servicio');
+  if(!contract)missing.push('contrato asociado a la orden de servicio');
+  if(!S.empresa?.nombre||!S.empresa?.rut)missing.push('datos legales de la empresa');
+  return {worker,service,contract,missing,ready:missing.length===0};
+}
+function contractHistoryV136(signature,action,detail='',state=''){
+  signature.history.unshift({id:`siglog_${Date.now()}`,at:new Date().toISOString(),by:currentTenantUser?.email||'usuario',action,detail,state:state||signature.estado||'borrador'});
+  if(typeof recordHistoryV90==='function')recordHistoryV90('firma',signature.id,action,{}, {estado:signature.estado,detalle:detail},detail||'Gestión contractual');
+}
+function ensureContractSignatureModalV136(){
+  if(document.getElementById('modal-contract-signature-v136'))return;
+  document.body.insertAdjacentHTML('beforeend',`<div class="modal-overlay" id="modal-contract-signature-v136"><div class="modal modal-wide"><div class="modal-header"><div class="modal-title" id="contract-signature-title-v136">Gestión de firma</div><button class="modal-close" onclick="closeModal('modal-contract-signature-v136')">✕</button></div><div class="modal-body" id="contract-signature-body-v136"></div><div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-contract-signature-v136')">Cerrar</button></div></div></div>`);
+}
+function openContractSignatureV136(signatureId){
+  ensureContractLifecycleV136();ensureContractSignatureModalV136();
+  const signature=S.firmas.find(row=>String(row.id)===String(signatureId));if(!signature)return;
+  const preflight=contractPreflightV136(signature.trabId,signature.mantId);
+  const person=preflight.worker||{},service=preflight.service||{},contract=preflight.contract||{};
+  const history=(signature.history||[]).map(row=>`<tr><td>${contractEscV136(String(row.at||'').replace('T',' ').slice(0,16)||'—')}</td><td>${contractEscV136(row.action||'Actualización')}</td><td>${contractEscV136(row.detail||'—')}</td><td>${contractEscV136(row.by||'—')}</td></tr>`).join('')||'<tr><td colspan="4">Aún no hay movimientos registrados.</td></tr>';
+  const evidence=(signature.evidenceFiles||[]).map(file=>`<span class="chip" style="background:var(--bg3);color:var(--text-muted);">${contractEscV136(file.name||file.fileName||'Respaldo')}</span>`).join(' ')||'<span class="badge badge-warn">Sin PDF o respaldo firmado</span>';
+  document.getElementById('contract-signature-title-v136').textContent=`Firma · ${person.nombre||'Persona sin identificar'}`;
+  document.getElementById('contract-signature-body-v136').innerHTML=`<div class="cloud-note">Documento: <b>${contractEscV136(signature.tipo||'Contrato')}</b> · Orden: <b>${contractEscV136(service.nombre||'Sin orden')}</b> · Contrato: <b>${contractEscV136(contract.numero||contract.nombre||'Sin contrato')}</b></div><div class="kpi-grid" style="margin:14px 0;"><div class="kpi kpi-blue"><div class="kpi-value" style="font-size:16px;">${contractEscV136(signature.version||'1.0')}</div><div class="kpi-label">Versión</div></div><div class="kpi kpi-orange"><div class="kpi-value" style="font-size:16px;">${contractEscV136(signature.canal||'—')}</div><div class="kpi-label">Canal</div></div><div class="kpi ${preflight.ready?'kpi-green':'kpi-red'}"><div class="kpi-value" style="font-size:16px;">${preflight.ready?'Lista':'Pendiente'}</div><div class="kpi-label">Validación previa</div></div><div class="kpi kpi-blue"><div class="kpi-value" style="font-size:16px;">${contractStateBadgeV136(signature.estado)}</div><div class="kpi-label">Estado</div></div></div><div class="card" style="margin-bottom:14px;"><div class="card-title">Validación antes de enviar</div>${preflight.ready?'<span class="badge badge-ok">Datos mínimos completos</span>':`<div class="cloud-note" style="margin-top:8px;">Falta completar: ${contractEscV136(preflight.missing.join(', '))}.</div>`}</div><div class="grid-2"><div class="card"><div class="card-title">Solicitud de firma</div><p class="card-subtitle">Envía mediante el proveedor configurado. Si no existe integración activa, el estado quedará preparado para configuración.</p><button class="btn btn-primary btn-sm" ${preflight.ready?'':'disabled'} onclick="requestContractSignatureV136('${contractEscV136(signature.id)}')">Solicitar firma electrónica</button></div><div class="card"><div class="card-title">Registrar documento firmado</div><p class="card-subtitle">Para documento firmado fuera de la plataforma. Se conserva como respaldo, sin reemplazar la auditoría del proveedor.</p><input class="form-input" id="contract-signed-file-v136" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"><input class="form-input" id="contract-signed-note-v136" style="margin-top:8px;" placeholder="Observación o referencia del firmado"><button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="saveContractSignedEvidenceV136('${contractEscV136(signature.id)}')">Guardar respaldo firmado</button></div></div><div class="card" style="margin-top:14px;"><div class="card-title">Evidencia disponible</div><div style="margin-top:8px;">${evidence}</div></div><div class="card" style="margin-top:14px;"><div class="card-title">Historial de firma</div><div class="table-wrap" style="margin-top:8px;"><table><thead><tr><th>Fecha</th><th>Acción</th><th>Detalle</th><th>Usuario</th></tr></thead><tbody>${history}</tbody></table></div></div>`;
+  openModal('modal-contract-signature-v136');
+}
+async function requestContractSignatureV136(signatureId){
+  ensureContractLifecycleV136();const signature=S.firmas.find(row=>String(row.id)===String(signatureId));if(!signature)return;
+  const preflight=contractPreflightV136(signature.trabId,signature.mantId);if(!preflight.ready){toast(`Completa antes de enviar: ${preflight.missing.join(', ')}`,'err');return;}
+  signature.estado='validacion';contractHistoryV136(signature,'Validación contractual completada','Datos de persona, empresa, contrato y orden verificados.','validacion');
+  let event=null;
+  try{if(window.AccesoMinaCloud?.enabled&&typeof window.AccesoMinaCloud.sendSignatureRequest==='function')event=await window.AccesoMinaCloud.sendSignatureRequest(signature.trabId,signature.tipo,signature.mantId,signature.canal||'email');}catch(error){event=null;}
+  const configured=Boolean(event);
+  signature.estado=configured?'enviado':'pendiente_configuracion';signature.enviado=hoy();signature.provider=event?.provider||event?.provider_name||'Proveedor pendiente';signature.envelopeId=event?.envelopeId||event?.id||'';
+  signature.signatureRequests.unshift({id:`req_${Date.now()}`,requestedAt:new Date().toISOString(),channel:signature.canal||'email',provider:signature.provider,envelopeId:signature.envelopeId,status:configured?'enviado':'pendiente_configuracion'});
+  contractHistoryV136(signature,configured?'Solicitud enviada al proveedor':'Solicitud preparada',configured?'Proveedor respondió el envío de firma.':'Configura URL y token del proveedor de firma en Configuración Empresa.',signature.estado);
+  persistTenant();renderContratos();openContractSignatureV136(signatureId);toast(configured?'Solicitud de firma enviada':'Solicitud preparada: falta configurar el proveedor','warn');
+}
+async function saveContractSignedEvidenceV136(signatureId){
+  ensureContractLifecycleV136();const signature=S.firmas.find(row=>String(row.id)===String(signatureId));if(!signature)return;
+  const input=document.getElementById('contract-signed-file-v136'),note=document.getElementById('contract-signed-note-v136')?.value.trim()||'';
+  if(!input?.files?.length)return toast('Adjunta el documento firmado o su evidencia','err');
+  try{
+    const files=typeof captureEvidenceFilesV79==='function'?await captureEvidenceFilesV79(input,'contract_signature',signature.id):[{name:input.files[0].name,uploadedAt:new Date().toISOString()}];
+    signature.evidenceFiles.push(...files);signature.estado='firmado';signature.firmado=hoy();signature.signedAt=new Date().toISOString();signature.manualEvidence=true;
+    contractHistoryV136(signature,'Respaldo de firma cargado',note||`Archivo: ${files.map(file=>file.name).join(', ')}`,'firmado');persistTenant();renderContratos();openContractSignatureV136(signatureId);toast('Respaldo firmado guardado con historial');
+  }catch(error){if(!['INVALID_FILE_TYPE','FILE_TOO_LARGE','LOCAL_FILE_TOO_LARGE'].includes(error.message))toast(error.message||'No fue posible cargar el respaldo','err');}
+}
+function renderContractLifecycleV136(){
+  ensureContractLifecycleV136();
+  const contracts=S.contratos||[],signatures=S.firmas||[],today=hoy();
+  const expiring=contracts.filter(row=>row.termino&&row.termino>=today&&row.termino<=new Date(Date.now()+90*86400000).toISOString().slice(0,10)).length;
+  const pending=signatures.filter(row=>!['firmado','cancelado'].includes(String(row.estado||'').toLowerCase())).length;
+  const host=document.getElementById('contracts-v94');if(host)host.innerHTML=`<div class="card-header"><div><div class="card-title">Control contractual y firmas</div><div class="card-subtitle">Vigencias, versiones, condiciones previas, solicitudes, respaldos e historial por persona y orden de servicio.</div></div><button class="btn btn-primary btn-sm" onclick="addContractTemplateV94()">+ Plantilla</button></div><div class="kpi-grid" style="margin-top:12px;"><div class="kpi kpi-blue"><div class="kpi-value">${contracts.length}</div><div class="kpi-label">Contratos registrados</div></div><div class="kpi kpi-orange"><div class="kpi-value">${expiring}</div><div class="kpi-label">Vencen en 90 días</div></div><div class="kpi kpi-red"><div class="kpi-value">${pending}</div><div class="kpi-label">Firmas por resolver</div></div><div class="kpi kpi-green"><div class="kpi-value">${signatures.filter(row=>row.estado==='firmado').length}</div><div class="kpi-label">Firmas con respaldo</div></div></div><div class="cloud-note" style="margin-top:12px;">La firma certificada se confirma mediante proveedor configurado. Un documento cargado manualmente queda identificado como respaldo documental.</div>`;
+  const contractsTable=document.getElementById('contratos-table');if(contractsTable)contractsTable.innerHTML=`<thead><tr><th>Contrato</th><th>Cliente</th><th>Órdenes</th><th>Vigencia</th><th>Monto</th><th>Estado</th><th>Gestión</th></tr></thead><tbody>${contracts.map(contract=>{const services=(S.mantenciones||[]).filter(row=>String(row.contratoId)===String(contract.id));return `<tr><td><b>${contractEscV136(contract.nombre||'Sin nombre')}</b><div class="worker-rut">${contractEscV136(contract.numero||'Sin número')} · v${contractEscV136(contract.version||'1.0')}</div></td><td>${contractEscV136(minaNombre(contract.minaId)||'—')}</td><td>${services.length}</td><td>${contractEscV136(contract.inicio||'—')} → ${contractEscV136(contract.termino||'—')}</td><td><b>${contractEscV136(contractMoneyV136(contract))}</b></td><td>${estadoTag(contract.estado||'proceso')}</td><td><button class="btn btn-primary btn-sm" onclick="openContractDetailV78('${contractEscV136(contract.id)}')">Ficha</button></td></tr>`;}).join('')||'<tr><td colspan="7">Aún no hay contratos registrados.</td></tr>'}</tbody>`;
+  const signTable=document.getElementById('firmas-table');if(signTable)signTable.innerHTML=`<thead><tr><th>Persona</th><th>Documento / versión</th><th>Orden de servicio</th><th>Canal / proveedor</th><th>Estado</th><th>Respaldo</th><th>Gestión</th></tr></thead><tbody>${signatures.map(signature=>{const person=(S.trabajadores||[]).find(row=>row.id===signature.trabId)||{},service=(S.mantenciones||[]).find(row=>row.id===signature.mantId)||{},hasEvidence=(signature.evidenceFiles||[]).length;return `<tr><td><b>${contractEscV136(person.nombre||signature.trabId||'—')}</b><div class="worker-rut">${contractEscV136(person.rut||'Sin RUT')}</div></td><td>${contractEscV136(signature.tipo||'Documento')}<div class="worker-rut">Versión ${contractEscV136(signature.version||'1.0')}</div></td><td>${contractEscV136(service.nombre||'—')}</td><td>${contractEscV136(signature.canal||'—')}<div class="worker-rut">${contractEscV136(signature.provider||'Sin proveedor')}</div></td><td>${contractStateBadgeV136(signature.estado)}</td><td>${hasEvidence?`<span class="badge badge-ok">${hasEvidence} archivo(s)</span>`:'<span class="badge badge-warn">Pendiente</span>'}</td><td><button class="btn btn-secondary btn-sm" onclick="openContractSignatureV136('${contractEscV136(signature.id)}')">Gestionar</button> <button class="btn btn-blue btn-sm" onclick="previewContrato('${contractEscV136(signature.trabId)}','${contractEscV136(signature.mantId)}','${contractEscV136(signature.tipo)}')">Vista previa</button></td></tr>`;}).join('')||'<tr><td colspan="7">Aún no existen documentos en firma.</td></tr>'}</tbody>`;
+}
+const renderContratosV136Base=renderContratos;
+renderContratos=function(){renderContratosV136Base();renderContractLifecycleV136();};
+const generarContratoV136Base=generarContrato;
+generarContrato=function(){
+  const workerId=document.getElementById('gc-trab')?.value,serviceId=document.getElementById('gc-mant')?.value,check=contractPreflightV136(workerId,serviceId);
+  if(!check.ready){toast(`Completa antes de generar: ${check.missing.join(', ')}`,'err');return;}
+  generarContratoV136Base();const signature=(S.firmas||[]).at(-1);if(signature){signature.estado='borrador';signature.version='1.0';contractHistoryV136(signature,'Documento generado','Pendiente de solicitud de firma electrónica.','borrador');persistTenant();renderContratos();}
+};
+const saveNuevaFirmaV136Base=saveNuevaFirma;
+saveNuevaFirma=function(){
+  const workerId=document.getElementById('nf-trab')?.value,serviceId=document.getElementById('nf-mant')?.value,check=contractPreflightV136(workerId,serviceId);
+  if(!check.ready){toast(`Completa antes de enviar: ${check.missing.join(', ')}`,'err');return;}
+  saveNuevaFirmaV136Base();const signature=(S.firmas||[]).at(-1);if(signature){signature.estado='borrador';signature.version='1.0';contractHistoryV136(signature,'Documento preparado para firma','Revisión previa aprobada.','borrador');persistTenant();renderContratos();openContractSignatureV136(signature.id);}
+};
+const initV136Base=init;
+init=function(){initV136Base();ensureContractLifecycleV136();if(currentPage==='contratos')renderContratos();};
+</script>
+
 <script src="assets/nexo-klar-guidance.js"></script>
 <script src="assets/nexo-klar-enterprise.js"></script>
 </body>
