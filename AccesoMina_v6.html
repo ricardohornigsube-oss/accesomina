@@ -1314,7 +1314,7 @@ td { padding:12px 14px; }
   <!-- PAGE: HOTELERIA -->
   <div id="page-hoteleria" class="page">
     <div class="section-header">
-      <div><div class="section-title">🛏️ Hotelería</div></div>
+      <div><div class="section-title">🛏️ Alojamientos y estadías</div><div class="section-sub">Controle camas, ingresos, salidas y costos por cliente, contrato y orden de servicio.</div></div>
       <div class="section-actions">
         <button class="btn btn-secondary" onclick="openModal('modal-nuevo-hotel')">+ Nuevo Hotel</button>
         <button class="btn btn-primary" onclick="openModal('modal-hotel-asignar')">+ Asignar Persona</button>
@@ -9766,6 +9766,39 @@ const renderTurnosV139Base=renderTurnos;
 renderTurnos=function(){renderTurnosV139Base();ensureShiftExperienceV139();};
 const renderPageV139Base=renderPage;
 renderPage=function(page){renderPageV139Base(page);if(page==='turnos')setTimeout(()=>renderTurnos(),0);};
+</script>
+
+<script>
+// V14.0 · Alojamientos y estadías: panel diario de camas, ingresos y salidas.
+function accommodationEscV140(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
+function accommodationDateV140(){return document.getElementById('hotel-filter-from')?.value||hoy();}
+function accommodationStatusV140(assignment,date){
+  if(assignment.estado==='cancelada')return 'Cancelada';
+  if(String(assignment.checkin||'')>date)return 'Reservada';
+  if(String(assignment.checkout||'')<=date)return 'Salida pendiente';
+  return 'En estadía';
+}
+function accommodationBadgeV140(status){const css=status==='En estadía'?'badge-ok':status==='Reservada'?'badge-blue':status==='Salida pendiente'?'badge-warn':'badge-na';return `<span class="badge ${css}">${accommodationEscV140(status)}</span>`;}
+function openAccommodationAssignV140(hotelId=''){
+  openModal('modal-hotel-asignar');
+  setTimeout(()=>{const hotel=document.getElementById('ha-hotel');if(hotelId&&hotel){hotel.value=hotelId;renderHotelRoomOptionsV122?.();}document.getElementById('ha-trab')?.focus();},0);
+}
+function renderAccommodationCommandV140(){
+  const host=document.getElementById('hotel-cards');if(!host)return;
+  document.getElementById('hotel-command-v140')?.remove();
+  ensureHoteleriaV122();
+  const date=accommodationDateV140(),tomorrow=typeof addDaysV122==='function'?addDaysV122(date,1):date;
+  const client=document.getElementById('hotel-filter-client')?.value||'';
+  const hotels=(S.hoteles||[]).filter(h=>!client||!(h.minaIds||[]).length||(h.minaIds||[]).includes(client));
+  const stays=(S.hotelAsig||[]).filter(a=>a.estado!=='cancelada');
+  const arrivals=stays.filter(a=>String(a.checkin||'')===date),departures=stays.filter(a=>String(a.checkout||'')===date&&a.estado==='activa'),pending=stays.filter(a=>String(a.checkout||'')<date&&a.estado==='activa');
+  const hotelRows=hotels.map(h=>{const occupancy=hotelOccupancyV122(h,date,tomorrow),rooms=ensureHotelRoomsV122(h).slice(0,10);return {h,occupancy,rooms};});
+  const panel=document.createElement('div');panel.id='hotel-command-v140';panel.className='card';panel.style.gridColumn='1/-1';
+  panel.innerHTML=`<div class="card-header"><div><div class="card-title">Panel diario de alojamientos</div><div class="card-subtitle">Use esta vista para ubicar personas, revisar camas libres y gestionar ingresos o salidas sin perder el contexto del servicio.</div></div><button class="btn btn-primary btn-sm" onclick="openAccommodationAssignV140()">+ Asignar alojamiento</button></div><div class="kpi-grid" style="margin-top:12px;"><div class="kpi kpi-blue"><div class="kpi-value">${arrivals.length}</div><div class="kpi-label">Ingresos del día</div></div><div class="kpi kpi-orange"><div class="kpi-value">${departures.length}</div><div class="kpi-label">Salidas del día</div></div><div class="kpi kpi-red"><div class="kpi-value">${pending.length}</div><div class="kpi-label">Salidas pendientes</div></div><div class="kpi kpi-green"><div class="kpi-value">${hotelRows.reduce((total,row)=>total+row.occupancy.free,0)}</div><div class="kpi-label">Camas libres</div></div></div><div class="grid-2" style="margin-top:14px;"><div><div class="form-label" style="margin-bottom:8px;">Disponibilidad por hotel</div><div style="display:grid;gap:8px;">${hotelRows.map(row=>{const level=row.occupancy.free===0?'badge-err':row.occupancy.free<=2?'badge-warn':'badge-ok';return `<div style="border:1px solid var(--border);border-radius:8px;padding:10px;background:var(--bg-soft);"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;"><div><b>${accommodationEscV140(row.h.nombre)}</b><div class="worker-rut">${row.occupancy.occupied}/${row.occupancy.total} ocupadas · ${row.occupancy.blocked} bloqueadas</div></div><span class="badge ${level}">${row.occupancy.free} libres</span></div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;">${row.rooms.map(room=>{const beds=hotelBedsV122(row.h).filter(b=>String(b.room.number)===String(room.number));const used=stays.filter(a=>a.hotelId===row.h.id&&String(a.pieza)===String(room.number)&&a.estado!=='cancelada'&&String(a.checkin||'')<=date&&String(a.checkout||'')>date).length;const roomCss=room.status==='bloqueada'||room.status==='mantencion'?'badge-warn':used>=beds.length?'badge-err':used?'badge-blue':'badge-ok';return `<span class="badge ${roomCss}">Hab. ${accommodationEscV140(room.number)} · ${used}/${beds.length}</span>`;}).join('')}${ensureHotelRoomsV122(row.h).length>10?'<span class="worker-rut">+ más habitaciones</span>':''}</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"><button class="btn btn-secondary btn-sm" onclick="openHotelDetailV122('${accommodationEscV140(row.h.id)}')">Ver disponibilidad</button><button class="btn btn-ghost btn-sm" onclick="openAccommodationAssignV140('${accommodationEscV140(row.h.id)}')">Asignar</button></div></div>`;}).join('')||'<div class="cloud-note">Crea un hotel para empezar a controlar camas y estadías.</div>'}</div></div><div><div class="form-label" style="margin-bottom:8px;">Movimientos de hoy</div><div style="display:grid;gap:8px;">${[...arrivals.map(a=>({a,label:'Ingreso',action:'Ficha'})),...departures.map(a=>({a,label:'Salida',action:'Liberar'})),...pending.map(a=>({a,label:'Salida vencida',action:'Liberar'}))].slice(0,10).map(row=>{const status=accommodationStatusV140(row.a,date);return `<div style="border:1px solid var(--border);border-radius:8px;padding:10px;background:var(--bg-soft);"><div style="display:flex;justify-content:space-between;gap:8px;"><div><b>${accommodationEscV140(trabNombre(row.a.trabId))}</b><div class="worker-rut">${accommodationEscV140(hotelNombre(row.a.hotelId))} · Hab. ${accommodationEscV140(row.a.pieza)} / cama ${accommodationEscV140(row.a.cama||'1')}</div><div class="worker-rut">${accommodationEscV140(mantNombre(row.a.mantId))}</div></div>${accommodationBadgeV140(status)}</div><div style="margin-top:8px;">${row.action==='Liberar'?`<button class="btn btn-primary btn-sm" onclick="closeHotelStayV122('${accommodationEscV140(row.a.id)}')">Registrar salida</button>`:`<button class="btn btn-secondary btn-sm" onclick="openFicha('${accommodationEscV140(row.a.trabId)}')">Ver persona</button>`}</div></div>`;}).join('')||'<div class="cloud-note">No hay ingresos ni salidas para esta fecha.</div>'}</div></div></div><div class="cloud-note" style="margin-top:12px;">Las asignaciones validan camas disponibles y fechas superpuestas. Al registrar una estadía, la persona queda vinculada con el hotel, la orden de servicio, el cliente y el contrato correspondientes.</div>`;
+  const summary=host.querySelector(':scope > .card');if(summary)summary.insertAdjacentElement('afterend',panel);else host.prepend(panel);
+}
+const renderHoteleriaV140Base=renderHoteleria;
+renderHoteleria=function(){renderHoteleriaV140Base();renderAccommodationCommandV140();};
 </script>
 
 <script src="assets/nexo-klar-guidance.js"></script>
