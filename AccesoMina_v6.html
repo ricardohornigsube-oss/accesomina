@@ -7270,7 +7270,7 @@ function renderWarehouseInventoryV105(){
     const last=mov.find(m=>m.itemId===i.id&&(m.warehouseId===w.id||m.warehouseToId===w.id));
     if(Number(qty)>0||last)rows.push({i,w,qty:Number(qty)||0,last});
   }));
-  return `<div class="card" id="ops-v105-warehouse-real" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Inventario real por bodega</div><div class="card-subtitle">Vista simple de disponibilidad, mínimos, último movimiento y reposición por ubicación.</div></div><button class="btn btn-primary btn-sm" onclick="addWarehouseV95()">+ Bodega</button></div><div class="table-wrap"><table><thead><tr><th>Recurso</th><th>Bodega</th><th>Disponible</th><th>Mínimo</th><th>Estado</th><th>Último movimiento</th></tr></thead><tbody>${rows.slice(0,18).map(r=>`<tr><td><b>${esc94(r.i.name)}</b><div class="worker-rut">${esc94(r.i.type||'Recurso')}</div></td><td>${esc94(r.w.name)}</td><td>${r.qty}</td><td>${Number(r.i.minStock)||0}</td><td>${r.qty<=Number(r.i.minStock||0)?'<span class="badge badge-err">Reponer</span>':'<span class="badge badge-ok">Disponible</span>'}</td><td>${r.last?`${esc94(r.last.type)} · ${(r.last.at||'').slice(0,10)}`:'Sin movimiento'}</td></tr>`).join('')||'<tr><td colspan="6">Sin stock por bodega registrado.</td></tr>'}</tbody></table></div></div>`;
+  return `<div class="card" id="ops-v105-warehouse-real" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Inventario real por bodega</div><div class="card-subtitle">Vista simple de disponibilidad, mínimos, último movimiento y reposición por ubicación.</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-secondary btn-sm" onclick="openEppStockModalV133()" title="Agregar EPP y stock a una bodega">🦺 Agregar EPP</button><button class="btn btn-primary btn-sm" onclick="addWarehouseV95()" title="Crear una nueva bodega">＋ Bodega</button></div></div><div class="table-wrap"><table><thead><tr><th>Recurso</th><th>Bodega</th><th>Disponible</th><th>Mínimo</th><th>Estado</th><th>Último movimiento</th></tr></thead><tbody>${rows.slice(0,18).map(r=>`<tr><td><b>${esc94(r.i.name)}</b><div class="worker-rut">${esc94(r.i.type||'Recurso')}</div></td><td>${esc94(r.w.name)}</td><td>${r.qty}</td><td>${Number(r.i.minStock)||0}</td><td>${r.qty<=Number(r.i.minStock||0)?'<span class="badge badge-err">Reponer</span>':'<span class="badge badge-ok">Disponible</span>'}</td><td>${r.last?`${esc94(r.last.type)} · ${(r.last.at||'').slice(0,10)}`:'Sin movimiento'}</td></tr>`).join('')||'<tr><td colspan="6">Sin stock por bodega registrado.</td></tr>'}</tbody></table></div></div>`;
 }
 function polishInventoryCenterV105(){
   const page=document.getElementById('page-operaciones-cloud');if(!page)return;
@@ -9381,6 +9381,50 @@ function renderOperationalReportsV132(){
 const renderPageV132Base=renderPage;
 renderPage=function(page){renderPageV132Base(page);if(page==='reportes')renderOperationalReportsV132();};
 window.addEventListener('load',()=>{if(currentPage==='reportes')renderOperationalReportsV132();});
+</script>
+
+<script>
+// V13.3 · Inventario por bodega: alta de EPP y movimientos con saldo validado.
+function ensureEppStockModalV133(){
+  if(document.getElementById('modal-epp-stock-v133'))return;
+  document.body.insertAdjacentHTML('beforeend',`<div class="modal-overlay" id="modal-epp-stock-v133"><div class="modal"><div class="modal-header"><div class="modal-title">Agregar EPP a bodega</div><button class="modal-close" onclick="closeModal('modal-epp-stock-v133')">✕</button></div><form onsubmit="saveEppStockV133(event)"><div class="modal-body"><div class="cloud-note" style="margin-bottom:14px;">Crea un nuevo elemento de protección personal o aumenta el stock de uno existente en la bodega seleccionada. Cada ingreso queda registrado en el historial de inventario.</div><div class="form-grid"><div class="form-group"><label class="form-label">Elemento EPP *</label><input class="form-input" id="v133-epp-name" required placeholder="Ej: Casco de seguridad"></div><div class="form-group"><label class="form-label">Bodega *</label><select class="form-select" id="v133-epp-warehouse" required></select></div><div class="form-group"><label class="form-label">Cantidad a ingresar *</label><input class="form-input" id="v133-epp-qty" type="number" min="1" value="1" required></div><div class="form-group"><label class="form-label">Stock mínimo</label><input class="form-input" id="v133-epp-min" type="number" min="0" value="0"></div><div class="form-group"><label class="form-label">Costo unitario CLP</label><input class="form-input" id="v133-epp-cost" type="number" min="0" value="0"></div><div class="form-group"><label class="form-label">Vida útil (días)</label><input class="form-input" id="v133-epp-life" type="number" min="1" value="180"></div><div class="form-group"><label class="form-label">Talla / medida disponible</label><input class="form-input" id="v133-epp-size" placeholder="Universal, M, 42..." ></div><div class="form-group full"><label class="form-label">Observación</label><textarea class="form-textarea" id="v133-epp-note" placeholder="Compra, reposición, proveedor, lote u otra referencia."></textarea></div></div></div><div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="closeModal('modal-epp-stock-v133')">Cancelar</button><button class="btn btn-primary" type="submit">Agregar a bodega</button></div></form></div></div>`);
+}
+function openEppStockModalV133(){
+  ensureV95Collections();ensureEppStockModalV133();
+  const warehouse=document.getElementById('v133-epp-warehouse');warehouse.innerHTML=(S.warehouses||[]).map(row=>`<option value="${rptEscV132(row.id)}">${rptEscV132(row.name)}</option>`).join('');
+  ['v133-epp-name','v133-epp-note','v133-epp-size'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('v133-epp-qty').value='1';document.getElementById('v133-epp-min').value='0';document.getElementById('v133-epp-cost').value='0';document.getElementById('v133-epp-life').value='180';openModal('modal-epp-stock-v133');
+}
+function saveEppStockV133(event){
+  event.preventDefault();ensureV95Collections();
+  const name=document.getElementById('v133-epp-name').value.trim(),warehouseId=document.getElementById('v133-epp-warehouse').value,qty=Number(document.getElementById('v133-epp-qty').value)||0,minStock=Number(document.getElementById('v133-epp-min').value)||0,unitCost=Number(document.getElementById('v133-epp-cost').value)||0,lifeDays=Number(document.getElementById('v133-epp-life').value)||180,size=document.getElementById('v133-epp-size').value.trim(),notes=document.getElementById('v133-epp-note').value.trim();
+  if(!name||!warehouseId||qty<=0)return toast('Completa elemento EPP, bodega y cantidad','err');
+  let item=(S.inventoryItems||[]).find(row=>String(row.type||'').toLowerCase()==='epp'&&String(row.name||'').trim().toLowerCase()===name.toLowerCase());
+  const before=item?JSON.parse(JSON.stringify(item)):null;
+  if(!item){item={id:`inv_epp_${Date.now()}`,type:'EPP',name,stock:0,minStock,unitCost,lifeDays,status:'activo',sizes:size?size.split(',').map(value=>value.trim()).filter(Boolean):[],stockByLocation:{}};S.inventoryItems.push(item);}
+  item.stockByLocation=item.stockByLocation||{};item.stockByLocation[warehouseId]=Number(item.stockByLocation[warehouseId]||0)+qty;item.stock=Object.values(item.stockByLocation).reduce((total,value)=>total+Number(value||0),0);item.minStock=Math.max(Number(item.minStock||0),minStock);if(unitCost)item.unitCost=unitCost;if(lifeDays)item.lifeDays=lifeDays;if(size){const values=new Set([...(item.sizes||[]),...size.split(',').map(value=>value.trim()).filter(Boolean)]);item.sizes=[...values];}
+  const movement={id:`mov_${Date.now()}`,itemId:item.id,warehouseId,type:'reposicion',qty,stockBefore:Number(before?.stockByLocation?.[warehouseId]||0),stockAfter:Number(item.stockByLocation[warehouseId]),notes,fileName:'',signed:false,at:new Date().toISOString(),user:currentTenantUser?.email||'usuario'};S.inventoryMovements.unshift(movement);
+  recordHistoryV90?.('inventario',item.id,'EPP ingresado a bodega',before||{},item,notes||`Ingreso de ${qty} unidad(es) a bodega`);persistTenant();closeModal('modal-epp-stock-v133');renderV94OperationsSuite();toast('EPP agregado a la bodega');
+}
+function saveInventoryMovementV104(){
+  ensureV95Collections();
+  const itemId=document.getElementById('v104-inv-item')?.value,type=document.getElementById('v104-inv-type')?.value,warehouseId=document.getElementById('v104-inv-wh')?.value,warehouseToId=document.getElementById('v104-inv-wh-to')?.value||'',qty=Number(document.getElementById('v104-inv-qty')?.value)||0;
+  const item=(S.inventoryItems||[]).find(row=>row.id===itemId);if(!item||!warehouseId||qty<=0)return toast('Completa recurso, bodega y cantidad','err');
+  if(type==='traslado'&&!warehouseToId)return toast('Selecciona bodega destino para el traslado','err');
+  if(type==='traslado'&&warehouseId===warehouseToId)return toast('Selecciona una bodega destino distinta al origen','err');
+  item.stockByLocation=item.stockByLocation||{};const beforeOrigin=Number(item.stockByLocation[warehouseId]||0),beforeDestination=Number(item.stockByLocation[warehouseToId]||0),subtract=['entrega','traslado','perdida','dano'].includes(type),add=['reposicion','devolucion'].includes(type);
+  if(subtract&&beforeOrigin<qty)return toast(`Stock insuficiente en la bodega seleccionada. Disponible: ${beforeOrigin}`,'err');
+  const before=JSON.parse(JSON.stringify(item));
+  if(subtract)item.stockByLocation[warehouseId]=beforeOrigin-qty;
+  if(add)item.stockByLocation[warehouseId]=beforeOrigin+qty;
+  if(type==='ajuste')item.stockByLocation[warehouseId]=qty;
+  if(type==='traslado')item.stockByLocation[warehouseToId]=beforeDestination+qty;
+  item.stock=Object.values(item.stockByLocation).reduce((total,value)=>total+Number(value||0),0);
+  const workerId=document.getElementById('v104-inv-worker')?.value||'',projectId=document.getElementById('v104-inv-project')?.value||'',fileName=document.getElementById('v104-inv-file')?.files?.[0]?.name||'',notes=document.getElementById('v104-inv-notes')?.value.trim()||'',signed=!!document.getElementById('v104-inv-sign')?.checked;
+  const movement={id:`mov_${Date.now()}`,itemId,warehouseId,warehouseToId,type,qty,workerId,projectId,owner:document.getElementById('v104-inv-owner')?.value.trim()||'',notes,fileName,signed,stockBefore:beforeOrigin,stockAfter:Number(item.stockByLocation[warehouseId]||0),at:new Date().toISOString(),user:currentTenantUser?.email||'usuario'};S.inventoryMovements.unshift(movement);
+  if(type==='entrega'&&String(item.type||'').toLowerCase()==='epp'&&workerId){S.eppDeliveries=S.eppDeliveries||[];S.eppDeliveries.unshift({id:`epp_inv_${Date.now()}`,trabId:workerId,mantId:projectId,item:item.name,tipo:item.name,qty,unitCost:Number(item.unitCost)||0,lifeDays:Number(item.lifeDays)||0,fecha:hoy(),fechaEntrega:hoy(),estado:'entregado',warehouseId,source:'inventario',notes,fileName});}
+  recordHistoryV90?.('inventario',item.id,`Movimiento de inventario: ${type}`,before,item,notes||`Cantidad: ${qty}`);persistTenant();toast('Movimiento de inventario registrado');renderFocusedOperationsV98();
+}
 </script>
 
 <script src="assets/nexo-klar-guidance.js"></script>
