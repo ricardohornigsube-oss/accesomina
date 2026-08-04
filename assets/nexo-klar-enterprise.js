@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "12.9";
+  const VERSION = "13.0";
   const ENTERPRISE_KEYS = [
     "uiRolePreferences", "alertWorkflow", "operationTasks", "signatureReminders",
     "communicationTemplates", "communicationHistory", "portalReviews",
@@ -598,8 +598,91 @@
   };
 
   function renderCommunicationsGovernance() {
-    upsertAfterHeader("llamados", "nk128-communications", `<div class="card" id="nk128-communications" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Plantillas, consentimiento e historial de entrega</div><div class="card-subtitle">Comunicación individual o grupal con trazabilidad.</div></div><button class="btn btn-primary btn-sm" onclick="openCommunicationTemplate128()">+ Plantilla aprobada</button></div><div class="grid-2"><div class="table-wrap"><table><thead><tr><th>Plantilla</th><th>Canal</th><th>Estado</th></tr></thead><tbody>${S.communicationTemplates.map((row) => `<tr><td><b>${esc(row.name)}</b><div class="worker-rut">${esc(row.body)}</div></td><td>${esc(row.channel)}</td><td><span class="badge ${row.approved ? "badge-ok" : "badge-warn"}">${row.approved ? "Aprobada" : "Borrador"}</span></td></tr>`).join("") || '<tr><td colspan="3">Sin plantillas.</td></tr>'}</tbody></table></div><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Destinatarios</th><th>Canal</th><th>Resultado</th></tr></thead><tbody>${S.communicationHistory.slice(0, 10).map((row) => `<tr><td>${esc(row.sentAt?.slice(0, 16).replace("T", " "))}</td><td>${row.recipients}</td><td>${esc(row.channel)}</td><td>${esc(row.status)}</td></tr>`).join("") || '<tr><td colspan="4">Sin entregas registradas.</td></tr>'}</tbody></table></div></div><div class="cloud-note">Antes de enviar, valide consentimiento y datos de contacto. Los envíos reales requieren el proveedor de correo o WhatsApp configurado.</div></div>`);
+    const calls = S.callouts || [];
+    const open = calls.filter((row) => !["cerrada", "cancelada"].includes(row.communicationStatus || "enviada"));
+    const recipients = open.flatMap((row) => row.recipients || []);
+    const confirmed = recipients.filter((row) => row.status === "confirmada").length;
+    const pending = recipients.filter((row) => ["pendiente", "enviada", "sin_respuesta"].includes(row.status || "pendiente")).length;
+    const overdue = open.filter((row) => row.responseDeadline && row.responseDeadline < new Date().toISOString().slice(0, 16)).length;
+    upsertAfterHeader("llamados", "nk128-communications", `<div class="card" id="nk128-communications" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Convocatorias con seguimiento</div><div class="card-subtitle">Convoca, registra respuestas y asigna solo a personas confirmadas y habilitadas.</div></div><button class="btn btn-primary btn-sm" onclick="openCommunicationTemplate128()">+ Plantilla aprobada</button></div><div class="kpi-grid" style="margin-top:12px;"><div class="kpi kpi-blue"><div class="kpi-value">${open.length}</div><div class="kpi-label">Convocatorias abiertas</div></div><div class="kpi kpi-orange"><div class="kpi-value">${pending}</div><div class="kpi-label">Sin respuesta</div></div><div class="kpi kpi-green"><div class="kpi-value">${confirmed}</div><div class="kpi-label">Confirmaciones</div></div><div class="kpi kpi-red"><div class="kpi-value">${overdue}</div><div class="kpi-label">Plazos vencidos</div></div></div><div class="table-wrap" style="margin-top:14px;"><table><thead><tr><th>Convocatoria</th><th>Orden</th><th>Canal</th><th>Plazo</th><th>Respuestas</th><th></th></tr></thead><tbody>${open.slice(0, 8).map((row) => { const list = row.recipients || []; const yes = list.filter((person) => person.status === "confirmada").length; const no = list.filter((person) => person.status === "rechazada").length; return `<tr><td><b>${esc(row.title || "Convocatoria")}</b><div class="worker-rut">${esc((row.especialidades || []).join(" · ") || "Sin especialidad")}</div></td><td>${esc(typeof mantNombre === "function" ? mantNombre(row.mantId) : row.mantId)}</td><td>${esc(row.channel || "WhatsApp")}</td><td>${esc(row.responseDeadline || "Sin plazo")}</td><td><span class="badge badge-ok">${yes} confirma</span> <span class="badge badge-na">${no} rechaza</span></td><td><button class="btn btn-secondary btn-sm" onclick="openCalloutFollowUp128('${esc(row.id)}')">Gestionar</button></td></tr>`; }).join("") || '<tr><td colspan="6">Aún no hay convocatorias para gestionar.</td></tr>'}</tbody></table></div><div class="divider"></div><div class="grid-2"><div class="table-wrap"><table><thead><tr><th>Plantilla</th><th>Canal</th><th>Estado</th></tr></thead><tbody>${S.communicationTemplates.map((row) => `<tr><td><b>${esc(row.name)}</b><div class="worker-rut">${esc(row.body)}</div></td><td>${esc(row.channel)}</td><td><span class="badge ${row.approved ? "badge-ok" : "badge-warn"}">${row.approved ? "Aprobada" : "Borrador"}</span></td></tr>`).join("") || '<tr><td colspan="3">Sin plantillas.</td></tr>'}</tbody></table></div><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Destinatarios</th><th>Canal</th><th>Resultado</th></tr></thead><tbody>${S.communicationHistory.slice(0, 10).map((row) => `<tr><td>${esc(row.sentAt?.slice(0, 16).replace("T", " "))}</td><td>${row.recipients}</td><td>${esc(row.channel)}</td><td>${esc(row.status)}</td></tr>`).join("") || '<tr><td colspan="4">Sin entregas registradas.</td></tr>'}</tbody></table></div></div><div class="cloud-note">Antes de enviar, valide consentimiento y datos de contacto. Los envíos reales requieren el proveedor de correo o WhatsApp configurado.</div></div>`);
   }
+
+  function communicationOptions128() {
+    return {
+      channel: document.getElementById("co-channel-128")?.value || "WhatsApp",
+      priority: document.getElementById("co-priority-128")?.value || "Normal",
+      responseDeadline: document.getElementById("co-deadline-128")?.value || "",
+      responsible: document.getElementById("co-owner-128")?.value.trim() || tenantUser()?.nombre || S.empresa?.representante || "Administración",
+      templateName: document.getElementById("co-template")?.selectedOptions?.[0]?.textContent?.trim() || "Plantilla de convocatoria"
+    };
+  }
+
+  function eligibleRecipients128(callout) {
+    const specialties = new Set(callout.especialidades || []);
+    return (S.trabajadores || []).filter((worker) => {
+      const hasChannel = callout.channel === "Correo" ? Boolean(worker.email) : callout.channel === "WhatsApp y correo" ? Boolean(worker.tel || worker.email) : Boolean(worker.tel);
+      const enabled = !worker.bloqueado && worker.operationalStatus !== "restringido" && worker.operationalStatus !== "bloqueado";
+      return enabled && worker.disponibilidad === "disponible" && specialties.has(worker.especialidad) && hasChannel && worker.communicationConsent !== false;
+    });
+  }
+
+  function enrichCallout128(callout, people) {
+    if (!callout) return;
+    const options = communicationOptions128();
+    Object.assign(callout, options, {
+      title: callout.title || `${options.priority} · ${typeof mantNombre === "function" ? mantNombre(callout.mantId) : "Convocatoria"}`,
+      communicationStatus: "enviada",
+      recipients: (people || eligibleRecipients128({ ...callout, ...options })).map((worker) => ({ workerId: worker.id, status: "enviada", sentAt: new Date().toISOString(), respondedAt: "", note: "" })),
+      createdAt: callout.createdAt || new Date().toISOString()
+    });
+    S.communicationHistory.unshift({ id: `ch_${Date.now()}`, type: "convocatoria", calloutId: callout.id, sentAt: new Date().toISOString(), recipients: callout.recipients.length, channel: options.channel, status: "enviada", serviceId: callout.mantId, responsible: options.responsible });
+    save();
+  }
+
+  function installCalloutForm128() {
+    const modal = document.getElementById("modal-callout");
+    if (!modal || document.getElementById("co-channel-128")) return;
+    modal.querySelector(".modal-title").textContent = "Nueva convocatoria";
+    const cupos = document.getElementById("co-cupos")?.closest(".form-group");
+    if (!cupos) return;
+    cupos.insertAdjacentHTML("afterend", `<div class="form-group"><label class="form-label">Canal</label><select class="form-select" id="co-channel-128"><option>WhatsApp</option><option>Correo</option><option>WhatsApp y correo</option></select></div><div class="form-group"><label class="form-label">Prioridad</label><select class="form-select" id="co-priority-128"><option>Normal</option><option>Alta</option><option>Urgente</option></select></div><div class="form-group"><label class="form-label">Responder antes de</label><input class="form-input" id="co-deadline-128" type="datetime-local"></div><div class="form-group"><label class="form-label">Responsable</label><input class="form-input" id="co-owner-128" placeholder="Responsable de la convocatoria"></div><div class="form-group full"><div class="cloud-note">Solo se consideran personas disponibles, no restringidas, con especialidad requerida, datos de contacto y consentimiento vigente.</div></div>`);
+    document.getElementById("co-owner-128").value = tenantUser()?.nombre || S.empresa?.representante || "";
+  }
+
+  window.openCalloutFollowUp128 = function (id) {
+    const callout = (S.callouts || []).find((row) => row.id === id);
+    if (!callout) return;
+    const recipients = callout.recipients || [];
+    const labels = { enviada: "Enviada", pendiente: "Pendiente", confirmada: "Confirmada", rechazada: "Rechazada", sin_respuesta: "Sin respuesta", asignada: "Asignada" };
+    openForm("Seguimiento de convocatoria", `<div class="cloud-note"><b>${esc(callout.title || "Convocatoria")}</b><br>${esc(typeof mantNombre === "function" ? mantNombre(callout.mantId) : "Orden de servicio")} · Responsable: ${esc(callout.responsible || "—")} · Responder antes de: ${esc(callout.responseDeadline || "Sin plazo")}</div><div class="table-wrap" style="margin-top:14px;"><table><thead><tr><th>Persona</th><th>Especialidad</th><th>Estado</th><th>Respuesta / nota</th><th></th></tr></thead><tbody>${recipients.map((recipient) => { const worker = (S.trabajadores || []).find((row) => row.id === recipient.workerId); return `<tr><td><b>${esc(worker?.nombre || "Persona")}</b><div class="worker-rut">${esc(worker?.tel || worker?.email || "Sin contacto")}</div></td><td>${esc(worker?.especialidad || worker?.cargo || "—")}</td><td><select class="form-select" onchange="updateCalloutRecipient128('${esc(callout.id)}','${esc(recipient.workerId)}',this.value)">${Object.entries(labels).map(([value, label]) => `<option value="${value}" ${recipient.status === value ? "selected" : ""}>${label}</option>`).join("")}</select></td><td>${esc(recipient.note || "—")}</td><td>${recipient.status === "confirmada" ? `<button class="btn btn-primary btn-sm" onclick="assignCalloutRecipient128('${esc(callout.id)}','${esc(recipient.workerId)}')">Asignar</button>` : "—"}</td></tr>`; }).join("") || '<tr><td colspan="5">Esta convocatoria fue creada antes del seguimiento individual. Cree una nueva convocatoria para obtener el detalle por persona.</td></tr>'}</tbody></table></div><div class="form-group" style="margin-top:14px;"><label class="form-label">Registrar nota general</label><textarea class="form-textarea" id="co-follow-note-128" placeholder="Acuerdo, reenvío, cambio de turno o condición de movilización"></textarea></div>`, () => { const note = document.getElementById("co-follow-note-128")?.value.trim(); if (note) { callout.followUps ||= []; callout.followUps.unshift({ at: new Date().toISOString(), note, user: tenantUser()?.email || "usuario" }); save(); } closeModal("nk128-modal"); renderCommunicationsGovernance(); toast("Seguimiento guardado"); }, "Guardar seguimiento");
+  };
+
+  window.updateCalloutRecipient128 = function (calloutId, workerId, status) {
+    const callout = (S.callouts || []).find((row) => row.id === calloutId);
+    const recipient = callout?.recipients?.find((row) => row.workerId === workerId);
+    if (!recipient) return;
+    recipient.status = status;
+    recipient.respondedAt = status === "enviada" || status === "pendiente" ? "" : new Date().toISOString();
+    callout.respondieron = callout.recipients.filter((row) => !["enviada", "pendiente", "sin_respuesta"].includes(row.status)).length;
+    callout.asignados = callout.recipients.filter((row) => row.status === "asignada").length;
+    S.communicationHistory.unshift({ id: `ch_${Date.now()}`, type: "respuesta", calloutId, sentAt: new Date().toISOString(), recipients: 1, channel: callout.channel || "WhatsApp", status, workerId });
+    save(); renderCommunicationsGovernance(); toast("Respuesta actualizada");
+  };
+
+  window.assignCalloutRecipient128 = function (calloutId, workerId) {
+    const callout = (S.callouts || []).find((row) => row.id === calloutId);
+    const worker = (S.trabajadores || []).find((row) => row.id === workerId);
+    const recipient = callout?.recipients?.find((row) => row.workerId === workerId);
+    if (!callout || !worker || !recipient) return;
+    if (worker.bloqueado || worker.operationalStatus === "restringido" || worker.operationalStatus === "bloqueado") return toast("La persona está restringida y no puede asignarse", "err");
+    if (!(S.asignaciones || []).some((row) => row.trabId === workerId && row.mantId === callout.mantId)) S.asignaciones.push({ id: `asig_call_${Date.now()}`, trabId: workerId, mantId: callout.mantId, fecha: today(), origin: "convocatoria" });
+    worker.disponibilidad = "asignado";
+    recipient.status = "asignada";
+    recipient.assignedAt = new Date().toISOString();
+    callout.asignados = callout.recipients.filter((row) => row.status === "asignada").length;
+    S.communicationHistory.unshift({ id: `ch_${Date.now()}`, type: "asignación", calloutId, sentAt: new Date().toISOString(), recipients: 1, channel: callout.channel || "WhatsApp", status: "asignada", workerId });
+    save(); renderCommunicationsGovernance(); openCalloutFollowUp128(calloutId); toast("Persona asignada a la orden de servicio");
+  };
 
   window.openCommunicationTemplate128 = function () {
     openForm("Nueva plantilla de comunicación", `<div class="form-grid"><div class="form-group"><label class="form-label">Nombre</label><input class="form-input" id="nk128-comm-name"></div><div class="form-group"><label class="form-label">Canal</label><select class="form-select" id="nk128-comm-channel"><option>WhatsApp</option><option>Correo</option><option>Ambos</option></select></div><div class="form-group full"><label class="form-label">Mensaje</label><textarea class="form-textarea" id="nk128-comm-body"></textarea></div><div class="form-group full"><label><input type="checkbox" id="nk128-comm-approved"> Aprobada para uso</label></div></div>`, () => {
@@ -741,9 +824,25 @@
       const baseRenderLlamados = renderLlamados;
       renderLlamados = function (...args) { return renderWithTemporalCollection("callouts", ["fecha", "createdAt"], baseRenderLlamados, args); };
     }
+    installCalloutForm128();
+    if (typeof window.sendCallout === "function") {
+      const baseSendCallout = window.sendCallout;
+      window.sendCallout = function (...args) {
+        const previous = (S.callouts || []).length;
+        const result = baseSendCallout(...args);
+        const finish = () => {
+          const callout = (S.callouts || [])[previous];
+          if (!callout || callout.recipients?.length) return;
+          enrichCallout128(callout);
+          renderCommunicationsGovernance();
+        };
+        if (result && typeof result.then === "function") result.then(finish).catch(() => {}); else finish();
+        return result;
+      };
+    }
     const page = document.querySelector(".page.active")?.id?.replace("page-", "") || "dashboard";
     window.setTimeout(() => enhance(page), 0);
-    window.NexoKlarEnterprise = { version: VERSION, enhance };
+    window.NexoKlarEnterprise = { version: VERSION, enhance, communicationOptions: communicationOptions128, enrichCallout: enrichCallout128, renderCommunications: renderCommunicationsGovernance };
   }
 
   window.addEventListener("load", install);

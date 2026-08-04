@@ -9,6 +9,7 @@ const script = fs.readFileSync(new URL('assets/nexo-klar-enterprise.js', root), 
 const productionScript = fs.readFileSync(new URL('public/assets/nexo-klar-enterprise.js', root), 'utf8');
 const styles = fs.readFileSync(new URL('assets/nexo-klar-enterprise.css', root), 'utf8');
 const productionStyles = fs.readFileSync(new URL('public/assets/nexo-klar-enterprise.css', root), 'utf8');
+const cloudClient = fs.readFileSync(new URL('public/cloud-client.js', root), 'utf8');
 
 test('enterprise enhancements are loaded and production assets stay synchronized', () => {
   assert.match(html, /assets\/nexo-klar-enterprise\.css/);
@@ -75,4 +76,19 @@ test('mass import checks the complete file and reports internal duplicates', () 
   assert.match(script, /const allRows = lines\.map\(parseCsvLine\)/);
   assert.match(script, /RUT repetido dentro del archivo/);
   assert.match(script, /downloadImportErrors128/);
+});
+
+test('communications track responses and assign only confirmed people to an order', () => {
+  for (const feature of [
+    'function communicationOptions128(',
+    'function enrichCallout128(',
+    'window.openCalloutFollowUp128',
+    'window.updateCalloutRecipient128',
+    'window.assignCalloutRecipient128',
+    'Convocatorias con seguimiento',
+    'Responder antes de'
+  ]) assert.ok(script.includes(feature), `missing communications feature: ${feature}`);
+  assert.match(cloudClient, /useWhatsApp=options\.channel!==['"]Correo['"]/);
+  assert.match(cloudClient, /useEmail=options\.channel!==['"]WhatsApp['"]/);
+  assert.match(cloudClient, /NexoKlarEnterprise\?\.enrichCallout/);
 });
