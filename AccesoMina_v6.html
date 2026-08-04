@@ -1194,7 +1194,7 @@ td { padding:12px 14px; }
   <!-- PAGE: AUDITORIA -->
   <div id="page-auditoria" class="page">
     <div class="section-header">
-      <div><div class="section-title">📋 Auditoría Documental</div></div>
+      <div><div class="section-title">📋 Auditoría documental</div><div class="section-sub">Revise vigencia, relación con la ficha, evidencia y aprobación responsable de cada documento.</div></div>
       <button class="btn btn-secondary" onclick="exportAuditoria()">⬇ Exportar CSV</button>
     </div>
     <div class="filters">
@@ -1209,6 +1209,7 @@ td { padding:12px 14px; }
         <option value="no_puede">❌ No puede operar</option>
       </select>
     </div>
+    <div id="audit-document-control-v141"></div>
     <div class="card"><div class="table-wrap"><table id="aud-table"></table></div></div>
   </div>
 
@@ -9799,6 +9800,78 @@ function renderAccommodationCommandV140(){
 }
 const renderHoteleriaV140Base=renderHoteleria;
 renderHoteleria=function(){renderHoteleriaV140Base();renderAccommodationCommandV140();};
+</script>
+
+<script>
+// V14.1 · Auditoría documental asistida: controles explicables y aprobación humana.
+const AUDIT_REVIEW_STATES_V141=[['en_revision','En revisión'],['observado','Observado'],['corregido','Corregido'],['aprobado','Aprobado'],['rechazado','Rechazado']];
+function auditEscV141(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
+function auditWorkflowV141(id){ensureV86Collections();return (S.documentWorkflows||[]).find(row=>String(row.id)===String(id))||null;}
+function auditSourceFilesV141(doc){const source=doc.source||{};const files=[...(source.evidenceFiles||[]),...(source.files||[])];if(source.fileName)files.push({name:source.fileName});if(source.nombreArchivo)files.push({name:source.nombreArchivo});return files.filter((file,index,list)=>file?.name&&list.findIndex(other=>other?.name===file.name)===index);}
+function auditAutomaticChecksV141(doc){
+  const files=auditSourceFilesV141(doc),name=files.map(file=>file.name).join(' ').toLowerCase(),expiry=doc.vence||'';
+  const allowed=files.length&&files.every(file=>/\.(pdf|jpe?g|png|docx?|xlsx?)$/i.test(file.name||''));
+  const duplicate=(typeof collectedDocumentsV86==='function'?collectedDocumentsV86():[]).filter(other=>other.id!==doc.id&&auditSourceFilesV141(other).some(file=>files.some(current=>current.name===file.name))).length;
+  return {
+    archivo:files.length?'ok':'falta',
+    formato:files.length?(allowed?'ok':'observado'):'pendiente',
+    vigencia:expiry?(diasHasta(expiry)<0?'vencido':'ok'):'sin_fecha',
+    duplicado:duplicate?'observado':'ok',
+    ocr:'pendiente_proveedor',qr:'pendiente_proveedor',firma:'pendiente_proveedor',emisor:'pendiente_proveedor',integridad:'pendiente_proveedor',
+    referencia:name||'Sin archivo asociado'
+  };
+}
+function auditScoreV141(auto={},review={}){
+  const values=[];
+  ['archivo','formato','vigencia','duplicado'].forEach(key=>{const value=auto[key];if(value==='ok')values.push(100);else if(value==='sin_fecha'||value==='pendiente')values.push(55);else values.push(0);});
+  ['identidad','emisor','qr','firma','integridad'].forEach(key=>{const value=review[key];if(value==='validado')values.push(100);else if(value==='observado')values.push(20);else values.push(55);});
+  return Math.round(values.reduce((total,value)=>total+value,0)/Math.max(1,values.length));
+}
+function auditCheckLabelV141(key){return {archivo:'Archivo asociado',formato:'Formato permitido',vigencia:'Vigencia',duplicado:'Archivo duplicado',identidad:'Datos coinciden con ficha',emisor:'Emisor validado',qr:'QR o código validado',firma:'Firma revisada',integridad:'Integridad revisada'}[key]||key;}
+function auditCheckBadgeV141(value){const normalized=String(value||'pendiente');const css=['ok','validado'].includes(normalized)?'badge-ok':['observado','vencido','falta'].includes(normalized)?'badge-err':'badge-warn';const label={ok:'Correcto',validado:'Validado',observado:'Observar',vencido:'Vencido',falta:'Falta',sin_fecha:'Sin fecha',pendiente:'Pendiente',pendiente_proveedor:'Pendiente proveedor'}[normalized]||normalized;return `<span class="badge ${css}">${auditEscV141(label)}</span>`;}
+function auditRowsV141(){
+  const docs=typeof collectedDocumentsV86==='function'?collectedDocumentsV86():[];
+  return docs.map(doc=>{const workflow=auditWorkflowV141(doc.id),automatic=auditAutomaticChecksV141(doc),review=workflow?.auditReview?.checks||{},score=auditScoreV141(automatic,review),status=workflow?.status||doc.status||'cargado',risk=['falta','observado','vencido'].some(value=>Object.values(automatic).includes(value))||Object.values(review).includes('observado');return {...doc,workflow,automatic,review,score,status,risk};});
+}
+function ensureAuditModalV141(){
+  if(document.getElementById('modal-audit-document-v141'))return;
+  document.body.insertAdjacentHTML('beforeend',`<div class="modal-overlay" id="modal-audit-document-v141"><div class="modal modal-wide"><div class="modal-header"><div class="modal-title" id="audit-modal-title-v141">Revisión documental</div><button class="modal-close" onclick="closeModal('modal-audit-document-v141')">✕</button></div><div class="modal-body" id="audit-modal-body-v141"></div><div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-audit-document-v141')">Cancelar</button><button class="btn btn-primary" id="audit-modal-save-v141">Guardar revisión</button></div></div></div>`);
+}
+function openDocumentAuditV141(id){
+  const doc=auditRowsV141().find(row=>String(row.id)===String(id));if(!doc)return toast('Documento no encontrado','err');ensureAuditModalV141();
+  const files=auditSourceFilesV141(doc),history=doc.workflow?.history||[],entityLabel=`${doc.entity||'Registro'} · ${doc.entityType||'Documento'}`;
+  document.getElementById('audit-modal-title-v141').textContent=`Revisar: ${doc.type||'Documento'}`;
+  document.getElementById('audit-modal-body-v141').innerHTML=`<div class="cloud-note"><b>${auditEscV141(entityLabel)}</b><br>Esta revisión no aprueba automáticamente el archivo. Registra los controles realizados y deja evidencia para que la decisión sea trazable.</div><div class="kpi-grid" style="margin-top:14px;"><div class="kpi kpi-${doc.score>=80?'green':doc.score>=60?'orange':'red'}"><div class="kpi-value">${doc.score}%</div><div class="kpi-label">Confianza documental</div></div><div class="kpi kpi-${doc.risk?'red':'green'}"><div class="kpi-value">${doc.risk?'Revisar':'Sin alerta'}</div><div class="kpi-label">Resultado automático</div></div><div class="kpi kpi-blue"><div class="kpi-value">${files.length}</div><div class="kpi-label">Archivo(s) asociados</div></div><div class="kpi kpi-orange"><div class="kpi-value">${auditEscV141(doc.vence||'—')}</div><div class="kpi-label">Vencimiento</div></div></div><div class="grid-2" style="margin-top:14px;"><div class="card"><div class="card-title">Controles automáticos disponibles</div><div class="table-wrap" style="margin-top:10px;"><table><thead><tr><th>Control</th><th>Resultado</th></tr></thead><tbody>${['archivo','formato','vigencia','duplicado'].map(key=>`<tr><td>${auditEscV141(auditCheckLabelV141(key))}</td><td>${auditCheckBadgeV141(doc.automatic[key])}</td></tr>`).join('')}</tbody></table></div><div class="cloud-note" style="margin-top:10px;">OCR, QR, firma, emisor e integridad requieren un proveedor conectado en producción. Mientras no exista, se muestran como pendientes y deben ser revisados por una persona.</div></div><div class="card"><div class="card-title">Archivo y relación</div><div style="margin-top:10px;">${files.map(file=>`<span class="badge badge-blue" style="margin:0 6px 6px 0;">${auditEscV141(file.name)}</span>`).join('')||'<span class="worker-rut">No existe archivo asociado.</span>'}</div><div class="worker-rut" style="margin-top:10px;">Documento: ${auditEscV141(doc.type||'—')}<br>Relación: ${auditEscV141(doc.relation||doc.entityType||'—')}<br>Fuente: ${auditEscV141(doc.automatic.referencia)}</div></div></div><div class="card" style="margin-top:14px;"><div class="card-title">Revisión humana obligatoria</div><div class="card-subtitle">Marque solo los controles que efectivamente revisó. No se solicita ni almacena biometría en esta vista.</div><div class="form-grid" style="margin-top:10px;"><div class="form-group"><label class="form-label">Resultado formal</label><select class="form-select" id="audit-status-v141">${AUDIT_REVIEW_STATES_V141.map(([value,label])=>`<option value="${value}" ${doc.status===value?'selected':''}>${label}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Revisor responsable *</label><input class="form-input" id="audit-owner-v141" value="${auditEscV141(doc.workflow?.owner||currentTenantUser?.nombre||currentTenantUser?.email||'')}" placeholder="Nombre o correo del revisor"></div>${['identidad','emisor','qr','firma','integridad'].map(key=>`<div class="form-group"><label class="form-label">${auditEscV141(auditCheckLabelV141(key))}</label><select class="form-select" id="audit-check-${key}-v141"><option value="pendiente" ${(doc.review[key]||'pendiente')==='pendiente'?'selected':''}>Pendiente</option><option value="validado" ${doc.review[key]==='validado'?'selected':''}>Validado</option><option value="observado" ${doc.review[key]==='observado'?'selected':''}>Observado</option></select></div>`).join('')}<div class="form-group full"><label class="form-label">Observación o motivo de decisión *</label><textarea class="form-textarea" id="audit-note-v141" placeholder="Indique qué se verificó, discrepancias, fuente de validación, corrección solicitada o motivo de aprobación.">${auditEscV141(doc.workflow?.auditReview?.notes||doc.workflow?.notes||'')}</textarea></div><div class="form-group"><label class="form-label">Evidencia de revisión</label><input class="form-input" type="file" id="audit-evidence-v141" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"></div></div></div><div class="card" style="margin-top:14px;"><div class="card-title">Historial de decisiones</div><div class="table-wrap" style="margin-top:10px;"><table><thead><tr><th>Fecha</th><th>Estado</th><th>Revisor</th><th>Observación</th></tr></thead><tbody>${history.slice().reverse().map(row=>`<tr><td>${auditEscV141(String(row.at||'').slice(0,16)||'—')}</td><td>${auditEscV141(row.to||'—')}</td><td>${auditEscV141(row.owner||'—')}</td><td>${auditEscV141(row.notes||'—')}</td></tr>`).join('')||'<tr><td colspan="4">Aún no hay decisiones registradas.</td></tr>'}</tbody></table></div></div>`;
+  document.getElementById('audit-modal-save-v141').onclick=()=>saveDocumentAuditV141(id);openModal('modal-audit-document-v141');
+}
+async function saveDocumentAuditV141(id){
+  const doc=auditRowsV141().find(row=>String(row.id)===String(id));if(!doc)return;
+  const status=document.getElementById('audit-status-v141')?.value||'en_revision',owner=document.getElementById('audit-owner-v141')?.value.trim()||'',notes=document.getElementById('audit-note-v141')?.value.trim()||'';
+  if(!owner||!notes)return toast('Indica revisor responsable y fundamento de la decisión','err');
+  const checks={};['identidad','emisor','qr','firma','integridad'].forEach(key=>checks[key]=document.getElementById(`audit-check-${key}-v141`)?.value||'pendiente');
+  const score=auditScoreV141(doc.automatic,checks);if(status==='aprobado'&&score<70)return toast('No es posible aprobar: faltan controles o existen observaciones documentales','err');
+  let workflow=auditWorkflowV141(id);if(!workflow){workflow={id,history:[]};S.documentWorkflows.push(workflow);}const before=workflow.status||doc.status||'';
+  let evidenceFiles=[];const input=document.getElementById('audit-evidence-v141');if(input?.files?.length&&typeof captureEvidenceFilesV79==='function')evidenceFiles=await captureEvidenceFilesV79(input,'documentWorkflows',doc.entityId||id);
+  workflow.auditReview={checks,automatic:doc.automatic,score,notes,evidenceFiles,reviewedAt:new Date().toISOString(),reviewedBy:owner};workflow.history=workflow.history||[];workflow.history.push({at:new Date().toISOString(),from:before,to:status,owner,notes,evidenceFiles,score});Object.assign(workflow,{status,owner,notes,updatedAt:new Date().toISOString()});
+  recordHistoryV90?.('documento',id,'Revisión documental registrada',{estado:before},{estado:status,score,checks},notes);persistTenant();closeModal('modal-audit-document-v141');renderAuditoria();renderOperationsV86?.();updateBadges();toast(`Documento ${status==='aprobado'?'aprobado':'actualizado'} con revisión trazable`);
+}
+async function runDocumentIntelligenceV141(id){
+  const doc=auditRowsV141().find(row=>String(row.id)===String(id));if(!doc)return;
+  const analyzer=window.AccesoMinaCloud?.analyzeDocument||window.NexoKlarDocumentIntelligence?.analyze;
+  if(typeof analyzer!=='function'){toast('El motor OCR/QR/firma no está configurado. Usa la revisión humana o conecta un proveedor en producción.','err');return;}
+  try{const result=await analyzer({documentId:doc.id,entityId:doc.entityId,type:doc.type,files:auditSourceFilesV141(doc)});let workflow=auditWorkflowV141(id);if(!workflow){workflow={id,history:[]};S.documentWorkflows.push(workflow);}workflow.analysisProvider=result?.provider||'conector';workflow.analysisResult=result||{};workflow.updatedAt=new Date().toISOString();persistTenant();renderAuditoria();toast('Análisis documental recibido. Requiere aprobación humana final.');}catch(error){toast('No fue posible analizar el documento. Revisa la configuración del proveedor.','err');}
+}
+function renderAuditDocumentControlV141(){
+  const host=document.getElementById('audit-document-control-v141');if(!host)return;const rows=auditRowsV141(),risk=rows.filter(row=>row.risk||row.score<70||['observado','rechazado','vencido'].includes(row.status)),review=rows.filter(row=>['cargado','en_revision','enviado','corregido'].includes(row.status)),approved=rows.filter(row=>row.status==='aprobado');
+  host.innerHTML=`<div class="card" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Control documental asistido</div><div class="card-subtitle">Primero verifica archivo, formato, vigencia y duplicados; luego registra una revisión humana con responsable, fundamento y evidencia.</div></div><span class="badge badge-blue">Aprobación humana obligatoria</span></div><div class="kpi-grid" style="margin-top:12px;"><button class="kpi kpi-red" onclick="filterAuditControlV141('riesgo')"><div class="kpi-value">${risk.length}</div><div class="kpi-label">Riesgo o discrepancia</div></button><button class="kpi kpi-orange" onclick="filterAuditControlV141('revision')"><div class="kpi-value">${review.length}</div><div class="kpi-label">Pendientes de revisión</div></button><button class="kpi kpi-green" onclick="filterAuditControlV141('aprobado')"><div class="kpi-value">${approved.length}</div><div class="kpi-label">Aprobados</div></button><button class="kpi kpi-blue" onclick="filterAuditControlV141('todos')"><div class="kpi-value">${rows.length}</div><div class="kpi-label">Documentos trazados</div></button></div><div class="cloud-note" style="margin-top:12px;">El análisis OCR, QR, firma, emisor e integridad se conecta mediante proveedor externo. Nexo Klar no afirma que un archivo sea auténtico sin esa conexión y sin revisión final de una persona autorizada.</div><div class="table-wrap" style="margin-top:14px;"><table id="audit-document-table-v141"></table></div></div>`;renderAuditDocumentRowsV141('todos');
+}
+function filterAuditControlV141(filter){renderAuditDocumentRowsV141(filter);}
+function renderAuditDocumentRowsV141(filter='todos'){
+  const table=document.getElementById('audit-document-table-v141');if(!table)return;let rows=auditRowsV141();if(filter==='riesgo')rows=rows.filter(row=>row.risk||row.score<70||['observado','rechazado','vencido'].includes(row.status));if(filter==='revision')rows=rows.filter(row=>['cargado','en_revision','enviado','corregido'].includes(row.status));if(filter==='aprobado')rows=rows.filter(row=>row.status==='aprobado');
+  table.innerHTML=`<thead><tr><th>Persona o entidad</th><th>Documento</th><th>Controles</th><th>Score</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${rows.slice(0,80).map(row=>`<tr><td><b>${auditEscV141(row.entity||'Registro')}</b><div class="worker-rut">${auditEscV141(row.entityType||'—')} · ${auditEscV141(row.relation||'')}</div></td><td>${auditEscV141(row.type||'Documento')}<div class="worker-rut">${auditEscV141(auditSourceFilesV141(row).map(file=>file.name).join(', ')||'Sin archivo')}</div></td><td>${['archivo','formato','vigencia','duplicado'].map(key=>auditCheckBadgeV141(row.automatic[key])).join(' ')}</td><td><b>${row.score}%</b><div class="worker-rut">${row.score>=80?'Revisión final':row.score>=60?'Validar evidencia':'Corregir'}</div></td><td>${auditCheckBadgeV141(row.status==='aprobado'?'validado':row.status)}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" onclick="openDocumentAuditV141('${auditEscV141(row.id)}')">Revisar</button><button class="btn btn-ghost btn-sm" onclick="runDocumentIntelligenceV141('${auditEscV141(row.id)}')">Analizar</button></div></td></tr>`).join('')||'<tr><td colspan="6">No hay documentos para este filtro.</td></tr>'}</tbody>`;
+}
+const renderAuditoriaV141Base=renderAuditoria;
+renderAuditoria=function(){renderAuditoriaV141Base();renderAuditDocumentControlV141();};
 </script>
 
 <script src="assets/nexo-klar-guidance.js"></script>
