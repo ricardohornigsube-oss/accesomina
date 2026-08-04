@@ -9313,6 +9313,76 @@ openAlertManagerV129=function(alertId){
 };
 </script>
 
+<script>
+// V13.2 · Reportes operativos por orden de servicio y constructor configurable.
+const reportBuilderLabelsV132={
+  personas_orden:'Personas por orden de servicio',ordenes:'Órdenes de servicio',alertas:'Alertas operativas',epp:'Protección personal y entregas',vehiculos:'Vehículos, activos y equipos'
+};
+const reportBuilderFieldsV132={
+  personas_orden:[['orden','Orden de servicio'],['cliente','Cliente'],['contrato','Contrato'],['persona','Persona'],['rut','RUT'],['especialidad','Especialidad'],['tipo','Tipo de personal'],['turno','Turno'],['estado','Estado asignación'],['acreditacion','Habilitación'],['epp','EPP entregado'],['alojamiento','Alojamiento'],['horas','Horas hombre']],
+  ordenes:[['orden','Orden de servicio'],['cliente','Cliente'],['contrato','Contrato'],['inicio','Inicio'],['termino','Término'],['estado','Estado'],['responsable','Responsable'],['dotacion','Personas asignadas'],['requeridos','Dotación requerida']],
+  alertas:[['tipo','Tipo'],['urgencia','Urgencia'],['mensaje','Detalle'],['cliente','Cliente'],['contrato','Contrato'],['orden','Orden de servicio'],['persona','Persona']],
+  epp:[['persona','Persona'],['rut','RUT'],['orden','Orden de servicio'],['cliente','Cliente'],['elemento','Elemento'],['talla','Talla'],['fecha','Fecha entrega'],['estado','Estado'],['costo','Costo CLP']],
+  vehiculos:[['activo','Vehículo / equipo'],['tipo','Tipo'],['propiedad','Propiedad'],['operador','Operador'],['cliente','Cliente'],['vencimientos','Vencimientos'],['costo','Costo CLP']]
+};
+const rptEscV132=value=>typeof eppEsc==='function'?eppEsc(String(value??'')):String(value??'');
+function servicePersonnelRowsV132(serviceId=''){
+  const assignments=(S.asignaciones||[]).filter(a=>!serviceId||String(a.mantId)===String(serviceId));
+  return assignments.map(a=>{
+    const worker=(S.trabajadores||[]).find(row=>String(row.id)===String(a.trabId))||{};
+    const service=(S.mantenciones||[]).find(row=>String(row.id)===String(a.mantId))||{};
+    const epp=(S.eppDeliveries||[]).filter(row=>String(row.trabId)===String(a.trabId)&&(!row.mantId||String(row.mantId)===String(a.mantId))).map(row=>row.item||row.tipo||row.epp||'EPP').join(', ');
+    const stay=(S.hotelAsig||[]).find(row=>String(row.trabId)===String(a.trabId)&&String(row.mantId)===String(a.mantId)&&row.estado!=='cancelada');
+    const turnRows=(S.turnos||[]).filter(row=>String(row.trabId)===String(a.trabId)&&(!row.mantId||String(row.mantId)===String(a.mantId)));
+    const hours=turnRows.reduce((total,row)=>total+Number(row.hh||row.horas||row.horasHombre||0),0);
+    return {orden:service.nombre||a.mantId,cliente:minaNombre(service.minaId),contrato:contratoNombre(service.contratoId),persona:worker.nombre||a.trabId,rut:worker.rut||'',especialidad:worker.especialidad||'',tipo:worker.tipo||'',turno:a.turno||worker.turno||'',estado:a.estado||'asignado',acreditacion:`${acreditacion(worker)}%`,epp:epp||'Sin entregas registradas',alojamiento:stay?`${hotelNombre(stay.hotelId)} · ${stay.pieza||'—'}/${stay.cama||'1'}`:'Sin estadía registrada',horas:hours};
+  });
+}
+function reportBuilderRowsV132(source){
+  if(source==='personas_orden')return servicePersonnelRowsV132();
+  if(source==='ordenes')return (S.mantenciones||[]).map(service=>({orden:service.nombre||service.id,cliente:minaNombre(service.minaId),contrato:contratoNombre(service.contratoId),inicio:service.inicio||'',termino:service.termino||'',estado:service.estado||'planificada',responsable:service.admin||service.responsable||'',dotacion:(S.asignaciones||[]).filter(a=>String(a.mantId)===String(service.id)).length,requeridos:Number(service.personalReq||service.requeridos||0)}));
+  if(source==='alertas')return computeAlertas().map(alert=>({tipo:alert.tipo||'',urgencia:alert.urgencia||'',mensaje:alert.msg||'',cliente:minaNombre(alert.minaId)||'',contrato:contratoNombre(alert.contratoId)||'',orden:mantNombre(alert.mantId)||'',persona:alert.trabId?trabNombre(alert.trabId):''}));
+  if(source==='epp')return (S.eppDeliveries||[]).map(row=>{const worker=(S.trabajadores||[]).find(t=>String(t.id)===String(row.trabId))||{},service=(S.mantenciones||[]).find(m=>String(m.id)===String(row.mantId))||{};return {persona:worker.nombre||row.trabId||'',rut:worker.rut||'',orden:service.nombre||'',cliente:minaNombre(service.minaId)||'',elemento:row.item||row.tipo||row.epp||'',talla:row.talla||'',fecha:row.fecha||row.fechaEntrega||'',estado:row.estado||'entregado',costo:Number(row.unitCost||row.costo||0)};});
+  return (S.vehiculos||[]).map(row=>({activo:row.nombre||row.patente||row.id,tipo:row.tipo||'',propiedad:row.propiedad||row.condicion||'',operador:trabNombre(row.operadorId)||row.operador||'',cliente:(row.minaIds||[]).map(minaNombre).join(', '),vencimientos:[row.permisoCirculacionVence,row.revisionTecnicaVence,row.soapVence,row.arriendoVence].filter(Boolean).join(' · '),costo:Number(row.arriendoCosto||row.costoArriendo||0)}));
+}
+function renderServicePersonnelReportV132(){
+  const serviceId=document.getElementById('report-service-v132')?.value||'',rows=servicePersonnelRowsV132(serviceId),host=document.getElementById('report-service-table-v132');if(!host)return;
+  host.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Persona</th><th>Especialidad</th><th>Turno</th><th>Habilitación</th><th>EPP</th><th>Alojamiento</th><th>HH</th></tr></thead><tbody>${rows.map(row=>`<tr><td><b>${rptEscV132(row.persona)}</b><div class="worker-rut">${rptEscV132(row.rut)}</div></td><td>${rptEscV132(row.especialidad)}</td><td>${rptEscV132(row.turno||'—')}</td><td>${rptEscV132(row.acreditacion)}</td><td>${rptEscV132(row.epp)}</td><td>${rptEscV132(row.alojamiento)}</td><td>${rptEscV132(row.horas)}</td></tr>`).join('')||'<tr><td colspan="7">No hay personas asignadas a esta orden de servicio.</td></tr>'}</tbody></table></div>`;
+}
+function exportServicePersonnelReportV132(){
+  const serviceId=document.getElementById('report-service-v132')?.value||'',service=(S.mantenciones||[]).find(row=>String(row.id)===String(serviceId))||{},fields=reportBuilderFieldsV132.personas_orden,rows=servicePersonnelRowsV132(serviceId);exportCSV([fields.map(([,label])=>label),...rows.map(row=>fields.map(([key])=>row[key]??''))],`personas_orden_${String(service.nombre||'servicio').replace(/[^a-z0-9]+/gi,'_').toLowerCase()}_${hoy()}.csv`);toast('Reporte de personas por orden exportado');}
+function renderReportBuilderV132(){
+  const source=document.getElementById('report-builder-source-v132')?.value||'personas_orden',fields=reportBuilderFieldsV132[source]||[];
+  const fieldsHost=document.getElementById('report-builder-fields-v132');if(!fieldsHost)return;
+  fieldsHost.innerHTML=fields.map(([key,label],index)=>`<label style="display:flex;gap:7px;align-items:center;"><input type="checkbox" value="${key}" ${index<7?'checked':''} onchange="renderReportBuilderPreviewV132()"> ${rptEscV132(label)}</label>`).join('');
+  renderReportBuilderPreviewV132();
+}
+function selectedReportBuilderFieldsV132(){const source=document.getElementById('report-builder-source-v132')?.value||'personas_orden';return [...document.querySelectorAll('#report-builder-fields-v132 input:checked')].map(input=>input.value).filter(key=>(reportBuilderFieldsV132[source]||[]).some(([field])=>field===key));}
+function filteredReportBuilderRowsV132(){
+  const source=document.getElementById('report-builder-source-v132')?.value||'personas_orden',client=document.getElementById('report-builder-client-v132')?.value||'',service=document.getElementById('report-builder-service-v132')?.value||'',query=(document.getElementById('report-builder-query-v132')?.value||'').toLowerCase();
+  return reportBuilderRowsV132(source).filter(row=>{const matchesClient=!client||String(row.cliente||'')===minaNombre(client),matchesService=!service||String(row.orden||'')===mantNombre(service),haystack=Object.values(row).join(' ').toLowerCase();return matchesClient&&matchesService&&(!query||haystack.includes(query));});
+}
+function renderReportBuilderPreviewV132(){
+  const source=document.getElementById('report-builder-source-v132')?.value||'personas_orden',selected=selectedReportBuilderFieldsV132(),fields=(reportBuilderFieldsV132[source]||[]).filter(([key])=>selected.includes(key)),rows=filteredReportBuilderRowsV132().slice(0,50),host=document.getElementById('report-builder-preview-v132');if(!host)return;
+  host.innerHTML=`<div class="worker-rut" style="margin-bottom:8px;">Vista previa: ${rows.length} registro(s). La exportación incluirá todos los resultados filtrados.</div><div class="table-wrap"><table><thead><tr>${fields.map(([,label])=>`<th>${rptEscV132(label)}</th>`).join('')}</tr></thead><tbody>${rows.map(row=>`<tr>${fields.map(([key])=>`<td>${rptEscV132(row[key]??'—')}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${Math.max(1,fields.length)}">No existen registros para los filtros seleccionados.</td></tr>`}</tbody></table></div>`;
+}
+function exportReportBuilderV132(){
+  const source=document.getElementById('report-builder-source-v132')?.value||'personas_orden',selected=selectedReportBuilderFieldsV132(),fields=(reportBuilderFieldsV132[source]||[]).filter(([key])=>selected.includes(key));
+  if(!fields.length)return toast('Selecciona al menos una columna para exportar','err');
+  const rows=filteredReportBuilderRowsV132();exportCSV([fields.map(([,label])=>label),...rows.map(row=>fields.map(([key])=>row[key]??''))],`reporte_personalizado_${source}_${hoy()}.csv`);toast('Reporte personalizado exportado');
+}
+function renderOperationalReportsV132(){
+  const page=document.getElementById('page-reportes');if(!page||document.getElementById('reports-v132-operational'))return;
+  const services=(S.mantenciones||[]).map(row=>`<option value="${rptEscV132(row.id)}">${rptEscV132(row.nombre||row.id)} · ${rptEscV132(minaNombre(row.minaId))}</option>`).join('');
+  const clients=(S.minas||[]).map(row=>`<option value="${rptEscV132(row.id)}">${rptEscV132(row.nombre)}</option>`).join('');
+  page.insertAdjacentHTML('beforeend',`<div class="card" id="reports-v132-operational" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Personas que trabajaron por orden de servicio</div><div class="card-subtitle">Revisa y exporta la dotación asignada, especialidad, turno, habilitación, EPP, alojamiento y horas hombre de cada orden.</div></div><button class="btn btn-primary btn-sm" onclick="exportServicePersonnelReportV132()">Exportar orden</button></div><div class="form-grid" style="margin-top:12px;"><div class="form-group full"><label class="form-label">Orden de servicio</label><select class="form-select" id="report-service-v132" onchange="renderServicePersonnelReportV132()"><option value="">Todas las órdenes de servicio</option>${services}</select></div></div><div id="report-service-table-v132" style="margin-top:12px;"></div><div class="divider"></div><div class="card-header"><div><div class="card-title">Constructor de reportes</div><div class="card-subtitle">Selecciona la fuente, las columnas y los filtros que necesitas. La vista previa muestra el resultado antes de exportar.</div></div><button class="btn btn-primary btn-sm" onclick="exportReportBuilderV132()">Exportar reporte</button></div><div class="form-grid" style="margin-top:12px;"><div class="form-group"><label class="form-label">Fuente de datos</label><select class="form-select" id="report-builder-source-v132" onchange="renderReportBuilderV132()">${Object.entries(reportBuilderLabelsV132).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Cliente</label><select class="form-select" id="report-builder-client-v132" onchange="renderReportBuilderPreviewV132()"><option value="">Todos los clientes</option>${clients}</select></div><div class="form-group"><label class="form-label">Orden de servicio</label><select class="form-select" id="report-builder-service-v132" onchange="renderReportBuilderPreviewV132()"><option value="">Todas las órdenes</option>${services}</select></div><div class="form-group"><label class="form-label">Buscar</label><input class="form-input" id="report-builder-query-v132" placeholder="Persona, RUT, estado, documento..." oninput="renderReportBuilderPreviewV132()"></div><div class="form-group full"><label class="form-label">Columnas del reporte</label><div id="report-builder-fields-v132" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px;"></div></div></div><div id="report-builder-preview-v132" style="margin-top:12px;"></div></div>`);
+  renderServicePersonnelReportV132();renderReportBuilderV132();
+}
+const renderPageV132Base=renderPage;
+renderPage=function(page){renderPageV132Base(page);if(page==='reportes')renderOperationalReportsV132();};
+window.addEventListener('load',()=>{if(currentPage==='reportes')renderOperationalReportsV132();});
+</script>
+
 <script src="assets/nexo-klar-guidance.js"></script>
 <script src="assets/nexo-klar-enterprise.js"></script>
 </body>
