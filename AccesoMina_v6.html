@@ -9874,6 +9874,58 @@ const renderAuditoriaV141Base=renderAuditoria;
 renderAuditoria=function(){renderAuditoriaV141Base();renderAuditDocumentControlV141();};
 </script>
 
+<script>
+// V14.2 · Catálogo práctico de EPP al ingresar existencias por bodega.
+const EPP_CATALOG_V142={
+  'Protección de cabeza':['Casco de seguridad','Barboquejo','Cofia / capuchón'],
+  'Protección visual y facial':['Lentes de seguridad claros','Lentes de seguridad oscuros','Antiparras','Protector facial'],
+  'Protección auditiva':['Tapones auditivos','Orejeras auditivas'],
+  'Protección respiratoria':['Mascarilla desechable','Respirador media cara','Respirador rostro completo','Filtro o cartucho respiratorio'],
+  'Protección de manos':['Guantes de cabritilla','Guantes anticorte','Guantes de nitrilo','Guantes dieléctricos','Guantes para soldadura'],
+  'Calzado de seguridad':['Zapato de seguridad','Botín de seguridad','Bota de seguridad','Bota dieléctrica'],
+  'Vestuario y primera capa':['Polera de trabajo','Pantalón de trabajo','Chaleco reflectante','Buzo o overol','Primera capa térmica','Chaqueta térmica','Ropa ignífuga'],
+  'Protección contra caídas':['Arnés de seguridad','Cabo de vida','Absorbedor de impacto','Línea de vida','Casco para altura'],
+  'Protección eléctrica y arco':['Pantalla facial para arco eléctrico','Guantes dieléctricos','Ropa para arco eléctrico'],
+  'Otros elementos de seguridad':['Bloqueador solar','Rodilleras','Protección cervical','Kit de emergencia']
+};
+function eppCatalogEscV142(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
+function ensureEppCatalogFieldsV142(){
+  const name=document.getElementById('v133-epp-name'),warehouse=name?.closest('.form-group')?.nextElementSibling;if(!name||document.getElementById('v142-epp-category'))return;
+  name.closest('.form-group')?.insertAdjacentHTML('afterend',`<div class="form-group"><label class="form-label">Categoría de protección *</label><select class="form-select" id="v142-epp-category" onchange="loadEppCatalogOptionsV142()"><option value="">Seleccionar categoría...</option>${Object.keys(EPP_CATALOG_V142).map(category=>`<option value="${eppCatalogEscV142(category)}">${eppCatalogEscV142(category)}</option>`).join('')}<option value="Otro / no listado">Otro / no listado</option></select></div><div class="form-group"><label class="form-label">Elemento habitual</label><select class="form-select" id="v142-epp-standard" onchange="syncEppCatalogSelectionV142()"><option value="">Primero seleccione una categoría</option></select></div><div class="form-group full" id="v142-epp-custom-wrap" style="display:none;"><label class="form-label">Elemento no listado *</label><input class="form-input" id="v142-epp-custom" oninput="syncEppCatalogSelectionV142()" placeholder="Ej: Protector auditivo especial, ropa química, EPP propio de la empresa"></div>`);
+  const label=name.closest('.form-group')?.querySelector('.form-label');if(label)label.textContent='Elemento seleccionado';
+}
+function loadEppCatalogOptionsV142(){
+  const category=document.getElementById('v142-epp-category')?.value||'',standard=document.getElementById('v142-epp-standard'),customWrap=document.getElementById('v142-epp-custom-wrap'),custom=document.getElementById('v142-epp-custom'),name=document.getElementById('v133-epp-name');if(!standard||!name)return;
+  const options=category&&category!=='Otro / no listado'?(EPP_CATALOG_V142[category]||[]):[];
+  standard.innerHTML='<option value="">Seleccionar elemento...</option>'+options.map(item=>`<option value="${eppCatalogEscV142(item)}">${eppCatalogEscV142(item)}</option>`).join('')+'<option value="__otro__">Otro / no listado</option>';
+  if(custom)custom.value='';if(customWrap)customWrap.style.display=category==='Otro / no listado'?'block':'none';
+  name.readOnly=false;name.value='';
+}
+function syncEppCatalogSelectionV142(){
+  const category=document.getElementById('v142-epp-category')?.value||'',standard=document.getElementById('v142-epp-standard')?.value||'',customWrap=document.getElementById('v142-epp-custom-wrap'),custom=document.getElementById('v142-epp-custom'),name=document.getElementById('v133-epp-name');if(!name)return;
+  const showCustom=category==='Otro / no listado'||standard==='__otro__';if(customWrap)customWrap.style.display=showCustom?'block':'none';
+  name.readOnly=false;
+  if(showCustom){if(custom?.value)name.value=custom.value;}else if(standard){name.value=standard;}
+}
+function chooseEppCatalogItemV142(){
+  const category=document.getElementById('v142-epp-category')?.value||'',standard=document.getElementById('v142-epp-standard')?.value||'',custom=document.getElementById('v142-epp-custom')?.value.trim()||'',name=document.getElementById('v133-epp-name');
+  const selected=standard&&standard!=='__otro__'?standard:custom;if(!category)return {error:'Selecciona la categoría de protección'};if(!selected)return {error:'Selecciona un elemento habitual o escribe uno no listado'};if(name)name.value=selected;return {category,selected};
+}
+const openEppStockModalV142Base=openEppStockModalV133;
+openEppStockModalV133=function(){
+  openEppStockModalV142Base();ensureEppCatalogFieldsV142();
+  const category=document.getElementById('v142-epp-category'),standard=document.getElementById('v142-epp-standard'),custom=document.getElementById('v142-epp-custom'),wrap=document.getElementById('v142-epp-custom-wrap'),name=document.getElementById('v133-epp-name');
+  if(category)category.value='';if(standard)standard.innerHTML='<option value="">Primero seleccione una categoría</option>';if(custom)custom.value='';if(wrap)wrap.style.display='none';if(name){name.value='';name.readOnly=false;}
+};
+const saveEppStockV142Base=saveEppStockV133;
+saveEppStockV133=function(event){
+  const choice=chooseEppCatalogItemV142();if(choice.error){event?.preventDefault?.();toast(choice.error,'err');return;}
+  const name=choice.selected;saveEppStockV142Base(event);
+  const item=(S.inventoryItems||[]).find(row=>String(row.type||'').toLowerCase()==='epp'&&String(row.name||'').trim().toLowerCase()===String(name).toLowerCase());
+  if(item){item.category=choice.category;item.eppCategory=choice.category;item.updatedAt=new Date().toISOString();persistTenant();if(typeof renderFocusedOperationsV98==='function')renderFocusedOperationsV98();}
+};
+</script>
+
 <script src="assets/nexo-klar-guidance.js"></script>
 <script src="assets/nexo-klar-enterprise.js"></script>
 </body>
