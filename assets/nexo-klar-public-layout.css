@@ -57,6 +57,8 @@
   justify-content:center;
   letter-spacing:.04em;
   line-height:1;
+  flex:0 0 26px;
+  white-space:nowrap;
   width:26px;
 }
 
@@ -119,12 +121,17 @@
   .public-shell #producto .real-product-caption { font-size:11px; }
   .public-shell #producto .public-image-action { margin-top:8px; }
 
-  .public-shell #capacidades .capability-grid { gap:var(--public-card-gap); margin-top:24px; }
+  .public-shell #capacidades .capability-grid {
+    gap:var(--public-card-gap);
+    grid-auto-rows:152px;
+    margin-top:24px;
+  }
   .public-shell #capacidades .capability {
     box-sizing:border-box;
     display:flex;
     flex-direction:column;
-    min-height:118px;
+    height:100%;
+    min-height:0;
     padding:14px;
   }
   .public-shell #capacidades .capability h3 { margin:6px 0 4px; font-size:14px; line-height:1.3; }
