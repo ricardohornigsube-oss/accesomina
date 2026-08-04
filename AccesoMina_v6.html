@@ -9451,6 +9451,44 @@ function saveWarehouseV134(event){
 function addWarehouseV95(){openWarehouseV134();}
 </script>
 
+<script>
+// V13.5 · Estado operativo preciso y acciones directas por orden de servicio.
+function serviceStatusV107(m){
+  const workers=(S.asignaciones||[]).filter(a=>a.mantId===m.id).map(a=>S.trabajadores.find(t=>t.id===a.trabId)).filter(Boolean);
+  const alerts=typeof computeAlertas==='function'?computeAlertas():[];
+  const personAlerts=alerts.filter(a=>workers.some(t=>t.id===a.trabId)||a.mantId===m.id);
+  const requiredPeople=Number(m.personalReq||m.requeridos||m.dotacionRequerida||0);
+  const needsHotel=Boolean(m.requiresHotel||m.requiereHotel||m.alojamientoRequerido);
+  const needsVehicle=Boolean(m.requiresVehicle||m.requiereVehiculo||m.vehiculoRequerido);
+  const hotel=(S.hotelAsig||[]).some(a=>a.mantId===m.id&&a.estado!=='cancelada'&&(!a.checkout||a.checkout>=hoy()));
+  const vehicle=(S.vehiculos||[]).some(v=>(v.mantIds||[]).includes(m.id)||(v.minaIds||[]).includes(m.minaId));
+  const hasEpp=worker=>((S.eppDeliveries||[]).some(e=>e.trabId===worker.id&&(!e.mantId||e.mantId===m.id)));
+  const hasDocumentAlert=personAlerts.some(a=>/document|curso|examen|credencial|acredit|firma/i.test(`${a.tipo||''} ${a.msg||''}`));
+  const pendingSignature=(S.firmas||[]).some(f=>f.mantId===m.id&&!['firmado','cerrado'].includes(f.estado));
+  const needPeople=workers.length===0||(requiredPeople>0&&workers.length<requiredPeople);
+  const needDocs=hasDocumentAlert,needHotel=needsHotel&&!hotel,needVehicle=needsVehicle&&!vehicle,needEpp=workers.length>0&&!workers.every(hasEpp),needSignature=pendingSignature;
+  const gaps=[needPeople&&'Falta personal',needDocs&&'Faltan documentos',needHotel&&'Falta alojamiento',needVehicle&&'Falta vehículo',needEpp&&'Falta EPP',needSignature&&'Falta firma'].filter(Boolean);
+  const blocked=workers.some(t=>t.bloqueado||t.operationalStatus==='bloqueado')||m.estado==='cancelada'||m.estado==='bloqueado';
+  return {workers,alerts:personAlerts,gaps,status:blocked?'Restringida':gaps.length?'Pendiente':'Lista para ejecutar',blocked,requiredPeople};
+}
+function goToServiceGapV135(serviceId){
+  const service=(S.mantenciones||[]).find(row=>row.id===serviceId),status=service?serviceStatusV107(service):null,gap=status?.gaps?.[0]||'';
+  const pages={
+    'Falta personal':'trabajadores','Faltan documentos':'alertas','Falta alojamiento':'hoteleria',
+    'Falta vehículo':'vehiculos','Falta EPP':'epp','Falta firma':'contratos'
+  };
+  if(pages[gap])nav(pages[gap]);else openMantDetalle(serviceId);
+}
+function renderServiceStatusBoardV107(){
+  const rows=(S.mantenciones||[]).slice(0,12).map(m=>{
+    const st=serviceStatusV107(m),statusClass=st.blocked?'badge-err':st.gaps.length?'badge-warn':'badge-ok';
+    const staffing=st.requiredPeople?`${st.workers.length}/${st.requiredPeople}`:String(st.workers.length);
+    return `<tr><td><b>${esc94(m.nombre||'Servicio')}</b><div class="worker-rut">${esc94(minaNombre(m.minaId)||'Cliente')} · ${esc94(contratoNombre(m.contratoId)||'Contrato')}</div></td><td><span class="badge ${statusClass}">${esc94(st.status)}</span></td><td>${staffing}</td><td>${st.gaps.map(g=>`<span class="badge badge-err">${esc94(g)}</span>`).join(' ')||'<span class="badge badge-ok">Sin brechas críticas</span>'}</td><td><button class="btn btn-secondary btn-sm" onclick="openMantDetalle('${m.id}')">Abrir</button>${st.gaps.length?` <button class="btn btn-primary btn-sm" onclick="goToServiceGapV135('${m.id}')">Resolver</button>`:''}</td></tr>`;
+  }).join('')||'<tr><td colspan="5">Sin órdenes de servicio cargadas.</td></tr>';
+  return `<div class="card" id="ops-v107-status" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Estado operativo por orden de servicio</div><div class="card-subtitle">Revise si la orden está lista o ingrese directamente al módulo que resuelve su primera brecha.</div></div></div><div class="table-wrap"><table><thead><tr><th>Orden de servicio</th><th>Estado único</th><th>Personas</th><th>Brechas</th><th>Acción</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+</script>
+
 <script src="assets/nexo-klar-guidance.js"></script>
 <script src="assets/nexo-klar-enterprise.js"></script>
 </body>
