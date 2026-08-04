@@ -9694,6 +9694,39 @@ const openMantDetalleV137Base=openMantDetalle;
 openMantDetalle=function(serviceId){openMantDetalleV137Base(serviceId);injectServiceTabsV137(serviceId);};
 </script>
 
+<script>
+// V13.8 · Ficha integral de Persona: lectura rápida, industria y acciones prioritarias.
+const WORKER_SECTORS_V138={general:'General',mineria:'⛏️ Minería',energia:'⚡ Energía',construccion:'🏗️ Construcción',logistica:'🚚 Logística',instalaciones:'🏢 Gestión de instalaciones',agroindustria:'🌿 Agroindustria',servicios:'🛠️ Servicios técnicos'};
+function workerEscV138(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
+function showFichaTabV138(tab){
+  const button=[...document.querySelectorAll('#modal-ficha .tab-btn')].find(row=>({datos:'Datos',docs:'Docs',cur:'Cursos',hist:'Historial',epp:'EPP'}[tab]&&row.textContent.includes({datos:'Datos',docs:'Docs',cur:'Cursos',hist:'Historial',epp:'EPP'}[tab])));
+  if(button)switchFichaTab(tab,button);
+}
+function workerQuickStatusV138(worker){
+  const status=typeof computeOperationalStatusV90==='function'?computeOperationalStatusV90(worker):{status:worker.bloqueado?'Restringida':'Disponible',blocked:Boolean(worker.bloqueado),reasons:[]};
+  const epp=typeof eppStatus==='function'?eppStatus(worker):{missing:[]};
+  const assignments=(S.asignaciones||[]).filter(row=>String(row.trabId)===String(worker.id));
+  const documents=typeof auditWorker==='function'?auditWorker(worker).filter(item=>String(item).toLowerCase().startsWith('falta')):[];
+  const next=[];
+  if(status.reasons?.length)next.push(...status.reasons);
+  if(documents.length)next.push(...documents);
+  if(epp.missing?.length)next.push(`EPP pendiente: ${epp.missing.length} elemento(s)`);
+  return {status,epp,assignments,documents,next:[...new Set(next)].slice(0,3)};
+}
+function saveWorkerSectorV138(workerId){
+  const worker=(S.trabajadores||[]).find(row=>String(row.id)===String(workerId)),sector=document.getElementById('worker-sector-v138')?.value||'general';if(!worker)return;
+  const before=worker.sector||'general';worker.sector=sector;recordHistoryV90?.('trabajador',worker.id,'Industria o perfil operativo actualizado',{sector:before},{sector},'Parametrización de ficha integral');persistTenant();toast('Perfil sectorial actualizado');
+}
+function renderWorkerQuickProfileV138(workerId){
+  const worker=(S.trabajadores||[]).find(row=>String(row.id)===String(workerId)),host=document.getElementById('ficha-tab-datos');if(!worker||!host)return;
+  document.getElementById('worker-quick-profile-v138')?.remove();
+  const quick=workerQuickStatusV138(worker),percent=typeof acreditacion==='function'?acreditacion(worker):0,sector=worker.sector||'general',statusText=quick.status.status||'Disponible',statusClass=quick.status.blocked?'badge-err':percent>=85?'badge-ok':'badge-warn';
+  host.insertAdjacentHTML('afterbegin',`<div class="card" id="worker-quick-profile-v138" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Resumen de la persona</div><div class="card-subtitle">Estado, requisitos y próxima acción en una sola vista.</div></div><span class="badge ${statusClass}">${workerEscV138(statusText)}</span></div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0;"><span class="badge badge-blue">${workerEscV138(worker.tipo==='permanente'?'Personal permanente':'Personal temporal')}</span><select class="form-select" id="worker-sector-v138" onchange="saveWorkerSectorV138('${workerEscV138(worker.id)}')" style="max-width:230px;">${Object.entries(WORKER_SECTORS_V138).map(([key,label])=>`<option value="${key}" ${sector===key?'selected':''}>${workerEscV138(label)}</option>`).join('')}</select><span class="worker-rut">${workerEscV138(worker.especialidad||worker.cargo||'Cargo pendiente')} · ${workerEscV138(worker.rut||'Sin RUT')}</span></div><div class="kpi-grid" style="margin-top:12px;"><button type="button" class="kpi kpi-${percent>=85?'green':percent>=60?'orange':'red'}" onclick="showFichaTabV138('docs')"><div class="kpi-value">${percent}%</div><div class="kpi-label">Habilitación</div></button><button type="button" class="kpi kpi-blue" onclick="showFichaTabV138('hist')"><div class="kpi-value">${quick.assignments.length}</div><div class="kpi-label">Servicios activos</div></button><button type="button" class="kpi kpi-${quick.epp.missing?.length?'orange':'green'}" onclick="showFichaTabV138('epp')"><div class="kpi-value">${quick.epp.missing?.length||0}</div><div class="kpi-label">EPP pendiente</div></button><button type="button" class="kpi kpi-${quick.documents.length?'red':'green'}" onclick="showFichaTabV138('docs')"><div class="kpi-value">${quick.documents.length}</div><div class="kpi-label">Documentos por revisar</div></button></div><div class="cloud-note" style="margin-top:12px;"><b>Próxima acción:</b> ${quick.next.length?workerEscV138(quick.next.join(' · ')):'La persona no tiene pendientes críticos detectados.'}</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><button class="btn btn-primary btn-sm" onclick="showFichaTabV138('docs')">Revisar documentos</button><button class="btn btn-secondary btn-sm" onclick="showFichaTabV138('epp')">Ver EPP y tallas</button><button class="btn btn-secondary btn-sm" onclick="showFichaTabV138('hist')">Ver historial</button></div></div>`);
+}
+const openFichaV138Base=openFicha;
+openFicha=function(workerId){openFichaV138Base(workerId);renderWorkerQuickProfileV138(workerId);};
+</script>
+
 <script src="assets/nexo-klar-guidance.js"></script>
 <script src="assets/nexo-klar-enterprise.js"></script>
 </body>
