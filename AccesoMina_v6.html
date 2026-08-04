@@ -8937,6 +8937,32 @@ async function saveAlertEntityDocumentV129(){
     persistTenant();closeModal('modal-v81-detail');alertDocumentTargetV128=null;renderAlertas();updateBadges();toast('Documento cargado y alerta actualizada');
   }catch(error){if(!['INVALID_FILE_TYPE','FILE_TOO_LARGE','LOCAL_FILE_TOO_LARGE'].includes(error.message))toast(error.message||'No fue posible cargar el archivo','err');}
 }
+function alertEvidenceKeyV130(alert){return [alert?.tipo,alert?.trabId,alert?.contratoId,alert?.mantId,alert?.minaId,alert?.msg].filter(Boolean).join('|');}
+function ensureAlertEvidenceV130(){if(!Array.isArray(S.alertEvidence))S.alertEvidence=[];}
+function openGenericAlertEvidenceV130(alert){
+  ensureAlertEvidenceV130();installV81Ui?.();
+  const key=alertEvidenceKeyV130(alert),history=S.alertEvidence.filter(row=>row.key===key);
+  alertDocumentTargetV128={kind:'alert-evidence',alert,key};
+  document.getElementById('v81-detail-title').textContent='Gestionar alerta';
+  document.getElementById('v81-detail-body').innerHTML=`<div class="cloud-note" style="margin-bottom:14px;">Adjunta el documento o respaldo que resuelve esta alerta. El archivo quedará vinculado a la alerta y disponible en su historial.</div><div class="form-grid"><div class="form-group full"><label class="form-label">Alerta</label><textarea class="form-textarea" readonly>${eppEsc(alert?.msg||'Alerta operacional')}</textarea></div><div class="form-group"><label class="form-label">Fecha de vencimiento, si aplica</label><input class="form-input" id="alert-evidence-expiry-v130" type="date"></div><div class="form-group"><label class="form-label">Archivo requerido</label><input class="form-input" id="alert-evidence-file-v130" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"></div><div class="form-group full"><label class="form-label">Observación</label><textarea class="form-textarea" id="alert-evidence-note-v130" placeholder="Indique cómo se resolvió o actualizó esta alerta."></textarea></div></div><div style="display:flex;justify-content:flex-end;margin-top:16px;"><button class="btn btn-primary" onclick="saveGenericAlertEvidenceV130()">Adjuntar respaldo</button></div><div class="divider"></div><div class="card-title" style="font-size:14px;">Historial de respaldos</div><div class="table-wrap" style="margin-top:8px;"><table><thead><tr><th>Fecha</th><th>Archivo</th><th>Vencimiento</th><th>Observación</th></tr></thead><tbody>${history.map(row=>`<tr><td>${String(row.createdAt||'').slice(0,16).replace('T',' ')}</td><td>${eppEsc(row.fileName||'Archivo')}</td><td>${row.expiresAt||'—'}</td><td>${eppEsc(row.note||'—')}</td></tr>`).join('')||'<tr><td colspan="4">Sin respaldos cargados todavía.</td></tr>'}</tbody></table></div>`;
+  openModal('modal-v81-detail');
+}
+async function saveGenericAlertEvidenceV130(){
+  const target=alertDocumentTargetV128,input=document.getElementById('alert-evidence-file-v130');
+  if(!target||target.kind!=='alert-evidence'||!input?.files?.length)return toast('Selecciona el archivo solicitado para continuar','err');
+  try{
+    const evidenceFiles=await captureEvidenceFilesV79(input,'alert_evidence',target.key),fileName=evidenceFiles[0]?.name||input.files[0].name,row={id:'ae_'+Date.now(),key:target.key,alertType:target.alert.tipo||'alerta',message:target.alert.msg||'',expiresAt:document.getElementById('alert-evidence-expiry-v130')?.value||'',note:document.getElementById('alert-evidence-note-v130')?.value.trim()||'',fileName,evidenceFiles,createdAt:new Date().toISOString(),user:currentTenantUser?.email||'usuario'};
+    ensureAlertEvidenceV130();S.alertEvidence.unshift(row);persistTenant();closeModal('modal-v81-detail');alertDocumentTargetV128=null;renderAlertas();toast('Respaldo adjuntado a la alerta');
+  }catch(error){if(!['INVALID_FILE_TYPE','FILE_TOO_LARGE','LOCAL_FILE_TOO_LARGE'].includes(error.message))toast(error.message||'No fue posible adjuntar el archivo','err');}
+}
+const openAlertManagerV130Base=openAlertManagerV129;
+openAlertManagerV129=function(alertId){const alert=alertManageIndexV128.get(alertId);if(!alert)return;const target=getAlertDocumentTargetV129(alert);if(!target)return openGenericAlertEvidenceV130(alert);return openAlertManagerV130Base(alertId);};
+const snapshotStateV130Base=snapshotState;
+snapshotState=function(){ensureAlertEvidenceV130();return {...snapshotStateV130Base(),alertEvidence:S.alertEvidence};};
+const applyStateV130Base=applyState;
+applyState=function(data){applyStateV130Base(data);if(data?.alertEvidence!==undefined)S.alertEvidence=data.alertEvidence;ensureAlertEvidenceV130();};
+const emptyTenantDataV130Base=emptyTenantData;
+emptyTenantData=function(...args){return {...emptyTenantDataV130Base(...args),alertEvidence:[]};};
 </script>
 <script>
 if (location.protocol !== 'file:') {
