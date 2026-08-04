@@ -9006,6 +9006,7 @@ function installWorkBookUiV125(){
       <div id="page-libro-obras" class="page">
         <div class="section-header"><div><div class="section-title">Libro de Obra</div><div class="section-subtitle">Registro formal, correlativo y trazable por cliente, contrato y servicio.</div></div><button class="btn btn-primary" onclick="openWorkBookFormV125()">+ Nueva anotación</button></div>
         <div class="cloud-note" style="margin-bottom:16px;">Use esta vista para registrar instrucciones, acuerdos, avances, consultas, respuestas e incidentes. Las anotaciones firmadas o cerradas quedan protegidas y cualquier cambio conserva su historial.</div>
+        <div class="card" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Control formal del Libro de Obra</div><div class="card-subtitle">Cada anotación se vincula con cliente, contrato y orden de servicio para mantener contexto, evidencia y trazabilidad.</div></div></div><div class="kpi-grid" style="margin-top:12px;"><div class="kpi kpi-blue"><div class="kpi-value" style="font-size:15px;">Folio correlativo</div><div class="kpi-label">Libro y anotación</div></div><div class="kpi kpi-orange"><div class="kpi-value" style="font-size:15px;">Evidencia</div><div class="kpi-label">Adjuntos e historial</div></div><div class="kpi kpi-yellow"><div class="kpi-value" style="font-size:15px;">Compromisos</div><div class="kpi-label">Responsable y plazo</div></div><div class="kpi kpi-green"><div class="kpi-value" style="font-size:15px;">Firma</div><div class="kpi-label">Correo o WhatsApp</div></div></div></div>
         <div class="kpi-grid" id="work-book-kpis-v125"></div>
         <div class="filters" style="margin-bottom:14px;">
           <input class="form-input" id="wb-filter-q-v125" placeholder="Buscar folio, asunto o contenido..." oninput="renderWorkBookV125()">
@@ -9270,6 +9271,35 @@ setCloudIdentityV7=function(identity){setCloudIdentityV126Base(identity);install
 const renderCurrentPageSoftV126Base=renderCurrentPageSoft;
 renderCurrentPageSoft=function(){renderCurrentPageSoftV126Base();installWorkspaceV126();setTimeout(()=>applyWorkspaceV126(document.getElementById('workspace-select-v126')?.value||preferredWorkspaceV126(),false),20);};
 window.addEventListener('load',()=>{installWorkspaceV126();ensureCloudAdminModalsV126();let attempts=0;const timer=setInterval(()=>{if(hookCloudAdminV126()||++attempts>20)clearInterval(timer);},250);});
+</script>
+
+<script>
+// V13.1 · Alertas operativas del Libro de Obra y acceso directo a la ficha.
+const computeAlertasV131Base=computeAlertas;
+computeAlertas=function(){
+  const list=computeAlertasV131Base();
+  const rows=Array.isArray(workBookEntriesV125)&&workBookEntriesV125.length?workBookEntriesV125:(S.workBookEntries||[]);
+  rows.forEach(row=>{
+    const closed=['firmado','cerrado'].includes(row.status);
+    const names=typeof workBookScopeNamesV125==='function'?workBookScopeNamesV125(row):{mine:'Cliente',contract:'',project:'Servicio'};
+    const context=[names.mine,names.contract,names.project].filter(Boolean).join(' · ');
+    if(row.dueAt&&row.dueAt<hoy()&&!closed)list.push({
+      id:`al_wb_due_${row.id}`,tipo:'libro_obra',urgencia:'vencido',workBookId:row.id,mineId:row.mineRef,contratoId:row.contractRef,mantId:row.projectRef,
+      msg:`Libro de Obra ${row.folio||'LOCAL'} · anotación ${row.entryNumber||'—'}: compromiso vencido${row.responsible?` (${row.responsible})`:''} · ${context}`
+    });
+    if(row.status==='pendiente_firma')list.push({
+      id:`al_wb_sign_${row.id}`,tipo:'libro_obra',urgencia:'critico',workBookId:row.id,mineId:row.mineRef,contratoId:row.contractRef,mantId:row.projectRef,
+      msg:`Libro de Obra ${row.folio||'LOCAL'} · anotación ${row.entryNumber||'—'}: firma pendiente · ${context}`
+    });
+  });
+  return list;
+};
+const openAlertManagerV131Base=openAlertManagerV129;
+openAlertManagerV129=function(alertId){
+  const alert=alertManageIndexV128.get(alertId);
+  if(alert?.tipo==='libro_obra'&&alert.workBookId)return openWorkBookDetailV125(alert.workBookId);
+  return openAlertManagerV131Base(alertId);
+};
 </script>
 
 <script src="assets/nexo-klar-guidance.js"></script>
