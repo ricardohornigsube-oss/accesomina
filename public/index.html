@@ -4455,8 +4455,8 @@ function renderAuditoria() {
 function computeAlertas() {
   const alertas=[]; let n=1;
   S.trabajadores.forEach(t=>{
-    getRequiredItemsForWorker(t).forEach(req=>{const st=reqStatus(t,req); if(!st.ok && st.src==='faltante') alertas.push({id:'al'+n++,tipo:req.type,urgencia:'falta',trabId:t.id,trab:t,msg:`${t.nombre}: falta ${req.name}`});});
-    ensureWorkerItems(t).forEach(item=>{if(!item.vence) return; const d=diasHasta(item.vence); if(d<0||d<=(window.TENANT_CRITICAL_DAYS||7)) alertas.push({id:'al'+n++,tipo:item.type,urgencia:d<0?'vencido':'critico',trabId:t.id,trab:t,msg:`${t.nombre}: ${item.name} ${d<0?'VENCIDO':d+'d para vencer'}`}); else if(d<=(window.TENANT_WARNING_DAYS||30)) alertas.push({id:'al'+n++,tipo:item.type,urgencia:'proximo',trabId:t.id,trab:t,msg:`${t.nombre}: ${item.name} vence en ${d}d`});});
+    getRequiredItemsForWorker(t).forEach(req=>{const st=reqStatus(t,req); if(!st.ok && st.src==='faltante') alertas.push({id:'al'+n++,tipo:req.type,urgencia:'falta',trabId:t.id,trab:t,requirement:req,msg:`${t.nombre}: falta ${req.name}`});});
+    ensureWorkerItems(t).forEach(item=>{if(!item.vence) return; const d=diasHasta(item.vence); if(d<0||d<=(window.TENANT_CRITICAL_DAYS||7)) alertas.push({id:'al'+n++,tipo:item.type,urgencia:d<0?'vencido':'critico',trabId:t.id,trab:t,itemId:item.id,msg:`${t.nombre}: ${item.name} ${d<0?'VENCIDO':d+'d para vencer'}`}); else if(d<=(window.TENANT_WARNING_DAYS||30)) alertas.push({id:'al'+n++,tipo:item.type,urgencia:'proximo',trabId:t.id,trab:t,itemId:item.id,msg:`${t.nombre}: ${item.name} vence en ${d}d`});});
     auditWorker(t).filter(i=>!i.startsWith('Falta')).forEach(i=>alertas.push({id:'al'+n++,tipo:'doc',urgencia:'critico',trabId:t.id,trab:t,msg:`${t.nombre}: alerta de mal uso - ${i}`}));
   });
   S.firmas.forEach(f=>{if(f.estado==='pendiente'||f.estado==='enviado') alertas.push({id:'al'+n++,tipo:'firma',urgencia:'critico',trabId:f.trabId,trab:S.trabajadores.find(w=>w.id===f.trabId),mantId:f.mantId,msg:`${trabNombre(f.trabId)}: ${f.tipo} pendiente de firma`});});
@@ -8830,6 +8830,77 @@ document.addEventListener('click',e=>{if(innerWidth<=900&&!e.target.closest('#si
 
 window.AccesoMinaCloud?.install();
 window.addEventListener('load', init);
+
+// Gestión contextual de alertas: cada carga renueva solo el requisito que originó la alerta.
+let alertManageIndexV128=new Map();
+let alertDocumentTargetV128=null;
+function getAlertDocumentTargetV128(alert){
+  if(!alert?.trabId)return null;
+  const worker=S.trabajadores.find(t=>t.id===alert.trabId);
+  if(!worker)return null;
+  const items=ensureWorkerItems(worker);
+  const item=alert.itemId?items.find(row=>row.id===alert.itemId):null;
+  const requirement=alert.requirement||null;
+  if(!item&&!requirement)return null;
+  return {alert,worker,item,requirement,type:item?.type||requirement.type||alert.tipo||'documento',name:item?.name||requirement.name||'Documento'};
+}
+function openAlertManagerV128(alertId){
+  const alert=alertManageIndexV128.get(alertId);
+  const target=getAlertDocumentTargetV128(alert);
+  if(!target)return manageNonDocumentAlertV128(alert);
+  installV81Ui?.();
+  alertDocumentTargetV128=target;
+  const currentExpiry=target.item?.vence||'';
+  document.getElementById('v81-detail-title').textContent=`Gestionar documento · ${target.name}`;
+  document.getElementById('v81-detail-body').innerHTML=`<div class="cloud-note" style="margin-bottom:14px;">Esta acción actualiza únicamente el archivo relacionado con la alerta. La versión anterior se conserva en el historial.</div><div class="form-grid"><div class="form-group"><label class="form-label">Persona</label><input class="form-input" value="${eppEsc(target.worker.nombre||'')}" readonly></div><div class="form-group"><label class="form-label">Requisito</label><input class="form-input" value="${eppEsc(target.name)}" readonly></div><div class="form-group"><label class="form-label">${currentExpiry?'Nuevo vencimiento':'Vencimiento, si corresponde'}</label><input class="form-input" id="alert-doc-expiry-v128" type="date" value="${currentExpiry}"></div><div class="form-group"><label class="form-label">Archivo requerido</label><input class="form-input" id="alert-doc-file-v128" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"></div><div class="form-group full"><label class="form-label">Observación</label><textarea class="form-textarea" id="alert-doc-note-v128" placeholder="Indique la renovación, corrección o antecedente cargado."></textarea></div></div><div style="display:flex;justify-content:flex-end;margin-top:16px;"><button class="btn btn-primary" onclick="saveAlertDocumentV128()">Cargar y actualizar</button></div>`;
+  openModal('modal-v81-detail');
+}
+async function saveAlertDocumentV128(){
+  const target=alertDocumentTargetV128;
+  const input=document.getElementById('alert-doc-file-v128');
+  if(!target||!input?.files?.length)return toast('Selecciona el archivo solicitado para continuar','err');
+  const expiry=document.getElementById('alert-doc-expiry-v128')?.value||'';
+  const note=document.getElementById('alert-doc-note-v128')?.value.trim()||'';
+  try{
+    const evidenceFiles=await captureEvidenceFilesV79(input,'worker_document',target.worker.id);
+    const now=new Date().toISOString();
+    const version={id:'wdv_'+Date.now(),uploadedAt:now,fileName:evidenceFiles[0]?.name||input.files[0].name,expiresAt:expiry,evidenceFiles,note};
+    let item=target.item;
+    if(item){
+      item.versions=item.versions||[];
+      if(!item.versions.length&&item.fileName)item.versions.push({id:'wdv_legacy_'+item.id,uploadedAt:item.created||item.updatedAt||'',fileName:item.fileName,expiresAt:item.vence||'',evidenceFiles:item.evidenceFiles||[],note:item.notes||'',legacy:true});
+      item.versions.push(version);
+      Object.assign(item,{fileName:version.fileName,evidenceFiles,vence:expiry,notes:note||item.notes||'',estado:'cargado',estadoRevision:'cargado',updatedAt:now});
+    }else{
+      item={id:'wi'+Date.now(),type:target.type,name:target.name,vence:expiry,notes:note||'Carga desde alerta documental',estado:'cargado',estadoRevision:'cargado',fileName:version.fileName,evidenceFiles,created:hoy(),updatedAt:now,versions:[version]};
+      ensureWorkerItems(target.worker).push(item);
+    }
+    recordHistoryV90?.('trabajador',target.worker.id,'Documento renovado desde alertas',{}, {documento:item.name,vencimiento:expiry,archivo:version.fileName},note||'Renovación documental desde alerta',version.fileName);
+    persistTenant();
+    closeModal('modal-v81-detail');
+    alertDocumentTargetV128=null;
+    renderAlertas(); updateBadges();
+    toast('Documento cargado y alerta actualizada');
+  }catch(error){
+    if(!['INVALID_FILE_TYPE','FILE_TOO_LARGE','LOCAL_FILE_TOO_LARGE'].includes(error.message))toast(error.message||'No fue posible cargar el archivo','err');
+  }
+}
+function manageNonDocumentAlertV128(alert){
+  if(!alert)return;
+  if(alert.trabId)return openFicha(alert.trabId);
+  if(alert.contratoId&&typeof openContractDetailV78==='function')return openContractDetailV78(alert.contratoId);
+  if(alert.mantId&&typeof openMantDetalle==='function')return openMantDetalle(alert.mantId);
+  nav(alert.tipo==='contrato'?'contratos':alert.tipo==='firma'?'contratos':'mantenciones');
+}
+renderAlertas=function(){
+  const alertas=computeAlertas();
+  const txt=document.getElementById('filt-alerta-txt')?.value.toLowerCase()||'',tipo=document.getElementById('filt-alerta-tipo')?.value||'',urg=document.getElementById('filt-alerta-urg')?.value||'',mina=document.getElementById('filt-alerta-mina')?.value||'',contrato=document.getElementById('filt-alerta-contrato')?.value||'',mant=document.getElementById('filt-alerta-mant')?.value||'';
+  const filtered=alertas.filter(a=>{if(txt&&!a.msg.toLowerCase().includes(txt))return false;if(tipo&&a.tipo!==tipo)return false;if(urg&&a.urgencia!==urg)return false;if(mina){const worker=a.trabId?S.trabajadores.find(row=>row.id===a.trabId):null;if(a.minaId!==mina&&!worker?.mineras?.includes(mina))return false;}if(contrato){const worker=a.trabId?S.trabajadores.find(row=>row.id===a.trabId):null;if(a.contratoId!==contrato&&getMantContratoId(a.mantId)!==contrato&&!(worker&&workerContratoIds(worker).includes(contrato)))return false;}if(mant&&a.mantId!==mant&&!(a.trabId&&workerMantIds(S.trabajadores.find(row=>row.id===a.trabId)||{}).includes(mant)))return false;return true;});
+  alertManageIndexV128=new Map(filtered.map(alert=>[alert.id,alert]));
+  document.getElementById('alertas-sub').textContent=`${filtered.length} alertas · ${alertas.filter(a=>a.urgencia==='vencido').length} vencidas, ${alertas.filter(a=>a.urgencia==='critico').length} críticas`;
+  const typeBadge={examen:'badge-blue',curso:'badge-orange',documento:'badge-warn',doc:'badge-warn',firma:'badge-err',empresa:'badge-blue',contrato:'badge-blue',proyecto:'badge-orange',mantencion:'badge-orange'};
+  document.getElementById('alertas-list').innerHTML=filtered.map(alert=>{const uploadable=Boolean(getAlertDocumentTargetV128(alert));const urgency=alert.urgencia==='falta'?'critico':alert.urgencia;const action=`<button class="btn ${uploadable?'btn-primary':'btn-secondary'} btn-sm" onclick="openAlertManagerV128('${alert.id}')">Gestionar</button>`;const workerActions=alert.trabId?`<button class="btn btn-ghost btn-sm" onclick="openFicha('${alert.trabId}')">Ficha</button>${action}<button class="btn btn-success btn-sm" onclick="notifWA('${alert.trabId}','${String(alert.msg).replace(/['\"<>]/g,'')}')">WA</button>`:action;return `<div class="alert-item alert-${urgency}"><div class="alert-dot dot-${urgency}"></div><div style="flex:1;"><div style="font-size:13px;font-weight:600;">${eppEsc(alert.msg)}</div><div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;"><span class="badge ${typeBadge[alert.tipo]||'badge-na'}">${eppEsc(alert.tipo)}</span><span class="badge ${alert.urgencia==='vencido'?'badge-err':alert.urgencia==='critico'||alert.urgencia==='falta'?'badge-crit':'badge-warn'}">${eppEsc(alert.urgencia)}</span></div></div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">${workerActions}</div></div>`;}).join('')||'<div style="color:var(--text-muted);padding:20px;text-align:center;">Sin alertas con los filtros seleccionados</div>';
+};
 </script>
 <script>
 if (location.protocol !== 'file:') {
