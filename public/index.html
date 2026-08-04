@@ -9605,6 +9605,95 @@ const initV136Base=init;
 init=function(){initV136Base();ensureContractLifecycleV136();if(currentPage==='contratos')renderContratos();};
 </script>
 
+<script>
+// V13.7 · Órdenes de servicio: ejecución, checklist, presupuesto y cierre controlado.
+const SERVICE_STAGES_V137=['planificada','asignada','movilizando','en ejecución','en revisión','cerrada','cancelada'];
+function serviceEscV137(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
+function serviceMoneyV137(value){return `$${Number(value||0).toLocaleString('es-CL')} CLP`;}
+function ensureServiceLifecycleV137(service){
+  if(!service)return;
+  if(!service.operationalStage)service.operationalStage=service.estado==='cerrada'?'cerrada':service.estado==='cancelada'?'cancelada':service.estado==='activa'?'en ejecución':'planificada';
+  if(!Array.isArray(service.checklist))service.checklist=[];
+  if(!Array.isArray(service.milestones))service.milestones=[];
+  if(service.progress===undefined)service.progress=Number(service.avancePct||0);
+  if(service.budgetCLP===undefined)service.budgetCLP=Number(service.presupuestoCLP||service.presupuesto||0);
+  if(service.actualStart===undefined)service.actualStart='';
+  if(service.actualEnd===undefined)service.actualEnd='';
+}
+function serviceRequirementsV137(service){
+  ensureServiceLifecycleV137(service);
+  const status=typeof serviceStatusV107==='function'?serviceStatusV107(service):{gaps:[]};
+  const assigned=(S.asignaciones||[]).filter(row=>String(row.mantId)===String(service.id));
+  const signature=(S.firmas||[]).filter(row=>String(row.mantId)===String(service.id));
+  const hasSigned=!assigned.length||assigned.every(row=>signature.some(sig=>String(sig.trabId)===String(row.trabId)&&sig.estado==='firmado'));
+  const defaults=[
+    ['alcance','Alcance y responsable definidos',Boolean(service.alcance&&service.admin)],
+    ['dotacion','Dotación asignada',!status.gaps?.some(g=>g==='Falta personal'||String(g).includes('cargos faltantes'))],
+    ['documentos','Personas habilitadas y documentos revisados',!status.gaps?.some(g=>g==='Faltan documentos')],
+    ['firmas','Firmas requeridas completas',hasSigned],
+    ['recursos','Recursos críticos disponibles',!status.gaps?.some(g=>g==='Falta vehículo'||g==='Falta EPP'||g==='Falta alojamiento')],
+    ['permisos','Permisos de trabajo aprobados',!(ensurePermisosMantV64?.(service.id)||[]).some(row=>['pendiente','observado','rechazado'].includes(row.estado))]
+  ];
+  return defaults.map(([key,label,systemOk])=>{const saved=service.checklist.find(row=>row.key===key);return {key,label,checked:saved?.checked===true||(!saved&&systemOk),systemOk,notes:saved?.notes||''};});
+}
+function serviceStatusLabelV137(stage){return {planificada:'Planificada',asignada:'Asignada',movilizando:'Movilizando','en ejecución':'En ejecución','en revisión':'En revisión',cerrada:'Cerrada',cancelada:'Cancelada'}[stage]||stage;}
+function serviceStatusBadgeV137(stage){const css=stage==='cerrada'?'badge-ok':stage==='cancelada'?'badge-err':['en ejecución','movilizando'].includes(stage)?'badge-blue':stage==='en revisión'?'badge-warn':'badge-na';return `<span class="badge ${css}">${serviceEscV137(serviceStatusLabelV137(stage))}</span>`;}
+function injectServiceTabsV137(serviceId){
+  const modal=document.getElementById('modal-mant-detalle'),bar=modal?.querySelector('.tab-bar');if(!modal||!bar)return;
+  if(!bar.querySelector('[data-v137-tab="ejecucion"]'))bar.insertAdjacentHTML('beforeend',`<button class="tab-btn" data-v137-tab="ejecucion" onclick="switchMantTabV137('ejecucion',this)">▶ Ejecución</button><button class="tab-btn" data-v137-tab="control" onclick="switchMantTabV137('control',this)">✓ Control</button>`);
+  if(!document.getElementById('mant-tab-ejecucion-v137'))modal.querySelector('.modal-body')?.insertAdjacentHTML('beforeend','<div id="mant-tab-ejecucion-v137" class="tab-content"></div><div id="mant-tab-control-v137" class="tab-content"></div>');
+  renderServiceExecutionV137(serviceId);renderServiceControlV137(serviceId);
+}
+function switchMantTabV137(tab,button){
+  const modal=document.getElementById('modal-mant-detalle');if(!modal)return;
+  modal.querySelectorAll('.tab-btn').forEach(row=>row.classList.remove('active'));button.classList.add('active');
+  ['personal','hotel','docs','timeline'].forEach(key=>document.getElementById(`mant-tab-${key}`)?.classList.remove('active'));
+  ['ejecucion','control'].forEach(key=>document.getElementById(`mant-tab-${key}-v137`)?.classList.toggle('active',key===tab));
+}
+function setServiceStageV137(serviceId,stage){
+  const service=(S.mantenciones||[]).find(row=>String(row.id)===String(serviceId));if(!service||!SERVICE_STAGES_V137.includes(stage))return;
+  ensureServiceLifecycleV137(service);const before=service.operationalStage;
+  if(stage==='cerrada'){const gaps=(typeof serviceStatusV107==='function'?serviceStatusV107(service).gaps:[]).filter(Boolean);if(gaps.length){toast(`No es posible cerrar: ${gaps.join(', ')}`,'err');return;}}
+  service.operationalStage=stage;service.estado=stage==='cerrada'?'cerrada':stage==='en ejecución'?'activa':stage==='cancelada'?'cancelada':'planificada';
+  if(stage==='en ejecución'&&!service.actualStart)service.actualStart=hoy();if(stage==='cerrada')service.actualEnd=hoy();
+  service.milestones.unshift({id:`hit_${Date.now()}`,date:hoy(),type:'estado',detail:`Estado actualizado: ${serviceStatusLabelV137(before)} → ${serviceStatusLabelV137(stage)}`,owner:currentTenantUser?.email||'usuario'});
+  recordHistoryV90?.('servicio',service.id,'Estado operativo actualizado',{estado:before},{estado:stage},'Gestión desde ficha de orden');persistTenant();openMantDetalle(serviceId);renderMantenciones();toast(`Orden ${serviceStatusLabelV137(stage).toLowerCase()}`);
+}
+function toggleServiceChecklistV137(serviceId,key,checked){
+  const service=(S.mantenciones||[]).find(row=>String(row.id)===String(serviceId));if(!service)return;ensureServiceLifecycleV137(service);
+  let item=service.checklist.find(row=>row.key===key);if(!item){item={key,checked:false,updatedAt:''};service.checklist.push(item);}item.checked=checked;item.updatedAt=new Date().toISOString();item.updatedBy=currentTenantUser?.email||'usuario';
+  recordHistoryV90?.('servicio',service.id,'Checklist operativo actualizado',{}, {requisito:key,completo:checked},'Control previo de la orden');persistTenant();renderServiceControlV137(serviceId);
+}
+function saveServiceExecutionV137(event,serviceId){
+  event.preventDefault();const service=(S.mantenciones||[]).find(row=>String(row.id)===String(serviceId));if(!service)return;ensureServiceLifecycleV137(service);
+  const progress=Math.min(100,Math.max(0,Number(document.getElementById('v137-progress')?.value)||0)),hh=Math.max(0,Number(document.getElementById('v137-hh')?.value)||0),people=Math.max(0,Number(document.getElementById('v137-people')?.value)||0),detail=document.getElementById('v137-detail')?.value.trim()||'',risk=document.getElementById('v137-risk')?.value.trim()||'';
+  service.progress=progress;service.avancePct=progress;if(!service.actualStart)service.actualStart=hoy();if(['planificada','asignada','movilizando'].includes(service.operationalStage))service.operationalStage='en ejecución';service.estado='activa';
+  (S.dailyLogs=S.dailyLogs||[]).unshift({id:`dl_${Date.now()}`,mantId:service.id,title:'Actualización de ejecución',fecha:hoy(),hh,personas:people,avance:detail,riesgos:risk,fileName:'',createdAt:new Date().toISOString(),source:'ficha_orden'});
+  service.milestones.unshift({id:`hit_${Date.now()}`,date:hoy(),type:'ejecucion',detail:`Avance ${progress}% · ${hh} HH · ${people} personas${detail?` · ${detail}`:''}`,owner:currentTenantUser?.email||'usuario'});
+  recordHistoryV90?.('servicio',service.id,'Ejecución registrada',{}, {avance:progress,hh,personas:people,riesgos:risk},'Registro diario desde la orden');persistTenant();openMantDetalle(serviceId);renderMantenciones();toast('Avance operativo registrado');
+}
+function saveServiceBudgetV137(serviceId){
+  const service=(S.mantenciones||[]).find(row=>String(row.id)===String(serviceId));if(!service)return;ensureServiceLifecycleV137(service);
+  const budget=Math.max(0,Number(document.getElementById('v137-budget')?.value)||0),billing=Math.max(0,Number(document.getElementById('v137-billing')?.value)||0),note=document.getElementById('v137-budget-note')?.value.trim()||'';
+  const before={budgetCLP:service.budgetCLP,facturacionProyectada:service.facturacionProyectada};service.budgetCLP=budget;service.facturacionProyectada=billing;
+  service.milestones.unshift({id:`hit_${Date.now()}`,date:hoy(),type:'presupuesto',detail:`Presupuesto ${serviceMoneyV137(budget)} · Venta proyectada ${serviceMoneyV137(billing)}${note?` · ${note}`:''}`,owner:currentTenantUser?.email||'usuario'});
+  recordHistoryV90?.('servicio',service.id,'Presupuesto actualizado',before,{budgetCLP:budget,facturacionProyectada:billing},note||'Control financiero de orden');persistTenant();renderServiceControlV137(serviceId);toast('Presupuesto de la orden actualizado');
+}
+function renderServiceExecutionV137(serviceId){
+  const service=(S.mantenciones||[]).find(row=>String(row.id)===String(serviceId)),host=document.getElementById('mant-tab-ejecucion-v137');if(!service||!host)return;ensureServiceLifecycleV137(service);
+  const logs=(S.dailyLogs||[]).filter(row=>String(row.mantId)===String(serviceId)).slice(0,8);
+  host.innerHTML=`<div class="card"><div class="card-header"><div><div class="card-title">Ejecución de la orden</div><div class="card-subtitle">Registra avance, horas hombre, dotación, riesgos y evidencia operacional sin salir del servicio.</div></div>${serviceStatusBadgeV137(service.operationalStage)}</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;">${SERVICE_STAGES_V137.filter(stage=>stage!=='cancelada').map(stage=>`<button class="btn ${service.operationalStage===stage?'btn-primary':'btn-secondary'} btn-sm" onclick="setServiceStageV137('${serviceEscV137(service.id)}','${stage}')">${serviceEscV137(serviceStatusLabelV137(stage))}</button>`).join('')}</div><form class="form-grid" onsubmit="saveServiceExecutionV137(event,'${serviceEscV137(service.id)}')"><div class="form-group"><label class="form-label">Avance real (%)</label><input class="form-input" id="v137-progress" type="number" min="0" max="100" value="${Number(service.progress)||0}"></div><div class="form-group"><label class="form-label">Horas hombre del registro</label><input class="form-input" id="v137-hh" type="number" min="0" value="0"></div><div class="form-group"><label class="form-label">Personas en terreno</label><input class="form-input" id="v137-people" type="number" min="0" value="${(S.asignaciones||[]).filter(row=>String(row.mantId)===String(service.id)).length}"></div><div class="form-group full"><label class="form-label">Avance / trabajo ejecutado</label><textarea class="form-textarea" id="v137-detail" placeholder="Trabajo realizado, hito alcanzado o desviación detectada."></textarea></div><div class="form-group full"><label class="form-label">Riesgos, restricciones o requerimientos</label><textarea class="form-textarea" id="v137-risk" placeholder="Riesgo, espera de repuesto, permiso pendiente o apoyo requerido."></textarea></div><div class="form-group"><button class="btn btn-primary">Guardar avance</button></div></form></div><div class="card" style="margin-top:14px;"><div class="card-title">Últimos registros de ejecución</div><div class="table-wrap" style="margin-top:10px;"><table><thead><tr><th>Fecha</th><th>HH / personas</th><th>Avance</th><th>Riesgos</th></tr></thead><tbody>${logs.map(row=>`<tr><td>${serviceEscV137(row.fecha||'—')}</td><td>${Number(row.hh||0)} HH · ${Number(row.personas||0)} pers.</td><td>${serviceEscV137(row.avance||'—')}</td><td>${serviceEscV137(row.riesgos||'—')}</td></tr>`).join('')||'<tr><td colspan="4">Sin registros de ejecución todavía.</td></tr>'}</tbody></table></div></div>`;
+}
+function renderServiceControlV137(serviceId){
+  const service=(S.mantenciones||[]).find(row=>String(row.id)===String(serviceId)),host=document.getElementById('mant-tab-control-v137');if(!service||!host)return;ensureServiceLifecycleV137(service);
+  const requirements=serviceRequirementsV137(service),status=typeof serviceStatusV107==='function'?serviceStatusV107(service):{gaps:[]},cost=(typeof costRowsV94==='function'?costRowsV94().find(row=>String(row.id)===String(service.id)):null)||{real:0,margin:0,projected:Number(service.facturacionProyectada||0)};
+  const completed=requirements.filter(row=>row.checked).length;
+  host.innerHTML=`<div class="card"><div class="card-header"><div><div class="card-title">Control previo y cierre</div><div class="card-subtitle">Revise brechas, requisitos, recursos y presupuesto antes de movilizar o cerrar la orden.</div></div><span class="badge ${status.gaps?.length?'badge-warn':'badge-ok'}">${status.gaps?.length?`${status.gaps.length} brecha(s)`:'Sin brechas críticas'}</span></div><div class="kpi-grid" style="margin-top:12px;"><div class="kpi kpi-blue"><div class="kpi-value">${completed}/${requirements.length}</div><div class="kpi-label">Checklist completo</div></div><div class="kpi kpi-orange"><div class="kpi-value">${Number(service.progress)||0}%</div><div class="kpi-label">Avance real</div></div><div class="kpi kpi-red"><div class="kpi-value">${status.gaps?.length||0}</div><div class="kpi-label">Brechas activas</div></div><div class="kpi kpi-green"><div class="kpi-value">${serviceMoneyV137(cost.margin||0)}</div><div class="kpi-label">Margen estimado</div></div></div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;">${(status.gaps||[]).map(gap=>`<button class="btn btn-secondary btn-sm" onclick="goToServiceGapV135('${serviceEscV137(service.id)}')">${serviceEscV137(gap)}</button>`).join('')||'<span class="badge badge-ok">Lista para revisión de cierre</span>'}</div><div class="table-wrap" style="margin-top:14px;"><table><thead><tr><th>Requisito</th><th>Estado</th><th>Validación</th></tr></thead><tbody>${requirements.map(row=>`<tr><td><b>${serviceEscV137(row.label)}</b></td><td><label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" ${row.checked?'checked':''} onchange="toggleServiceChecklistV137('${serviceEscV137(service.id)}','${row.key}',this.checked)"> Confirmado</label></td><td>${row.systemOk?'<span class="badge badge-ok">Verificado</span>':'<span class="badge badge-warn">Revisar</span>'}</td></tr>`).join('')}</tbody></table></div></div><div class="card" style="margin-top:14px;"><div class="card-title">Presupuesto y rentabilidad</div><div class="form-grid" style="margin-top:10px;"><div class="form-group"><label class="form-label">Presupuesto base CLP</label><input class="form-input" id="v137-budget" type="number" min="0" value="${Number(service.budgetCLP)||0}"></div><div class="form-group"><label class="form-label">Facturación proyectada CLP</label><input class="form-input" id="v137-billing" type="number" min="0" value="${Number(service.facturacionProyectada)||0}"></div><div class="form-group"><label class="form-label">Costo real registrado</label><input class="form-input" value="${serviceMoneyV137(cost.real||0)}" disabled></div><div class="form-group full"><label class="form-label">Observación financiera</label><input class="form-input" id="v137-budget-note" placeholder="OC, desviación, aprobación comercial o condición de facturación."></div></div><button class="btn btn-secondary btn-sm" onclick="saveServiceBudgetV137('${serviceEscV137(service.id)}')">Guardar presupuesto</button></div><div class="card" style="margin-top:14px;"><div class="card-title">Hitos e historial operativo</div><div class="table-wrap" style="margin-top:10px;"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Detalle</th><th>Responsable</th></tr></thead><tbody>${(service.milestones||[]).slice(0,12).map(row=>`<tr><td>${serviceEscV137(row.date||'—')}</td><td>${serviceEscV137(row.type||'evento')}</td><td>${serviceEscV137(row.detail||'—')}</td><td>${serviceEscV137(row.owner||'—')}</td></tr>`).join('')||'<tr><td colspan="4">Sin hitos registrados.</td></tr>'}</tbody></table></div></div>`;
+}
+const openMantDetalleV137Base=openMantDetalle;
+openMantDetalle=function(serviceId){openMantDetalleV137Base(serviceId);injectServiceTabsV137(serviceId);};
+</script>
+
 <script src="assets/nexo-klar-guidance.js"></script>
 <script src="assets/nexo-klar-enterprise.js"></script>
 </body>
