@@ -950,7 +950,7 @@ td { padding:12px 14px; }
   <div class="nav-item" onclick="nav('reclutamiento')">📋 Gestión de personal temporal</div>
   <div class="nav-item" onclick="nav('trabajadores')">👷 Trabajadores</div>
   <div class="nav-item" onclick="nav('personal-planta')">🏭 Personal de Planta</div>
-  <div class="nav-item" onclick="nav('turnos')">🕒 Turnos y Jornada</div>
+  <div class="nav-item" onclick="nav('turnos')">🕒 Turnos y asistencia</div>
   <div class="nav-item" onclick="nav('epp')">🦺 EPP y Entregas <span class="nav-badge nav-badge-orange" id="badge-epp">0</span></div>
   <div class="nav-item" onclick="nav('cursos')">📚 Cursos</div>
   <div class="nav-item" onclick="nav('examenes')">🧪 Exámenes</div>
@@ -1499,17 +1499,20 @@ td { padding:12px 14px; }
     <div class="card"><div class="table-wrap"><table id="subc-table"></table></div></div>
   </div>
 
-  <!-- PAGE: TURNOS Y JORNADA -->
+  <!-- PAGE: TURNOS Y ASISTENCIA -->
   <div id="page-turnos" class="page">
     <div class="section-header">
-      <div><div class="section-title">🕒 Turnos y Jornada</div><div class="section-sub" id="turnos-sub">Turnos 7x7, 4x3, 5x2, asistencia, ingreso/salida y HH reales</div></div>
-      <button class="btn btn-primary" onclick="addTurnoJornada()">+ Registro Jornada</button>
+      <div><div class="section-title">🕒 Turnos y asistencia</div><div class="section-sub" id="turnos-sub">Planifica cobertura, registra asistencia y controla horas hombre por orden de servicio.</div></div>
+      <button class="btn btn-primary" onclick="openShiftEntryV139('programar')">+ Programar turno</button>
     </div>
     <div class="filters">
+      <label class="filter-label" for="filt-turno-fecha-v139">Fecha operativa</label>
+      <input class="filter-select" id="filt-turno-fecha-v139" type="date" onchange="renderTurnos()">
       <select class="filter-select" id="filt-turno-mant" onchange="renderTurnos()"><option value="">Todos los proyectos</option></select>
       <select class="filter-select" id="filt-turno-regimen" onchange="renderTurnos()"><option value="">Todos los regímenes</option><option value="7x7">7x7</option><option value="4x3">4x3</option><option value="5x2">5x2</option><option value="turno_especial">Turno especial</option></select>
       <select class="filter-select" id="filt-turno-dia" onchange="renderTurnos()"><option value="">Todos los turnos</option><option value="día">Día</option><option value="noche">Noche</option></select>
     </div>
+    <div id="turnos-coordination-v139"></div>
     <div class="kpi-grid" id="turnos-kpis"></div>
     <div class="card"><div class="table-wrap"><table id="turnos-table"></table></div></div>
   </div>
@@ -9725,6 +9728,44 @@ function renderWorkerQuickProfileV138(workerId){
 }
 const openFichaV138Base=openFicha;
 openFicha=function(workerId){openFichaV138Base(workerId);renderWorkerQuickProfileV138(workerId);};
+</script>
+
+<script>
+// V13.9 · Turnos y asistencia: coordinación diaria, cobertura y registro en terreno.
+function shiftEscV139(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
+function shiftDateV139(){return document.getElementById('filt-turno-fecha-v139')?.value||hoy();}
+function shiftServicesV139(){return (S.mantenciones||[]).filter(row=>!['cerrada','cancelada','finalizada'].includes(String(row.estado||'').toLowerCase()));}
+function shiftRowsV139(date){return (S.turnos||[]).filter(row=>String(row.fecha||'')===String(date));}
+function shiftCoverageV139(service,date){
+  const registered=shiftRowsV139(date).filter(row=>String(row.mantId)===String(service.id));
+  const present=registered.filter(row=>row.asistencia==='presente').length;
+  const required=Number(service.personalReq||service.requeridos||service.dotacionRequerida||service.dotacion||0);
+  const assigned=(S.asignaciones||[]).filter(row=>String(row.mantId)===String(service.id)).length;
+  const target=required||assigned;
+  const pending=Math.max(0,target-present);
+  return {registered,present,required:target,assigned,pending,status:pending===0&&target>0?'Lista':present>0?'Parcial':'Sin cobertura'};
+}
+function shiftStatusBadgeV139(status){const cls=status==='Lista'?'badge-ok':status==='Parcial'?'badge-warn':'badge-err';return `<span class="badge ${cls}">${shiftEscV139(status)}</span>`;}
+function ensureShiftExperienceV139(){
+  const filter=document.getElementById('filt-turno-fecha-v139');if(filter&&!filter.value)filter.value=hoy();
+  const host=document.getElementById('turnos-coordination-v139');if(!host)return;
+  const date=shiftDateV139(),services=shiftServicesV139(),rows=shiftRowsV139(date),present=rows.filter(row=>row.asistencia==='presente').length,exceptions=rows.filter(row=>row.asistencia!=='presente').length;
+  const coverage=services.map(service=>({service,...shiftCoverageV139(service,date)}));
+  host.innerHTML=`<div class="card" style="margin:0 0 16px;"><div class="card-header"><div><div class="card-title">Coordinación diaria</div><div class="card-subtitle">Revise cobertura antes de iniciar la jornada y registre novedades durante el día.</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" onclick="openShiftEntryV139('programar')">+ Programar turno</button><button class="btn btn-secondary btn-sm" onclick="openShiftEntryV139('asistencia')">Registrar asistencia</button></div></div><div class="kpi-grid" style="margin-top:12px;"><div class="kpi kpi-blue"><div class="kpi-value">${services.length}</div><div class="kpi-label">Órdenes activas</div></div><div class="kpi kpi-green"><div class="kpi-value">${present}</div><div class="kpi-label">Presentes hoy</div></div><div class="kpi kpi-orange"><div class="kpi-value">${exceptions}</div><div class="kpi-label">Novedades</div></div><div class="kpi kpi-${coverage.filter(row=>row.pending>0).length?'red':'green'}"><div class="kpi-value">${coverage.filter(row=>row.pending>0).length}</div><div class="kpi-label">Órdenes con brecha</div></div></div><div class="table-wrap" style="margin-top:14px;"><table><thead><tr><th>Orden de servicio</th><th>Dotación</th><th>Asistencia del día</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${coverage.map(row=>`<tr><td><b>${shiftEscV139(row.service.nombre||'Orden sin nombre')}</b><div class="worker-rut">${shiftEscV139(minaNombre(row.service.minaId))} · ${shiftEscV139(contratoNombre(row.service.contratoId))}</div></td><td>${row.assigned} asignadas${row.required?` / ${row.required} requeridas`:''}</td><td>${row.present} presente(s)${row.pending?` · faltan ${row.pending}`:''}</td><td>${shiftStatusBadgeV139(row.status)}</td><td><button class="btn btn-secondary btn-sm" onclick="openShiftEntryV139('asistencia','${shiftEscV139(row.service.id)}')">Registrar</button></td></tr>`).join('')||'<tr><td colspan="5">No hay órdenes activas para coordinar.</td></tr>'}</tbody></table></div><div class="cloud-note" style="margin-top:12px;">Use esta vista para confirmar dotación, detectar ausencias y registrar asistencia por orden. Las horas hombre se reflejan en la orden de servicio y en los reportes.</div></div>`;
+}
+function openShiftEntryV139(mode,serviceId=''){
+  addTurnoJornada();
+  setTimeout(()=>{
+    const date=document.getElementById('tj-fecha'),service=document.getElementById('tj-mant'),attendance=document.getElementById('tj-asistencia'),modal=document.getElementById('modal-nuevo-turno');
+    if(date)date.value=shiftDateV139();if(serviceId&&service)service.value=serviceId;
+    if(modal){const title=modal.querySelector('.modal-title');if(title)title.textContent=mode==='asistencia'?'Registrar asistencia':'Programar turno';const note=modal.querySelector('#shift-entry-note-v139')||document.createElement('div');note.id='shift-entry-note-v139';note.className='cloud-note';note.style.marginBottom='14px';note.textContent=mode==='asistencia'?'Registre presencia, ausencia o novedad de la persona durante esta jornada.':'Programe la persona, orden, jornada y turno para preparar la cobertura.';modal.querySelector('.modal-body')?.prepend(note);}
+    if(mode==='asistencia'&&attendance)attendance.value='presente';
+  },0);
+}
+const renderTurnosV139Base=renderTurnos;
+renderTurnos=function(){renderTurnosV139Base();ensureShiftExperienceV139();};
+const renderPageV139Base=renderPage;
+renderPage=function(page){renderPageV139Base(page);if(page==='turnos')setTimeout(()=>renderTurnos(),0);};
 </script>
 
 <script src="assets/nexo-klar-guidance.js"></script>
