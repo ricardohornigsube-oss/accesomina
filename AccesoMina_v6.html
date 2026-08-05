@@ -6330,7 +6330,7 @@ function translateClientTerminology(value) {
     [/\bDashboard\b/gi,'Panel de control'],
     [/\bTrabajadores\b/gi,'Personas'],
     [/\bTrabajador\b/gi,'Persona'],
-    [/\bSubcontratos\b/gi,'Terceros y subcontratos'],
+    [/(?<!Terceros y )\bSubcontratos\b/gi,'Terceros y subcontratos'],
     [/\bSubcontratistas\b/gi,'Empresas colaboradoras'],
     [/\bSubcontratista\b/gi,'Empresa colaboradora'],
     [/\bEmpresa contratista\b/gi,'Empresa de servicios'],
