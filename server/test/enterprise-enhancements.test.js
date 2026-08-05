@@ -147,6 +147,14 @@ test('EPP is available as a connected inventory area without duplicating deliver
   ]) assert.ok(html.includes(feature), `missing EPP inventory feature: ${feature}`);
 });
 
+test('EPP stock, movements and deliveries are managed from the assets workspace', () => {
+  for (const feature of [
+    'injectEppInventoryHubV158', 'Control de EPP por bodega', 'openEppMovementV158',
+    'saveEppMovementV158', 'Registrar entrega', 'openEppDelivery()',
+    'hideOperationalEppEntryV158', 'Registrar movimiento'
+  ]) assert.ok(html.includes(feature), `missing centralized EPP operation: ${feature}`);
+});
+
 test('alerts group worker documents in one compliance card and keep direct document upload available', () => {
   for (const feature of [
     'filteredActiveAlerts', 'personAlertCard', 'Personas con antecedentes por gestionar',
