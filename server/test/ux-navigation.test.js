@@ -4,6 +4,7 @@ import fs from 'node:fs';
 
 const html = fs.readFileSync(new URL('../../AccesoMina_v6.html', import.meta.url), 'utf8');
 const production = fs.readFileSync(new URL('../../public/index.html', import.meta.url), 'utf8');
+const enterpriseCss = fs.readFileSync(new URL('../../assets/nexo-klar-enterprise.css', import.meta.url), 'utf8');
 
 test('local and production frontends remain identical', () => {
   assert.equal(html, production);
@@ -85,4 +86,14 @@ test('contractor and asset workspaces reuse operational data instead of creating
   }
   assert.match(html, /subcontractComplianceV144\(row\)/);
   assert.match(html, /S\.inventoryMovements\.unshift/);
+});
+
+test('private workspace uses one visual system for typography, controls and data tables', () => {
+  for (const token of ['--font-sans', '--space-4', '--radius-md', '--focus-ring']) {
+    assert.ok(html.includes(token), `missing UI token: ${token}`);
+  }
+  for (const rule of ['body.private .section-header', 'body.private .table-wrap', 'body.private .tab-bar', 'body.private .modal', 'body.private .nav-item']) {
+    assert.ok(enterpriseCss.includes(rule), `missing private UI rule: ${rule}`);
+  }
+  assert.match(html, /button, input, select, textarea \{ font:inherit; \}/);
 });
