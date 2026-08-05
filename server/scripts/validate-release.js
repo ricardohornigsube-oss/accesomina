@@ -6,8 +6,11 @@ const errors=[],warnings=[];
 const read=file=>fs.readFileSync(file,'utf8');
 const hash=value=>crypto.createHash('sha256').update(value).digest('hex');
 const local=read('AccesoMina_v6.html'),publicHtml=read('public/index.html');
+const localUi=`${local}\n${read('assets/nexo-klar-enterprise.js')}`;
+const publicUi=`${publicHtml}\n${read('public/assets/nexo-klar-enterprise.js')}`;
 
 if(hash(local)!==hash(publicHtml))errors.push('AccesoMina_v6.html and public/index.html are not synchronized');
+if(hash(read('assets/nexo-klar-enterprise.js'))!==hash(read('public/assets/nexo-klar-enterprise.js')))errors.push('Enterprise UI assets are not synchronized');
 const requiredCapabilities=[
   'Panel General','Alertas','Centro Operativo','Libro de Obra',
   'Prospectos y oportunidades','Clientes','Contratos y Firmas','Órdenes de Servicio','Terceros y subcontratos',
@@ -23,11 +26,12 @@ const requiredCapabilities=[
   'saveInventoryCountV154','saveInventoryReceiptV154','findInventoryCodeV154',
   'ASSET_AREA_LABELS_V155','syncAssetNavigationV155','Estás en',
   'openInventoryLocationV156','saveInventoryLocationV156','Ubicaciones internas',
-  'v156-item-lot','v156-item-expiry'
+  'v156-item-lot','v156-item-expiry',
+  'Personas con antecedentes por gestionar','Cada persona aparece una sola vez','Regularizar documento'
 ];
 for(const capability of requiredCapabilities){
-  if(!local.includes(capability))errors.push(`Local frontend is missing required capability: ${capability}`);
-  if(!publicHtml.includes(capability))errors.push(`Production frontend is missing required capability: ${capability}`);
+  if(!localUi.includes(capability))errors.push(`Local frontend is missing required capability: ${capability}`);
+  if(!publicUi.includes(capability))errors.push(`Production frontend is missing required capability: ${capability}`);
 }
 for(const [file,html] of [['AccesoMina_v6.html',local],['public/index.html',publicHtml]]){
   const scripts=[...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(match=>match[1]);

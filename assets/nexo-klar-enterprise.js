@@ -353,28 +353,82 @@
     return "Revisar antecedente y resolver";
   }
 
+  function alertLevel(row) {
+    const value = row.urgencia === "falta" ? "critico" : row.urgencia;
+    return ["vencido", "critico", "proximo"].includes(value) ? value : "proximo";
+  }
+
+  function alertLevelRank(row) {
+    return { vencido: 0, critico: 1, proximo: 2 }[alertLevel(row)] ?? 3;
+  }
+
+  function alertBadge(row) {
+    const level = alertLevel(row);
+    const label = row.urgencia === "falta" ? "Faltante" : level === "proximo" ? "Por vencer" : level[0].toUpperCase() + level.slice(1);
+    return `<span class="badge ${level === "vencido" ? "badge-err" : level === "critico" ? "badge-crit" : "badge-warn"}">${label}</span>`;
+  }
+
+  function filteredActiveAlerts() {
+    const txt = (document.getElementById("filt-alerta-txt")?.value || "").toLowerCase();
+    const type = document.getElementById("filt-alerta-tipo")?.value || "";
+    const urgency = document.getElementById("filt-alerta-urg")?.value || "";
+    const client = document.getElementById("filt-alerta-mina")?.value || "";
+    const contract = document.getElementById("filt-alerta-contrato")?.value || "";
+    const service = document.getElementById("filt-alerta-mant")?.value || "";
+    return activeAlerts().filter((row) => {
+      if (txt && !String(row.msg || "").toLowerCase().includes(txt) && !String(row.trab?.nombre || "").toLowerCase().includes(txt)) return false;
+      if (type && row.tipo !== type) return false;
+      if (urgency && row.urgencia !== urgency) return false;
+      const person = row.trabId ? (S.trabajadores || []).find((item) => item.id === row.trabId) : null;
+      if (client && row.minaId !== client && !(person?.mineras || []).includes(client)) return false;
+      if (contract && row.contratoId !== contract && (typeof getMantContratoId === "function" ? getMantContratoId(row.mantId) : "") !== contract && !(typeof workerContratoIds === "function" ? workerContratoIds(person || {}).includes(contract) : false)) return false;
+      if (service && row.mantId !== service && !(typeof workerMantIds === "function" ? workerMantIds(person || {}).includes(service) : false)) return false;
+      return true;
+    });
+  }
+
+  function documentAction(row) {
+    if (row.trabId && typeof getAlertDocumentTargetV129 === "function" && getAlertDocumentTargetV129(row)) {
+      return `<button class="btn btn-primary btn-sm" type="button" onclick="openAlertManagerV129('${esc(row.id)}')">Cargar documento</button>`;
+    }
+    return `<button class="btn btn-secondary btn-sm" type="button" onclick="manageAlert128('${encodeURIComponent(row.key)}')">Gestionar</button>`;
+  }
+
+  function personAlertCard(personId, rows) {
+    const person = rows[0]?.trab || (S.trabajadores || []).find((item) => item.id === personId) || {};
+    const ordered = rows.slice().sort((a, b) => alertLevelRank(a) - alertLevelRank(b));
+    const expired = ordered.filter((row) => alertLevel(row) === "vencido").length;
+    const critical = ordered.filter((row) => alertLevel(row) === "critico").length;
+    const upcoming = ordered.filter((row) => alertLevel(row) === "proximo").length;
+    const firstUploadable = ordered.find((row) => typeof getAlertDocumentTargetV129 === "function" && getAlertDocumentTargetV129(row));
+    const serviceNames = typeof workerMantIds === "function" ? workerMantIds(person).map((id) => typeof mantNombre === "function" ? mantNombre(id) : id).filter(Boolean) : [];
+    return `<article class="card" style="margin-bottom:12px;border-left:4px solid ${expired ? "var(--red)" : critical ? "var(--orange)" : "var(--blue)"};">
+      <div class="card-header" style="align-items:flex-start;gap:12px;"><div><div class="card-title">${esc(person.nombre || "Persona sin identificar")}</div><div class="card-subtitle">${esc(person.rut || "Sin RUT")} · ${esc(person.cargo || person.especialidad || "Sin cargo")}${serviceNames.length ? ` · ${esc(serviceNames.slice(0, 2).join(", "))}` : ""}</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">${expired ? `<span class="badge badge-err">${expired} vencido${expired === 1 ? "" : "s"}</span>` : ""}${critical ? `<span class="badge badge-crit">${critical} crítico${critical === 1 ? "" : "s"}</span>` : ""}${upcoming ? `<span class="badge badge-warn">${upcoming} por vencer</span>` : ""}</div></div>
+      <div class="cloud-note" style="margin-bottom:10px;"><b>Estado:</b> ${expired || critical ? "No habilitada hasta regularizar los antecedentes críticos." : "Habilitada con antecedentes próximos a vencer."}</div>
+      <div style="display:grid;gap:8px;">${ordered.map((row) => `<div class="alert-item alert-${alertLevel(row)}"><div class="alert-dot dot-${alertLevel(row)}"></div><div style="flex:1;"><b>${esc(String(row.msg || "").replace(`${person.nombre || ""}: `, ""))}</b><div class="nk128-muted">${esc(row.tipo || "antecedente")} · ${esc(row.workflow.owner || "Sin responsable asignado")}</div></div>${alertBadge(row)}${documentAction(row)}</div>`).join("")}</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px;"><button class="btn btn-ghost btn-sm" type="button" onclick="openFicha('${esc(personId)}')">Abrir ficha</button>${firstUploadable ? `<button class="btn btn-primary btn-sm" type="button" onclick="openAlertManagerV129('${esc(firstUploadable.id)}')">Regularizar documento</button>` : ""}<button class="btn btn-secondary btn-sm" type="button" onclick="notifWA('${esc(personId)}','${esc(`Nexo Klar: tienes ${ordered.length} antecedente(s) pendiente(s) de regularización.`)}')">Notificar</button></div>
+    </article>`;
+  }
+
   function renderManagedAlerts() {
     ensureState();
     const listHost = document.getElementById("alertas-list");
     if (!listHost) return;
-    const txt = (document.getElementById("filt-alerta-txt")?.value || "").toLowerCase();
-    const type = document.getElementById("filt-alerta-tipo")?.value || "";
-    const urgency = document.getElementById("filt-alerta-urg")?.value || "";
-    const rows = activeAlerts().filter((row) => (!txt || row.msg.toLowerCase().includes(txt)) && (!type || row.tipo === type) && (!urgency || row.urgencia === urgency));
-    const order = ["vencido", "critico", "falta", "proximo"];
-    listHost.innerHTML = order.map((level) => {
-      const group = rows.filter((row) => row.urgencia === level);
-      if (!group.length) return "";
-      return `<div class="card" style="margin-bottom:12px;"><div class="card-header"><div class="card-title">${esc(level.toUpperCase())}</div><span class="badge ${level === "vencido" ? "badge-err" : "badge-warn"}">${group.length}</span></div>${group.map((row) => `
-        <div class="alert-item alert-${level === "falta" ? "critico" : level}">
-          <div class="alert-dot dot-${level === "falta" ? "critico" : level}"></div>
-          <div style="flex:1;"><b>${esc(row.msg)}</b><div class="nk128-muted">${esc(row.workflow.owner || "Sin responsable")} · ${esc(alertAction(row))}</div></div>
-          <div class="nk128-actions"><button class="btn btn-secondary btn-sm" onclick="manageAlert128('${encodeURIComponent(row.key)}')">Gestionar</button></div>
-        </div>`).join("")}</div>`;
-    }).join("") || '<div class="empty">No existen alertas activas para estos filtros.</div>';
+    const rows = filteredActiveAlerts();
+    const byPerson = new Map();
+    const operational = [];
+    rows.forEach((row) => row.trabId ? byPerson.set(row.trabId, [...(byPerson.get(row.trabId) || []), row]) : operational.push(row));
+    const people = [...byPerson.entries()].sort((a, b) => alertLevelRank(a[1][0]) - alertLevelRank(b[1][0]) || b[1].length - a[1].length);
+    const expired = rows.filter((row) => alertLevel(row) === "vencido").length;
+    const critical = rows.filter((row) => alertLevel(row) === "critico").length;
+    const upcoming = rows.filter((row) => alertLevel(row) === "proximo").length;
+    const summary = `<div class="kpi-grid" style="margin-bottom:16px;"><div class="kpi kpi-red"><div class="kpi-value">${people.filter(([, group]) => group.some((row) => ["vencido", "critico"].includes(alertLevel(row)))).length}</div><div class="kpi-label">Personas no habilitadas</div></div><div class="kpi kpi-red"><div class="kpi-value">${expired}</div><div class="kpi-label">Documentos vencidos</div></div><div class="kpi kpi-orange"><div class="kpi-value">${upcoming}</div><div class="kpi-label">Próximos a vencer</div></div><div class="kpi kpi-blue"><div class="kpi-value">${operational.length}</div><div class="kpi-label">Alertas de recursos y operación</div></div></div>`;
+    const peopleContent = people.length ? `<div class="card" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Personas con antecedentes por gestionar</div><div class="card-subtitle">Cada persona aparece una sola vez con todos sus documentos, cursos, exámenes y firmas pendientes.</div></div><span class="badge badge-blue">${people.length} persona(s)</span></div></div>${people.map(([personId, group]) => personAlertCard(personId, group)).join("")}` : "";
+    const operationContent = operational.length ? `<div class="card"><div class="card-header"><div><div class="card-title">Recursos, contratos y operación</div><div class="card-subtitle">Alertas no asociadas a una persona: contratos, vehículos, terceros, órdenes y documentación de empresa.</div></div><span class="badge badge-warn">${operational.length}</span></div>${operational.sort((a, b) => alertLevelRank(a) - alertLevelRank(b)).map((row) => `<div class="alert-item alert-${alertLevel(row)}"><div class="alert-dot dot-${alertLevel(row)}"></div><div style="flex:1;"><b>${esc(row.msg)}</b><div class="nk128-muted">${esc(row.tipo || "operación")} · ${esc(row.workflow.owner || alertAction(row))}</div></div>${alertBadge(row)}${documentAction(row)}</div>`).join("")}</div>` : "";
+    listHost.innerHTML = rows.length ? `${summary}${peopleContent}${operationContent}` : '<div class="empty">No existen alertas activas para estos filtros.</div>';
     const closed = Object.values(S.alertWorkflow).filter((row) => row.status === "cerrada").length;
     const snoozed = Object.values(S.alertWorkflow).filter((row) => row.snoozedUntil && row.snoozedUntil > today()).length;
-    document.getElementById("alertas-sub").textContent = `${rows.length} activas · ${closed} cerradas · ${snoozed} pospuestas`;
+    document.getElementById("alertas-sub").textContent = `${rows.length} alertas activas · ${people.length} personas agrupadas · ${critical} críticas · ${closed} cerradas · ${snoozed} pospuestas`;
   }
 
   window.manageAlert128 = function (encodedKey) {

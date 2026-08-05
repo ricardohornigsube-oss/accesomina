@@ -137,3 +137,10 @@ test('inventory tracks internal locations, codes, lots and expiry without duplic
     'El código, QR, patente o serie ya está asignado a otro recurso'
   ]) assert.ok(html.includes(feature), `missing inventory traceability feature: ${feature}`);
 });
+
+test('alerts group worker documents in one compliance card and keep direct document upload available', () => {
+  for (const feature of [
+    'filteredActiveAlerts', 'personAlertCard', 'Personas con antecedentes por gestionar',
+    'Cada persona aparece una sola vez', 'Regularizar documento', 'openAlertManagerV129'
+  ]) assert.ok(script.includes(feature), `missing grouped alert feature: ${feature}`);
+});
