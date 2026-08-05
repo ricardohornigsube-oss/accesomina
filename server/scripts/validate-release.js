@@ -27,6 +27,7 @@ const requiredCapabilities=[
   'ASSET_AREA_LABELS_V155','syncAssetNavigationV155','Estás en',
   'openInventoryLocationV156','saveInventoryLocationV156','Ubicaciones internas',
   'v156-item-lot','v156-item-expiry',
+  "openAssetsWorkspaceV146('epp')",'EPP y protección personal','openInventoryItemModalV157Base',
   'Personas con antecedentes por gestionar','Cada persona aparece una sola vez','Regularizar documento'
 ];
 for(const capability of requiredCapabilities){

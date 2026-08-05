@@ -138,6 +138,15 @@ test('inventory tracks internal locations, codes, lots and expiry without duplic
   ]) assert.ok(html.includes(feature), `missing inventory traceability feature: ${feature}`);
 });
 
+test('EPP is available as a connected inventory area without duplicating delivery data', () => {
+  for (const feature of [
+    "openAssetsWorkspaceV146('epp')", 'EPP y protección personal',
+    "['maquinaria','equipos','herramientas','epp','materiales','insumos']",
+    'Las entregas a personas se registran desde Protección personal y entregas',
+    'openInventoryItemModalV157Base'
+  ]) assert.ok(html.includes(feature), `missing EPP inventory feature: ${feature}`);
+});
+
 test('alerts group worker documents in one compliance card and keep direct document upload available', () => {
   for (const feature of [
     'filteredActiveAlerts', 'personAlertCard', 'Personas con antecedentes por gestionar',
