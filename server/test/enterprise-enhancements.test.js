@@ -156,6 +156,13 @@ test('EPP stock, movements and deliveries are managed from the assets workspace'
   ]) assert.ok(html.includes(feature), `missing centralized EPP operation: ${feature}`);
 });
 
+test('asset assignments and loans open a dedicated operational workspace', () => {
+  for (const feature of [
+    'injectAssignmentsWorkspaceV159', 'openAssetAssignmentV159', 'saveAssetAssignmentV159',
+    'Asignaciones y préstamos', 'Asignar recurso', 'Recurso asignado y préstamo registrado'
+  ]) assert.ok(html.includes(feature), `missing asset assignment feature: ${feature}`);
+});
+
 test('alerts group worker documents in one compliance card and keep direct document upload available', () => {
   for (const feature of [
     'filteredActiveAlerts', 'personAlertCard', 'Personas con antecedentes por gestionar',

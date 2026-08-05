@@ -29,6 +29,7 @@ const requiredCapabilities=[
   'v156-item-lot','v156-item-expiry',
   "openAssetsWorkspaceV146('epp')",'EPP y protección personal','openInventoryItemModalV157Base',
   'injectEppInventoryHubV158','injectEppOperationGuideV158','Control de EPP por bodega','openEppMovementV158','saveEppMovementV158','hideOperationalEppEntryV158',
+  'injectAssignmentsWorkspaceV159','openAssetAssignmentV159','saveAssetAssignmentV159','Asignaciones y préstamos',
   'Personas con antecedentes por gestionar','Cada persona aparece una sola vez','Regularizar documento'
 ];
 for(const capability of requiredCapabilities){
