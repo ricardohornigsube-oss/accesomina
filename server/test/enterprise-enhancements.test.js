@@ -129,3 +129,11 @@ test('asset workspace keeps the selected area visible in the sidebar and workspa
   }
   assert.ok(html.includes('Estás en'), 'missing visible asset workspace path');
 });
+
+test('inventory tracks internal locations, codes, lots and expiry without duplicating a resource code', () => {
+  for (const feature of [
+    'inventoryLocations', 'openInventoryLocationV156', 'saveInventoryLocationV156',
+    'Ubicaciones internas', 'v156-item-lot', 'v156-item-expiry',
+    'El código, QR, patente o serie ya está asignado a otro recurso'
+  ]) assert.ok(html.includes(feature), `missing inventory traceability feature: ${feature}`);
+});
