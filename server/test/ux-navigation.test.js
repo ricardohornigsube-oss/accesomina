@@ -46,8 +46,8 @@ test('visible terminology supports multiple industries without changing legacy d
 });
 
 test('people navigation is centralized with fixed, project, available and restricted views', () => {
-  const peopleStart = html.indexOf('<div class="nav-group-label">Capital humano</div>');
-  const operationsStart = html.indexOf('<div class="nav-group-label">Gestión operacional</div>');
+  const peopleStart = html.indexOf('data-nav-group="capital-humano"');
+  const operationsStart = html.indexOf('data-nav-group="gestion-operacional"');
   const peopleNavigation = html.slice(peopleStart, operationsStart);
 
   assert.match(peopleNavigation, /onclick="nav\('trabajadores'\)"/);
@@ -68,13 +68,23 @@ test('visible worker restriction language is standardized without changing inter
 });
 
 test('work book remains visible in the project and business management group', () => {
-  const generalStart = html.indexOf('<div class="nav-group-label">Gestión de proyectos y negocios</div>');
-  const nextStart = html.indexOf('<div class="nav-group-label">Activos, equipos e inventario</div>');
+  const generalStart = html.indexOf('data-nav-group="proyectos-negocios"');
+  const nextStart = html.indexOf('data-nav-group="activos-inventario"');
   const generalNavigation = html.slice(generalStart, nextStart);
 
   assert.match(generalNavigation, /id="nav-work-book-v125"/);
   assert.match(generalNavigation, /📖 Libro de Obra/);
   assert.ok(generalNavigation.includes("nav('oportunidades')"));
+});
+
+test('every private navigation group can collapse without hiding the active module permanently', () => {
+  for (const group of ['centro-control', 'capital-humano', 'gestion-operacional', 'contratistas', 'relacion-comercial', 'cumplimiento-calidad', 'proyectos-negocios', 'activos-inventario', 'gestion-administracion']) {
+    assert.ok(html.includes(`data-nav-group="${group}"`), `missing collapsible group: ${group}`);
+  }
+  for (const fn of ['toggleNavGroupV147', 'setNavGroupCollapsedV147', 'expandNavGroupContainingV147', 'restoreNavGroupsV147']) {
+    assert.match(html, new RegExp(`function ${fn}`));
+  }
+  assert.match(enterpriseCss, /nav-group-label\.is-collapsed .nav-group-toggle/);
 });
 
 test('contractor and asset workspaces reuse operational data instead of creating silos', () => {

@@ -206,6 +206,38 @@ body.private .tab-btn {
 
 body.private .nav-group-label {
   color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  cursor: pointer;
+  user-select: none;
+  border-radius: var(--radius-sm);
+}
+
+body.private .nav-group-label:hover {
+  color: var(--text);
+  background: var(--bg3);
+}
+
+body.private .nav-group-label:focus-visible {
+  outline: 0;
+  box-shadow: var(--focus-ring);
+}
+
+body.private .nav-group-toggle {
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  color: var(--text-dim);
+  font-size: 15px;
+  line-height: 1;
+  transition: transform .16s ease;
+}
+
+body.private .nav-group-label.is-collapsed .nav-group-toggle {
+  transform: rotate(-90deg);
 }
 
 body.private .nav-item {

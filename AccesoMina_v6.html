@@ -933,13 +933,13 @@ td { padding:12px 14px; }
   <div class="sidebar-logo">
     <div style="display:flex;align-items:center;gap:10px;"><div class="logo-mark" style="width:34px;height:34px;border-radius:10px;">N</div><div><div class="sidebar-logo-title">Nexo Klar</div><div class="sidebar-logo-sub">Sitio privado · Datos claros</div></div></div>
   </div>
-  <div class="nav-group-label">Centro de control</div>
+  <div class="nav-group-label" data-nav-group="centro-control" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Centro de control</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
   <div class="nav-item active" onclick="nav('dashboard')">🏠 Panel General</div>
   <div class="nav-item" onclick="nav('alertas')">🔔 Alertas <span class="nav-badge" id="badge-alertas">0</span></div>
   <div class="nav-item" onclick="nav('reclutamiento')">📋 Gestión de personal temporal</div>
   <div class="nav-item" onclick="nav('operaciones-cloud')">📡 Centro Operativo</div>
 
-  <div class="nav-group-label">Capital humano</div>
+  <div class="nav-group-label" data-nav-group="capital-humano" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Capital humano</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
   <div class="nav-item" onclick="nav('trabajadores')">👷 Personas</div>
   <div class="nav-item" onclick="nav('turnos')">🕒 Turnos y asistencia</div>
   <div class="nav-item" onclick="nav('epp')">🦺 Protección personal y entregas <span class="nav-badge nav-badge-orange" id="badge-epp">0</span></div>
@@ -948,35 +948,35 @@ td { padding:12px 14px; }
   <div class="nav-item" onclick="nav('protocolos')">🩺 Salud Ocupacional</div>
   <div class="nav-item" onclick="nav('bloqueados')">🚫 Restringidos</div>
 
-  <div class="nav-group-label">Gestión operacional</div>
+  <div class="nav-group-label" data-nav-group="gestion-operacional" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Gestión operacional</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
   <div class="nav-item" onclick="nav('llamados')">📲 Comunicaciones y convocatorias</div>
   <div class="nav-item" onclick="nav('vehiculos')">🚙 Vehículos, activos y equipos</div>
   <div class="nav-item" onclick="nav('hoteleria')">🛏️ Alojamientos y Estadías</div>
   <div class="nav-item" onclick="nav('credenciales')">🎫 Credenciales</div>
 
-  <div class="nav-group-label">Contratistas</div>
+  <div class="nav-group-label" data-nav-group="contratistas" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Contratistas</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
   <div class="nav-item" onclick="nav('contratistas')">🏗️ Terceros y subcontratos</div>
   <div class="nav-item" onclick="openContractorWorkspaceV146('contratos')">📑 Contratos y convenios</div>
   <div class="nav-item" onclick="openContractorWorkspaceV146('personas')">👥 Personal del contratista</div>
   <div class="nav-item" onclick="openContractorWorkspaceV146('cumplimiento')">✅ Habilitaciones y cumplimiento</div>
   <div class="nav-item" onclick="openContractorWorkspaceV146('evaluacion')">📊 Evaluación de desempeño</div>
 
-  <div class="nav-group-label">Relación comercial</div>
+  <div class="nav-group-label" data-nav-group="relacion-comercial" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Relación comercial</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
   <div class="nav-item" onclick="nav('mineras')">🏢 Clientes</div>
   <div class="nav-item" onclick="nav('contratos')">📝 Contratos y Firmas <span class="nav-badge nav-badge-orange" id="badge-firmas">0</span></div>
   <div class="nav-item" onclick="nav('mantenciones')">🔧 Órdenes de Servicio</div>
 
-  <div class="nav-group-label">Cumplimiento y calidad</div>
+  <div class="nav-group-label" data-nav-group="cumplimiento-calidad" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Cumplimiento y calidad</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
   <div class="nav-item" onclick="nav('acreditacion-empresa')">🏢 Documentación de la Empresa</div>
   <div class="nav-item" onclick="nav('acreditacion-mandante')">✅ Habilitación del Cliente</div>
   <div class="nav-item" onclick="nav('incidentes')">⚠️ Incidentes y no conformidades</div>
   <div class="nav-item" onclick="nav('auditoria')">📋 Auditoría</div>
 
-  <div class="nav-group-label">Gestión de proyectos y negocios</div>
+  <div class="nav-group-label" data-nav-group="proyectos-negocios" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Gestión de proyectos y negocios</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
   <div class="nav-item" id="nav-work-book-v125" onclick="nav('libro-obras')">📖 Libro de Obra <span class="nav-badge" id="badge-work-book-v125">0</span></div>
   <div class="nav-item" onclick="nav('oportunidades')">💼 Prospectos y oportunidades</div>
 
-  <div class="nav-group-label">Activos, equipos e inventario</div>
+  <div class="nav-group-label" data-nav-group="activos-inventario" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Activos, equipos e inventario</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
   <div class="nav-item" onclick="nav('activos-inventario')">📊 Inventario y stock</div>
   <div class="nav-item" onclick="openAssetsWorkspaceV146('maquinaria')">🚜 Maquinaria</div>
   <div class="nav-item" onclick="openAssetsWorkspaceV146('equipos')">🧰 Equipos e instrumentos</div>
@@ -988,14 +988,14 @@ td { padding:12px 14px; }
   <div class="nav-item" onclick="openAssetsWorkspaceV146('mantenimiento')">🛠️ Mantenimiento</div>
   <div class="nav-item" onclick="openAssetsWorkspaceV146('asignaciones')">📋 Asignaciones y préstamos</div>
 
-  <div class="nav-group-label">Gestión y administración</div>
+  <div class="nav-group-label" data-nav-group="gestion-administracion" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Gestión y administración</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
   <div class="nav-item" onclick="nav('reportes')">📊 Reportes y analítica</div>
   <div class="nav-item" onclick="nav('configuracion')">⚙️ Configuración Empresa</div>
   <div class="nav-item" onclick="nav('transferencia')">↕️ Importar / Exportar</div>
   <div class="nav-item" onclick="nav('usuarios')">👥 Usuarios y Permisos</div>
   <div class="nav-item" onclick="nav('bitacora')">🧾 Bitácora de Cambios</div>
   <div class="nav-item" onclick="nav('privacidad')">🛡️ Privacidad y Datos</div>
-  <div class="nav-group-label" id="nav-admin-label" style="display:none;">Administración Nexo Klar</div>
+  <div class="nav-group-label" id="nav-admin-label" data-nav-group="administracion-nexo-klar" style="display:none;" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Administración Nexo Klar</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
   <div class="nav-item" id="nav-clientes" style="display:none;" onclick="nav('clientes')">🏢 Clientes</div>
   <div class="sidebar-bottom">
     <div style="font-weight:700;color:var(--text-muted);margin-bottom:4px;">Nexo Klar SPA</div>
@@ -2762,12 +2762,23 @@ function nav(page) {
   document.querySelectorAll('.nav-item').forEach(n=>{
     if(n.getAttribute('onclick')===`nav('${page}')`) n.classList.add('active');
   });
+  expandNavGroupContainingV147(page);
   const titleEl=document.getElementById('topbar-title'); if(titleEl) titleEl.textContent = pageLabels[page]||page;
   const subEl=document.getElementById('topbar-sub'); if(subEl) subEl.textContent = pageSubs[page]||'';
   currentPage = page;
   renderPage(page);
   closeMobileMenu();
 }
+
+function navGroupsStorageKeyV147(){return `nexo_klar_nav_groups_${currentTenantId||'local'}`;}
+function navGroupItemsV147(label){const items=[];let node=label?.nextElementSibling;while(node&&!node.classList.contains('nav-group-label')&&!node.classList.contains('sidebar-bottom')){if(node.classList.contains('nav-item'))items.push(node);node=node.nextElementSibling;}return items;}
+function collapsedNavGroupsV147(){try{return JSON.parse(localStorage.getItem(navGroupsStorageKeyV147())||'{}');}catch{return {};}}
+function saveCollapsedNavGroupsV147(value){try{localStorage.setItem(navGroupsStorageKeyV147(),JSON.stringify(value));}catch{}}
+function setNavGroupCollapsedV147(label,collapsed,save=true){if(!label)return;label.classList.toggle('is-collapsed',collapsed);label.setAttribute('aria-expanded',String(!collapsed));navGroupItemsV147(label).forEach(item=>{item.hidden=collapsed;});if(save){const state=collapsedNavGroupsV147(),key=label.dataset.navGroup;if(key){state[key]=collapsed;saveCollapsedNavGroupsV147(state);}}}
+function toggleNavGroupV147(label){setNavGroupCollapsedV147(label,!label.classList.contains('is-collapsed'));}
+function navGroupKeydownV147(event,label){if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleNavGroupV147(label);}}
+function expandNavGroupContainingV147(page){const item=[...document.querySelectorAll('#sidebar .nav-item')].find(node=>node.getAttribute('onclick')===`nav('${page}')`);if(!item)return;let label=item.previousElementSibling;while(label&&!label.classList.contains('nav-group-label'))label=label.previousElementSibling;if(label?.classList.contains('is-collapsed'))setNavGroupCollapsedV147(label,false);}
+function restoreNavGroupsV147(){const state=collapsedNavGroupsV147();document.querySelectorAll('#sidebar .nav-group-label[data-nav-group]').forEach(label=>setNavGroupCollapsedV147(label,!!state[label.dataset.navGroup],false));expandNavGroupContainingV147(currentPage||'dashboard');}
 
 function toggleMobileMenu(button){const sidebar=document.getElementById('sidebar'),open=!sidebar.classList.contains('mobile-open');sidebar.classList.toggle('mobile-open',open);button?.setAttribute('aria-expanded',String(open));if(open)sidebar.querySelector('.nav-item')?.focus();}
 function closeMobileMenu(){const sidebar=document.getElementById('sidebar');sidebar?.classList.remove('mobile-open');document.querySelector('.mobile-menu-button')?.setAttribute('aria-expanded','false');}
@@ -10064,6 +10075,7 @@ renderIncidentes=function(){
 
 <script src="assets/nexo-klar-guidance.js"></script>
 <script src="assets/nexo-klar-enterprise.js"></script>
+<script>window.addEventListener('load',restoreNavGroupsV147);</script>
 <script>
 // V14.6 · Espacios comerciales para contratistas y activos, construidos sobre la misma data operativa.
 let contractorWorkspaceV146='resumen',assetsWorkspaceV146='inventario';
