@@ -111,3 +111,14 @@ test('contractors, assets, EPP, reservations and replenishment stay connected in
     'F30-1 sin período acreditado'
   ]) assert.ok(html.includes(visibleAction), `missing client-facing action: ${visibleAction}`);
 });
+
+test('inventory uses physical counts, controlled receipts and code lookup without losing traceability', () => {
+  for (const feature of [
+    'ensureInventoryControlsV154', 'openInventoryCountV154', 'saveInventoryCountV154',
+    'openInventoryReceiptV154', 'saveInventoryReceiptV154', 'openInventoryLookupV154',
+    'findInventoryCodeV154', 'inventoryStocktakes'
+  ]) assert.ok(html.includes(feature), `missing inventory control: ${feature}`);
+  for (const visibleAction of ['Conteo físico', 'Recibir reposición', 'Buscar código', 'Control de existencias']) {
+    assert.ok(html.includes(visibleAction), `missing inventory control action: ${visibleAction}`);
+  }
+});

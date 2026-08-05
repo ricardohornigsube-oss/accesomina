@@ -18,7 +18,9 @@ const requiredCapabilities=[
   'Precalificación y seguimiento','Descontar EPP de la bodega','Reserva para orden de servicio','Solicitar reposición',
   'saveAssetReturnV150','saveEppDelivery=async function','saveAssetReservationV152','saveReplenishmentV152',
   'Órdenes y desempeño operativo','Asignar a orden','F30-1 sin período acreditado',
-  'saveContractorOrderV153','installF301PeriodV153'
+  'saveContractorOrderV153','installF301PeriodV153',
+  'Control de existencias','Conteo físico','Recibir reposición','Buscar código',
+  'saveInventoryCountV154','saveInventoryReceiptV154','findInventoryCodeV154'
 ];
 for(const capability of requiredCapabilities){
   if(!local.includes(capability))errors.push(`Local frontend is missing required capability: ${capability}`);
