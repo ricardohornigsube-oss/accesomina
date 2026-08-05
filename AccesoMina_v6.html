@@ -59,7 +59,21 @@ a { color:inherit; text-decoration:none; }
 .sidebar-logo { padding:20px 20px 16px; border-bottom:1px solid var(--border); }
 .sidebar-logo-title { font-size:20px; font-weight:800; color:var(--orange); letter-spacing:-0.5px; }
 .sidebar-logo-sub { font-size:11px; color:var(--text-dim); margin-top:2px; }
-.nav-group-label { padding:16px 20px 6px; font-size:10px; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:.1em; }
+.nav-group-label { --group-color:var(--text-dim); display:flex; align-items:center; justify-content:space-between; gap:8px; margin:10px 10px 2px; padding:9px 10px; border-left:3px solid var(--group-color); border-radius:6px; font-size:10px; font-weight:800; color:var(--group-color); text-transform:uppercase; letter-spacing:.1em; cursor:pointer; transition:background .15s ease,color .15s ease; }
+.nav-group-label:hover,.nav-group-label:focus-visible { background:color-mix(in srgb,var(--group-color) 10%,transparent); outline:none; }
+.nav-group-label:not(.is-collapsed) { background:color-mix(in srgb,var(--group-color) 8%,transparent); }
+.nav-group-label.is-collapsed { opacity:.82; }
+.nav-group-toggle { font-size:15px; line-height:1; transition:transform .15s ease; }
+.nav-group-label.is-collapsed .nav-group-toggle { transform:rotate(-90deg); }
+.nav-group-label.tone-control { --group-color:#2a2a8c; }
+.nav-group-label.tone-people { --group-color:#a21caf; }
+.nav-group-label.tone-operations { --group-color:#e4006e; }
+.nav-group-label.tone-contractors { --group-color:#b45309; }
+.nav-group-label.tone-commercial { --group-color:#0f766e; }
+.nav-group-label.tone-compliance { --group-color:#15803d; }
+.nav-group-label.tone-projects { --group-color:#7c3aed; }
+.nav-group-label.tone-assets { --group-color:#2563eb; }
+.nav-group-label.tone-administration { --group-color:#475569; }
 .nav-item { display:flex; align-items:center; gap:10px; padding:10px 20px; color:var(--text-muted); cursor:pointer; font-size:13.5px; transition:all .15s; border-left:3px solid transparent; }
 .nav-item:hover { background:var(--bg2); color:var(--text); border-left-color:var(--border-light); }
 .nav-item.active { background:rgba(228,0,110,.12); color:var(--orange); border-left-color:var(--orange); font-weight:600; }
@@ -933,13 +947,13 @@ td { padding:12px 14px; }
   <div class="sidebar-logo">
     <div style="display:flex;align-items:center;gap:10px;"><div class="logo-mark" style="width:34px;height:34px;border-radius:10px;">N</div><div><div class="sidebar-logo-title">Nexo Klar</div><div class="sidebar-logo-sub">Sitio privado · Datos claros</div></div></div>
   </div>
-  <div class="nav-group-label" data-nav-group="centro-control" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Centro de control</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
+  <div class="nav-group-label" data-nav-group="centro-control" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Centro de Control</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
   <div class="nav-item active" onclick="nav('dashboard')">🏠 Panel General</div>
   <div class="nav-item" onclick="nav('alertas')">🔔 Alertas <span class="nav-badge" id="badge-alertas">0</span></div>
   <div class="nav-item" onclick="nav('reclutamiento')">📋 Gestión de personal temporal</div>
   <div class="nav-item" onclick="nav('operaciones-cloud')">📡 Centro Operativo</div>
 
-  <div class="nav-group-label" data-nav-group="capital-humano" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Capital humano</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
+  <div class="nav-group-label" data-nav-group="capital-humano" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Capital Humano</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
   <div class="nav-item" onclick="nav('trabajadores')">👷 Personas</div>
   <div class="nav-item" onclick="nav('turnos')">🕒 Turnos y asistencia</div>
   <div class="nav-item" onclick="nav('epp')">🦺 Protección personal y entregas <span class="nav-badge nav-badge-orange" id="badge-epp">0</span></div>
@@ -948,7 +962,7 @@ td { padding:12px 14px; }
   <div class="nav-item" onclick="nav('protocolos')">🩺 Salud Ocupacional</div>
   <div class="nav-item" onclick="nav('bloqueados')">🚫 Restringidos</div>
 
-  <div class="nav-group-label" data-nav-group="gestion-operacional" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Gestión operacional</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
+  <div class="nav-group-label" data-nav-group="gestion-operacional" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Gestión Operacional</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
   <div class="nav-item" onclick="nav('llamados')">📲 Comunicaciones y convocatorias</div>
   <div class="nav-item" onclick="nav('vehiculos')">🚙 Vehículos, activos y equipos</div>
   <div class="nav-item" onclick="nav('hoteleria')">🛏️ Alojamientos y Estadías</div>
@@ -961,22 +975,22 @@ td { padding:12px 14px; }
   <div class="nav-item" onclick="openContractorWorkspaceV146('cumplimiento')">✅ Habilitaciones y cumplimiento</div>
   <div class="nav-item" onclick="openContractorWorkspaceV146('evaluacion')">📊 Evaluación de desempeño</div>
 
-  <div class="nav-group-label" data-nav-group="relacion-comercial" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Relación comercial</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
+  <div class="nav-group-label" data-nav-group="relacion-comercial" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Relación Comercial</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
   <div class="nav-item" onclick="nav('mineras')">🏢 Clientes</div>
   <div class="nav-item" onclick="nav('contratos')">📝 Contratos y Firmas <span class="nav-badge nav-badge-orange" id="badge-firmas">0</span></div>
   <div class="nav-item" onclick="nav('mantenciones')">🔧 Órdenes de Servicio</div>
 
-  <div class="nav-group-label" data-nav-group="cumplimiento-calidad" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Cumplimiento y calidad</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
+  <div class="nav-group-label" data-nav-group="cumplimiento-calidad" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Cumplimiento y Calidad</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
   <div class="nav-item" onclick="nav('acreditacion-empresa')">🏢 Documentación de la Empresa</div>
   <div class="nav-item" onclick="nav('acreditacion-mandante')">✅ Habilitación del Cliente</div>
   <div class="nav-item" onclick="nav('incidentes')">⚠️ Incidentes y no conformidades</div>
   <div class="nav-item" onclick="nav('auditoria')">📋 Auditoría</div>
 
-  <div class="nav-group-label" data-nav-group="proyectos-negocios" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Gestión de proyectos y negocios</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
+  <div class="nav-group-label" data-nav-group="proyectos-negocios" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Gestión de Proyectos y Negocios</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
   <div class="nav-item" id="nav-work-book-v125" onclick="nav('libro-obras')">📖 Libro de Obra <span class="nav-badge" id="badge-work-book-v125">0</span></div>
   <div class="nav-item" onclick="nav('oportunidades')">💼 Prospectos y oportunidades</div>
 
-  <div class="nav-group-label" data-nav-group="activos-inventario" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Activos, equipos e inventario</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
+  <div class="nav-group-label" data-nav-group="activos-inventario" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Activos, Equipos e Inventario</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
   <div class="nav-item" onclick="nav('activos-inventario')">📊 Inventario y stock</div>
   <div class="nav-item" onclick="openAssetsWorkspaceV146('maquinaria')">🚜 Maquinaria</div>
   <div class="nav-item" onclick="openAssetsWorkspaceV146('equipos')">🧰 Equipos e instrumentos</div>
@@ -2778,7 +2792,7 @@ function setNavGroupCollapsedV147(label,collapsed,save=true){if(!label)return;la
 function toggleNavGroupV147(label){setNavGroupCollapsedV147(label,!label.classList.contains('is-collapsed'));}
 function navGroupKeydownV147(event,label){if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleNavGroupV147(label);}}
 function expandNavGroupContainingV147(page){const item=[...document.querySelectorAll('#sidebar .nav-item')].find(node=>node.getAttribute('onclick')===`nav('${page}')`);if(!item)return;let label=item.previousElementSibling;while(label&&!label.classList.contains('nav-group-label'))label=label.previousElementSibling;if(label?.classList.contains('is-collapsed'))setNavGroupCollapsedV147(label,false);}
-function restoreNavGroupsV147(){const state=collapsedNavGroupsV147();document.querySelectorAll('#sidebar .nav-group-label[data-nav-group]').forEach(label=>setNavGroupCollapsedV147(label,!!state[label.dataset.navGroup],false));expandNavGroupContainingV147(currentPage||'dashboard');}
+function restoreNavGroupsV147(){const state=collapsedNavGroupsV147(),tones={'centro-control':'tone-control','capital-humano':'tone-people','gestion-operacional':'tone-operations','contratistas':'tone-contractors','relacion-comercial':'tone-commercial','cumplimiento-calidad':'tone-compliance','proyectos-negocios':'tone-projects','activos-inventario':'tone-assets','gestion-administracion':'tone-administration','administracion-nexo-klar':'tone-administration'};document.querySelectorAll('#sidebar .nav-group-label[data-nav-group]').forEach(label=>{label.classList.add(tones[label.dataset.navGroup]||'tone-administration');setNavGroupCollapsedV147(label,!!state[label.dataset.navGroup],false);});expandNavGroupContainingV147(currentPage||'dashboard');}
 
 function toggleMobileMenu(button){const sidebar=document.getElementById('sidebar'),open=!sidebar.classList.contains('mobile-open');sidebar.classList.toggle('mobile-open',open);button?.setAttribute('aria-expanded',String(open));if(open)sidebar.querySelector('.nav-item')?.focus();}
 function closeMobileMenu(){const sidebar=document.getElementById('sidebar');sidebar?.classList.remove('mobile-open');document.querySelector('.mobile-menu-button')?.setAttribute('aria-expanded','false');}
