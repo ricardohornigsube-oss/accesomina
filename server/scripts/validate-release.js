@@ -28,7 +28,14 @@ for(const [file,html] of [['AccesoMina_v6.html',local],['public/index.html',publ
 }
 const pkg=JSON.parse(read('package.json'));
 if(pkg.name!=='nexo-klar-cloud')errors.push('package name is not normalized to nexo-klar-cloud');
-const task=JSON.parse(read('infra/aws/ecs-task-definition.json'));
+const taskDefinitionPath=process.env.ECS_TASK_DEFINITION_PATH||'infra/aws/ecs-task-definition.json';
+let task={};
+if(!fs.existsSync(taskDefinitionPath)){
+  errors.push(`ECS task definition does not exist: ${taskDefinitionPath}`);
+}else{
+  try{task=JSON.parse(read(taskDefinitionPath));}
+  catch(error){errors.push(`ECS task definition is not valid JSON: ${error.message}`);}
+}
 const taskText=JSON.stringify(task);
 const placeholders=[...taskText.matchAll(/<[^>]+>/g)].map(match=>match[0]);
 if(placeholders.length)(strict?errors:warnings).push(`AWS task definition has unresolved placeholders: ${[...new Set(placeholders)].join(', ')}`);

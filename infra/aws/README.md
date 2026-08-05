@@ -5,8 +5,9 @@ Esta carpeta deja preparado el paquete base para cargar Nexo Klar en AWS con ope
 ## Componentes
 
 - `ecs-task-definition.json`: referencia de tarea ECS Fargate.
+- `render-ecs-task-definition.mjs`: genera una definición real desde la plantilla, usando la cuenta AWS y la etiqueta de imagen del despliegue.
 - `production-env.template`: variables productivas esperadas.
-- `github-actions-ci.yml`: plantilla de validacion de sintaxis, migraciones, seguridad funcional y construccion del contenedor; copiar a `.github/workflows/ci.yml` cuando el token GitHub tenga permiso workflow.
+- `.github/workflows/ci.yml`: validación automática activa de sintaxis, migraciones, seguridad funcional, paridad entre la versión local y la versión productiva, y construcción del contenedor.
 - `github-actions-aws-ecs-deploy.yml`: plantilla de despliegue que debe activarse solo despues de completar roles, secretos y nombres AWS.
 
 ## Servicios AWS requeridos
@@ -30,7 +31,21 @@ Esta carpeta deja preparado el paquete base para cargar Nexo Klar en AWS con ope
 4. Se ejecuta una tarea puntual de migración.
 5. ECS actualiza el servicio productivo.
 6. El balanceador usa `/api/health` como liveness y `/api/ready` como readiness.
-7. Antes del cambio productivo se ejecuta `pnpm run validate:production` sobre la definicion final.
+7. El despliegue genera una definición ECS sin placeholders desde la cuenta AWS autenticada.
+8. Antes del cambio productivo se ejecuta `pnpm run validate:production` sobre la definición final.
+
+## Preflight de despliegue
+
+No edites los identificadores AWS dentro de la plantilla. Para revisar una definición real antes de desplegar:
+
+```bash
+AWS_ACCOUNT_ID=123456789012 ECR_IMAGE_TAG=preflight \
+node infra/aws/render-ecs-task-definition.mjs
+ECS_TASK_DEFINITION_PATH=infra/aws/ecs-task-definition.rendered.json \
+pnpm run validate:production
+```
+
+El archivo generado está excluido de Git para evitar que identificadores de una cuenta o imagen queden como configuración permanente del repositorio.
 
 ## Separación de datos
 

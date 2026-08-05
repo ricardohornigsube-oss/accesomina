@@ -14,7 +14,7 @@ env:
   ECR_REPOSITORY: nexo-klar
   ECS_CLUSTER: nexo-klar-prod
   ECS_SERVICE: nexo-klar-api
-  ECS_TASK_DEFINITION: infra/aws/ecs-task-definition.json
+  ECS_TASK_DEFINITION: infra/aws/ecs-task-definition.rendered.json
   CONTAINER_NAME: nexo-klar-api
 
 jobs:
@@ -46,6 +46,15 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Render and validate task definition
+        env:
+          ECR_IMAGE_TAG: preflight
+          ECS_TASK_OUTPUT: ${{ env.ECS_TASK_DEFINITION }}
+        run: |
+          export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+          node infra/aws/render-ecs-task-definition.mjs
+          ECS_TASK_DEFINITION_PATH="$ECS_TASK_OUTPUT" pnpm run validate:production
 
       - name: Login to ECR
         id: login-ecr
