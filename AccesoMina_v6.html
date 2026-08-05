@@ -10120,5 +10120,64 @@ function saveInventoryItemV146(event){event.preventDefault();ensureV95Collection
 const renderPageV146Base=renderPage;
 renderPage=function(page){renderPageV146Base(page);if(page==='contratistas')renderContractorWorkspaceV146();if(page==='activos-inventario')renderAssetsWorkspaceV146();};
 </script>
+<script>
+// V14.8 · Gestión integral de activos: ficha técnica, préstamos y control preventivo.
+function assetRowsV148(){
+  const items=S.inventoryItems||[];
+  return assetsWorkspaceV146==='inventario'?items:['maquinaria','equipos','herramientas','materiales','insumos'].includes(assetsWorkspaceV146)?items.filter(item=>inventoryCategoryV146(item)===assetsWorkspaceV146):[];
+}
+function assetIsTrackableV148(item){return ['maquinaria','equipos','herramientas'].includes(inventoryCategoryV146(item));}
+function assetOpenLoansV148(item){return (S.inventoryMovements||[]).filter(move=>move.itemId===item.id&&['entrega','prestamo'].includes(move.type)&&move.workerId&&!move.returnedAt&&assetIsTrackableV148(item));}
+function assetDateLabelV148(value){return value?String(value).slice(0,10):'Sin fecha';}
+function assetSummaryV148(){
+  const items=S.inventoryItems||[],today=hoy();
+  const low=items.filter(item=>Number(item.stock)<=Number(item.minStock));
+  const maintenance=items.filter(item=>item.maintenanceDue&&item.maintenanceDue<=today);
+  const expiring=items.filter(item=>item.certificateExpires&&item.certificateExpires<=today);
+  const loans=items.reduce((total,item)=>total+assetOpenLoansV148(item).length,0);
+  return {low,maintenance,expiring,loans};
+}
+function ensureAssetProfileModalV148(){
+  if(document.getElementById('modal-asset-profile-v148'))return;
+  document.body.insertAdjacentHTML('beforeend',`<div class="modal-overlay" id="modal-asset-profile-v148"><div class="modal"><div class="modal-header"><div class="modal-title" id="v148-asset-title">Ficha de activo</div><button class="modal-close" type="button" onclick="closeModal('modal-asset-profile-v148')" aria-label="Cerrar">✕</button></div><form onsubmit="saveAssetProfileV148(event)"><div class="modal-body"><input type="hidden" id="v148-asset-id"><div class="cloud-note" style="margin-bottom:14px;">Centraliza datos técnicos, custodia, prevención y vencimientos. El historial de movimientos no se modifica.</div><div class="form-grid"><div class="form-group"><label class="form-label">Código / QR</label><input class="form-input" id="v148-asset-code"></div><div class="form-group"><label class="form-label">Estado</label><select class="form-select" id="v148-asset-status"><option value="Disponible">Disponible</option><option value="Asignado">Asignado</option><option value="En mantenimiento">En mantenimiento</option><option value="Restringido">Restringido</option><option value="Baja">Baja</option></select></div><div class="form-group"><label class="form-label">Marca</label><input class="form-input" id="v148-asset-brand"></div><div class="form-group"><label class="form-label">Modelo</label><input class="form-input" id="v148-asset-model"></div><div class="form-group"><label class="form-label">Serie / patente</label><input class="form-input" id="v148-asset-serial"></div><div class="form-group"><label class="form-label">Proveedor</label><input class="form-input" id="v148-asset-supplier"></div><div class="form-group"><label class="form-label">Custodio responsable</label><input class="form-input" id="v148-asset-owner"></div><div class="form-group"><label class="form-label">Criticidad</label><select class="form-select" id="v148-asset-criticality"><option value="Baja">Baja</option><option value="Media">Media</option><option value="Alta">Alta</option><option value="Crítica">Crítica</option></select></div><div class="form-group"><label class="form-label">Próximo mantenimiento</label><input class="form-input" type="date" id="v148-asset-maintenance"></div><div class="form-group"><label class="form-label">Vencimiento certificado / calibración</label><input class="form-input" type="date" id="v148-asset-certificate"></div><div class="form-group full"><label class="form-label">Observación técnica</label><textarea class="form-textarea" id="v148-asset-notes" placeholder="Condición, garantía, arriendo, inspección, mantenimiento o información relevante."></textarea></div></div><div id="v148-asset-loans" style="margin-top:14px;"></div></div><div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="closeModal('modal-asset-profile-v148')">Cerrar</button><button class="btn btn-primary" type="submit">Guardar ficha</button></div></form></div></div>`);
+}
+function openAssetProfileV148(id){
+  const item=(S.inventoryItems||[]).find(row=>row.id===id);if(!item)return;
+  ensureAssetProfileModalV148();document.getElementById('v148-asset-id').value=id;document.getElementById('v148-asset-title').textContent=`Ficha · ${item.name}`;
+  const values={code:item.code||'',status:item.status||'Disponible',brand:item.brand||'',model:item.model||'',serial:item.serial||item.serie||'',supplier:item.supplier||'',owner:item.owner||'',criticality:item.criticality||'Media',maintenance:item.maintenanceDue||'',certificate:item.certificateExpires||'',notes:item.notes||''};
+  Object.entries(values).forEach(([key,value])=>{const input=document.getElementById(`v148-asset-${key}`);if(input)input.value=value;});
+  const loans=assetOpenLoansV148(item);
+  const loanRows=loans.map(loan=>`<tr><td>${escV146(trabNombre(loan.workerId)||'—')}</td><td>${assetDateLabelV148(loan.at)}</td><td>${Number(loan.qty)||1}</td><td><button type="button" class="btn btn-secondary btn-sm" onclick="closeAssetLoanV148('${loan.id}')">Registrar devolución</button></td></tr>`).join('');
+  const loanContent=loans.length?`<div class="table-wrap" style="margin-top:8px;"><table><thead><tr><th>Entregado a</th><th>Fecha</th><th>Cantidad</th><th></th></tr></thead><tbody>${loanRows}</tbody></table></div>`:'<div class="worker-rut" style="margin-top:8px;">Sin préstamos pendientes.</div>';
+  document.getElementById('v148-asset-loans').innerHTML=assetIsTrackableV148(item)?`<div class="card" style="padding:12px;"><div class="card-title">Préstamos y asignaciones</div><div class="card-subtitle">Una devolución cerrará el préstamo, restaurará el saldo y dejará evidencia.</div>${loanContent}</div>`:`<div class="cloud-note">Este recurso se controla por existencias. Usa Movimientos de inventario para entregar, devolver o trasladar unidades.</div>`;
+  openModal('modal-asset-profile-v148');
+}
+function saveAssetProfileV148(event){
+  event.preventDefault();const item=(S.inventoryItems||[]).find(row=>row.id===document.getElementById('v148-asset-id').value);if(!item)return;const before=JSON.parse(JSON.stringify(item));
+  ['code','status','brand','model','serial','supplier','owner','criticality','notes'].forEach(key=>item[key]=document.getElementById(`v148-asset-${key}`)?.value.trim()||'');
+  item.maintenanceDue=document.getElementById('v148-asset-maintenance')?.value||'';item.certificateExpires=document.getElementById('v148-asset-certificate')?.value||'';item.updatedAt=new Date().toISOString();
+  recordHistoryV90?.('inventario',item.id,'Ficha técnica actualizada',before,item,'Actualización de activo o existencia');persistTenant();closeModal('modal-asset-profile-v148');renderAssetsWorkspaceV146();toast('Ficha de activo actualizada');
+}
+function closeAssetLoanV148(movementId){
+  const movement=(S.inventoryMovements||[]).find(row=>row.id===movementId),item=(S.inventoryItems||[]).find(row=>row.id===movement?.itemId);if(!movement||!item)return;
+  const before=JSON.parse(JSON.stringify(item)),warehouseId=movement.warehouseId;item.stockByLocation=item.stockByLocation||{};item.stockByLocation[warehouseId]=Number(item.stockByLocation[warehouseId]||0)+Number(movement.qty||0);item.stock=Object.values(item.stockByLocation).reduce((total,value)=>total+Number(value||0),0);movement.returnedAt=new Date().toISOString();movement.returnedBy=currentTenantUser?.email||'usuario';movement.returnedSigned=true;
+  S.inventoryMovements.unshift({id:`mov_${Date.now()}`,itemId:item.id,warehouseId,type:'devolucion',qty:Number(movement.qty)||0,workerId:movement.workerId,projectId:movement.projectId,owner:currentTenantUser?.nombre||currentTenantUser?.email||'',notes:`Devolución del préstamo ${movement.id}`,signed:true,stockBefore:Number(item.stockByLocation[warehouseId]||0)-Number(movement.qty||0),stockAfter:Number(item.stockByLocation[warehouseId]||0),at:new Date().toISOString(),user:currentTenantUser?.email||'usuario'});
+  recordHistoryV90?.('inventario',item.id,'Préstamo devuelto',before,item,`Devolución registrada para ${trabNombre(movement.workerId)||'persona asignada'}`);persistTenant();openAssetProfileV148(item.id);renderAssetsWorkspaceV146();toast('Devolución registrada y stock actualizado');
+}
+const renderAssetsWorkspaceV148Base=renderAssetsWorkspaceV146;
+renderAssetsWorkspaceV146=function(){
+  renderAssetsWorkspaceV148Base();const host=document.getElementById('assets-workspace-v146');if(!host)return;const summary=assetSummaryV148(),anchor=host.querySelector('.card');
+  anchor?.insertAdjacentHTML('afterend',`<div class="kpi-grid" style="margin-bottom:16px;"><div class="kpi kpi-red"><div class="kpi-value">${summary.low.length}</div><div class="kpi-label">Por reponer</div></div><div class="kpi kpi-orange"><div class="kpi-value">${summary.maintenance.length}</div><div class="kpi-label">Mantenciones vencidas</div></div><div class="kpi kpi-orange"><div class="kpi-value">${summary.expiring.length}</div><div class="kpi-label">Certificados vencidos</div></div><div class="kpi kpi-blue"><div class="kpi-value">${summary.loans}</div><div class="kpi-label">Préstamos abiertos</div></div></div>`);
+  const rows=assetRowsV148();const table=host.querySelector('.table-wrap table');if(table&&rows.length){const header=table.querySelector('thead tr');if(header&&!header.querySelector('.asset-action-v148'))header.insertAdjacentHTML('beforeend','<th class="asset-action-v148">Ficha</th>');[...table.querySelectorAll('tbody tr')].forEach((row,index)=>{if(rows[index]&&!row.querySelector('.asset-action-v148'))row.insertAdjacentHTML('beforeend',`<td class="asset-action-v148"><button class="btn btn-secondary btn-sm" type="button" onclick="openAssetProfileV148('${rows[index].id}')">Abrir ficha</button></td>`);});}
+};
+const openInventoryItemModalV148Base=openInventoryItemModalV146;
+openInventoryItemModalV146=function(category='equipos'){
+  openInventoryItemModalV148Base(category);const existing=document.getElementById('v148-inventory-extra');if(!existing){const notes=document.getElementById('v146-item-notes')?.closest('.form-group');notes?.insertAdjacentHTML('beforebegin',`<div id="v148-inventory-extra" class="form-group"><label class="form-label">Marca / modelo</label><input class="form-input" id="v148-item-brand" placeholder="Marca y modelo"></div><div class="form-group"><label class="form-label">Proveedor</label><input class="form-input" id="v148-item-supplier" placeholder="Proveedor o arrendador"></div><div class="form-group"><label class="form-label">Criticidad</label><select class="form-select" id="v148-item-criticality"><option value="Baja">Baja</option><option value="Media" selected>Media</option><option value="Alta">Alta</option><option value="Crítica">Crítica</option></select></div><div class="form-group"><label class="form-label">Próximo mantenimiento</label><input class="form-input" type="date" id="v148-item-maintenance"></div><div class="form-group"><label class="form-label">Vencimiento certificado / calibración</label><input class="form-input" type="date" id="v148-item-certificate"></div>`);}['v148-item-brand','v148-item-supplier','v148-item-maintenance','v148-item-certificate'].forEach(id=>{const input=document.getElementById(id);if(input)input.value='';});const criticality=document.getElementById('v148-item-criticality');if(criticality)criticality.value='Media';
+};
+const saveInventoryItemV148Base=saveInventoryItemV146;
+saveInventoryItemV146=function(event){
+  const beforeCount=(S.inventoryItems||[]).length;saveInventoryItemV148Base(event);const item=(S.inventoryItems||[]).find(row=>row.createdAt&&row.id&&row.id.startsWith('inv_')&&(S.inventoryItems||[]).indexOf(row)>=beforeCount);if(item){item.brand=document.getElementById('v148-item-brand')?.value.trim()||'';item.supplier=document.getElementById('v148-item-supplier')?.value.trim()||'';item.criticality=document.getElementById('v148-item-criticality')?.value||'Media';item.maintenanceDue=document.getElementById('v148-item-maintenance')?.value||'';item.certificateExpires=document.getElementById('v148-item-certificate')?.value||'';persistTenant();}
+};
+</script>
 </body>
 </html>
