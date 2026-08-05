@@ -31,8 +31,8 @@ test('visible terminology supports multiple industries without changing legacy d
   for (const neutralLabel of [
     "'Cliente'",
     'Órdenes de Servicio',
-    'Gestión de personal temporal',
-    'Personal permanente',
+    'Gestión de personal por proyecto',
+    'Trabajador fijo',
     'Habilitación por cliente',
     'Cumplimiento corporativo',
     'Alojamiento y estadías',
@@ -42,6 +42,20 @@ test('visible terminology supports multiple industries without changing legacy d
 
   assert.match(html, /function translateClientTerminology/);
   assert.match(html, /const plural=.*replacement=plural\?'clientes':'cliente'/);
+});
+
+test('people navigation is centralized with fixed, project, available and restricted views', () => {
+  const peopleStart = html.indexOf('<div class="nav-group-label">Personas</div>');
+  const operationsStart = html.indexOf('<div class="nav-group-label">Operación</div>');
+  const peopleNavigation = html.slice(peopleStart, operationsStart);
+
+  assert.match(peopleNavigation, /onclick="nav\('trabajadores'\)"/);
+  assert.doesNotMatch(peopleNavigation, /onclick="nav\('personal-planta'\)"/);
+  for (const label of ['Trabajador fijo', 'Trabajador por proyecto', 'Trabajador disponible', 'Restringidos']) {
+    assert.ok(html.includes(label), `missing people view: ${label}`);
+  }
+  assert.match(html, /currentTrabTab==='disponible'/);
+  assert.match(html, /if\(page==='personal-planta'\)/);
 });
 
 test('work book remains visible in the Inicio group', () => {

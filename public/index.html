@@ -947,9 +947,8 @@ td { padding:12px 14px; }
   <div class="nav-item" onclick="nav('subcontratos')">🏗️ Subcontratos</div>
 
   <div class="nav-group-label">Personas</div>
-  <div class="nav-item" onclick="nav('reclutamiento')">📋 Gestión de personal temporal</div>
-  <div class="nav-item" onclick="nav('trabajadores')">👷 Trabajadores</div>
-  <div class="nav-item" onclick="nav('personal-planta')">🏭 Personal de Planta</div>
+  <div class="nav-item" onclick="nav('reclutamiento')">📋 Gestión de personal por proyecto</div>
+  <div class="nav-item" onclick="nav('trabajadores')">👷 Personas</div>
   <div class="nav-item" onclick="nav('turnos')">🕒 Turnos y asistencia</div>
   <div class="nav-item" onclick="nav('epp')">🦺 EPP y Entregas <span class="nav-badge nav-badge-orange" id="badge-epp">0</span></div>
   <div class="nav-item" onclick="nav('cursos')">📚 Cursos</div>
@@ -1105,14 +1104,15 @@ td { padding:12px 14px; }
   <!-- PAGE: TRABAJADORES -->
   <div id="page-trabajadores" class="page">
     <div class="section-header">
-      <div><div class="section-title">👷 Trabajadores</div><div class="section-sub" id="trab-sub"></div></div>
+      <div><div class="section-title">👷 Personas</div><div class="section-sub" id="trab-sub" data-keep-worker-term></div></div>
       <div class="section-actions">
-        <button class="btn btn-primary" onclick="openModal('modal-nuevo-trab')">+ Trabajador</button>
+      <button class="btn btn-primary" onclick="openModal('modal-nuevo-trab')">+ Nueva persona</button>
       </div>
     </div>
     <div class="tab-bar">
-      <button class="tab-btn active" onclick="switchTrabTab('planta',this)">🏭 Personal Planta</button>
-      <button class="tab-btn" onclick="switchTrabTab('esporadico',this)">⚡ Pool Esporádico</button>
+      <button class="tab-btn active" data-keep-worker-term onclick="switchTrabTab('planta',this)">🏭 Trabajador fijo</button>
+      <button class="tab-btn" data-keep-worker-term onclick="switchTrabTab('esporadico',this)">⚡ Trabajador por proyecto</button>
+      <button class="tab-btn" data-keep-worker-term onclick="switchTrabTab('disponible',this)">🟢 Trabajador disponible</button>
       <button class="tab-btn" onclick="switchTrabTab('bloqueado',this)">🚫 Restringidos</button>
     </div>
     <div class="filters">
@@ -2687,7 +2687,7 @@ function updateBadges() {
 // ===================== NAVIGATION =====================
 let currentPage = 'dashboard';
 const pageLabels = {
-  dashboard:'Dashboard','mineras':'Por Cliente',alertas:'Alertas',trabajadores:'Trabajadores',
+  dashboard:'Dashboard','mineras':'Por Cliente',alertas:'Alertas',trabajadores:'Personas',
   bloqueados:'Restringidos',auditoria:'Auditoría Documental',mantenciones:'Mantenciones',
   contratos:'Contratos y Firmas',hoteleria:'Hotelería',llamados:'Llamados WA',
   examenes:'Exámenes Médicos',cursos:'Cursos',reportes:'Reportes',clientes:'Clientes Nexo Klar'
@@ -2696,7 +2696,7 @@ const pageSubs = {
   dashboard:'Resumen operativo · Nexo Klar',
   mineras:'Vista consolidada por mandante',
   alertas:'Documentos y certificaciones próximos a vencer',
-  trabajadores:'Gestión de personal y acreditación',
+  trabajadores:'Personal fijo, por proyecto, disponible y restringido en una sola vista',
   bloqueados:'Personas con restricción operativa',
   auditoria:'Estado de documentación por trabajador',
   mantenciones:'Paradas, shutdowns y mantenciones mayores',
@@ -2710,10 +2710,18 @@ const pageSubs = {
 };
 
 function nav(page) {
+  // La página histórica de planta se mantiene compatible, pero ahora abre la vista centralizada.
+  if(page==='personal-planta') {
+    page='trabajadores';
+    currentTrabTab='planta';
+  }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const el = document.getElementById(`page-${page}`);
   if(el) el.classList.add('active');
+  if(page==='trabajadores') document.querySelectorAll('#page-trabajadores .tab-btn').forEach(button=>{
+    button.classList.toggle('active',button.getAttribute('onclick')?.includes(`'${currentTrabTab}'`));
+  });
   document.querySelectorAll('.nav-item').forEach(n=>{
     if(n.getAttribute('onclick')===`nav('${page}')`) n.classList.add('active');
   });
@@ -3025,6 +3033,7 @@ function renderTrabajadores() {
   let workers = S.trabajadores;
   if(currentTrabTab==='planta') workers = workers.filter(t=>t.tipo==='permanente'&&!t.bloqueado);
   else if(currentTrabTab==='esporadico') workers = workers.filter(t=>t.tipo==='esporadico'&&!t.bloqueado);
+  else if(currentTrabTab==='disponible') workers = workers.filter(t=>!t.bloqueado&&t.disponibilidad==='disponible');
   else if(currentTrabTab==='bloqueado') workers = workers.filter(t=>t.bloqueado);
   if(txt) workers = workers.filter(t=>t.nombre.toLowerCase().includes(txt)||t.rut.includes(txt));
   if(esp) workers = workers.filter(t=>t.especialidad===esp);
@@ -3037,7 +3046,8 @@ function renderTrabajadores() {
     else workers=workers.filter(t=>t.calificacion<3);
   }
   if(mina) workers = workers.filter(t=>t.mineras?.includes(mina));
-  document.getElementById('trab-sub').textContent = `${workers.length} trabajadores`;
+  const tabLabel={planta:'trabajadores fijos',esporadico:'trabajadores por proyecto',disponible:'trabajadores disponibles',bloqueado:'personas restringidas'}[currentTrabTab]||'personas';
+  document.getElementById('trab-sub').textContent = `${workers.length} ${tabLabel}`;
   const thead = document.querySelector('#trab-table thead');
   const tbody = document.querySelector('#trab-table tbody');
   thead.innerHTML = '<tr><th>Trabajador</th><th>Comuna / región</th><th>Especialidad</th><th>Tipo</th><th>Minera(s)</th><th>Disponibilidad</th><th>Cal.</th><th>Acred.</th><th>Próx. Vence</th><th></th></tr>';
@@ -3055,7 +3065,7 @@ function renderTrabajadores() {
       </td>
       <td style="font-size:12px;">${chileLocationLabel(t)}</td>
       <td class="worker-esp">${t.especialidad}</td>
-      <td><span class="badge ${t.tipo==='permanente'?'badge-blue':'badge-orange'}">${t.tipo}</span></td>
+      <td><span class="badge ${t.tipo==='permanente'?'badge-blue':'badge-orange'}">${t.tipo==='permanente'?'fijo':'por proyecto'}</span></td>
       <td>${minas}</td>
       <td>${dispBadge(t.disponibilidad)}</td>
       <td><b style="color:${calColor(t.calificacion)};">${calLetra(t.calificacion)}</b></td>
@@ -4422,6 +4432,7 @@ function renderTrabajadores() {
   let workers=S.trabajadores;
   if(currentTrabTab==='planta') workers=workers.filter(t=>t.tipo==='permanente'&&!t.bloqueado);
   else if(currentTrabTab==='esporadico') workers=workers.filter(t=>t.tipo==='esporadico'&&!t.bloqueado);
+  else if(currentTrabTab==='disponible') workers=workers.filter(t=>!t.bloqueado&&t.disponibilidad==='disponible');
   else workers=workers.filter(t=>t.bloqueado);
   if(txt) workers=workers.filter(t=>t.nombre.toLowerCase().includes(txt)||String(t.rut).toLowerCase().includes(txt));
   if(esp) workers=workers.filter(t=>t.especialidad===esp);
@@ -4430,9 +4441,10 @@ function renderTrabajadores() {
   if(mina) workers=workers.filter(t=>t.mineras?.includes(mina));
   if(mant) workers=workers.filter(t=>workerMantIds(t).includes(mant));
   if(contrato) workers=workers.filter(t=>workerContratoIds(t).includes(contrato));
-  document.getElementById('trab-sub').textContent=`${workers.length} trabajadores`;
+  const tabLabel={planta:'trabajadores fijos',esporadico:'trabajadores por proyecto',disponible:'trabajadores disponibles',bloqueado:'personas restringidas'}[currentTrabTab]||'personas';
+  document.getElementById('trab-sub').textContent=`${workers.length} ${tabLabel}`;
   document.querySelector('#trab-table thead').innerHTML='<tr><th>Trabajador</th><th>Especialidad</th><th>Tipo</th><th>Minera(s)</th><th>Proyecto/Mantención</th><th>Contrato</th><th>Disp.</th><th>Acred.</th><th></th></tr>';
-  document.querySelector('#trab-table tbody').innerHTML=workers.map(t=>{const pct=acreditacion(t); const mants=workerMantIds(t).map(mantNombre).join('<br>')||'—'; const conts=workerContratoIds(t).map(contratoNombre).join('<br>')||'—'; return `<tr><td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar" style="background:${avatarColor(t.id)};">${initials(t.nombre)}</div><div><div class="worker-name">${t.nombre}</div><div class="worker-rut">${t.rut}</div></div></div></td><td>${t.especialidad}</td><td><span class="badge ${t.tipo==='permanente'?'badge-blue':'badge-orange'}">${t.tipo==='permanente'?'planta':'esporádico'}</span></td><td style="font-size:12px;">${(t.mineras||[]).map(minaNombre).join('<br>')||'—'}</td><td style="font-size:12px;">${mants}</td><td style="font-size:12px;color:var(--text-muted);">${conts}</td><td>${dispBadge(t.disponibilidad)}</td><td><div style="display:flex;align-items:center;gap:8px;"><div class="prog" style="width:70px;"><div class="prog-fill ${progColor(pct)}" style="width:${pct}%;"></div></div><span>${pct}%</span></div></td><td><button class="btn btn-ghost btn-sm" onclick="openFicha('${t.id}')">Ficha</button></td></tr>`}).join('')||'<tr><td colspan="9" style="text-align:center;color:var(--text-muted);">Sin trabajadores</td></tr>';
+  document.querySelector('#trab-table tbody').innerHTML=workers.map(t=>{const pct=acreditacion(t); const mants=workerMantIds(t).map(mantNombre).join('<br>')||'—'; const conts=workerContratoIds(t).map(contratoNombre).join('<br>')||'—'; return `<tr><td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar" style="background:${avatarColor(t.id)};">${initials(t.nombre)}</div><div><div class="worker-name">${t.nombre}</div><div class="worker-rut">${t.rut}</div></div></div></td><td>${t.especialidad}</td><td><span class="badge ${t.tipo==='permanente'?'badge-blue':'badge-orange'}">${t.tipo==='permanente'?'fijo':'por proyecto'}</span></td><td style="font-size:12px;">${(t.mineras||[]).map(minaNombre).join('<br>')||'—'}</td><td style="font-size:12px;">${mants}</td><td style="font-size:12px;color:var(--text-muted);">${conts}</td><td>${dispBadge(t.disponibilidad)}</td><td><div style="display:flex;align-items:center;gap:8px;"><div class="prog" style="width:70px;"><div class="prog-fill ${progColor(pct)}" style="width:${pct}%;"></div></div><span>${pct}%</span></div></td><td><button class="btn btn-ghost btn-sm" onclick="openFicha('${t.id}')">Ficha</button></td></tr>`}).join('')||'<tr><td colspan="9" style="text-align:center;color:var(--text-muted);">Sin personas para este filtro</td></tr>';
 }
 function auditWorker(t) {
   const issues=[];
@@ -4540,8 +4552,8 @@ function exportDocumentosTrabajadores() {
 }
 
 // ===================== V6.2: CARGA POR REQUISITO + DOTACION DE PLANTA =====================
-pageLabels['personal-planta']='Personal de Planta';
-pageSubs['personal-planta']='Dotación permanente, documentos, exámenes y vencimientos';
+pageLabels['personal-planta']='Personas';
+pageSubs['personal-planta']='Vista centralizada de personal';
 const renderPageV61=renderPage;
 renderPage=function(page){ if(page==='personal-planta') renderPersonalPlanta(); else renderPageV61(page); };
 
@@ -5506,7 +5518,7 @@ const RECRUITMENT_STAGES_V84=[
   {id:'contrato_firmado',label:'Contrato firmado'},
   {id:'acreditacion_cliente',label:'Acreditación cliente'}
 ];
-pageLabels.reclutamiento='Gestión de personal temporal';
+pageLabels.reclutamiento='Gestión de personal por proyecto';
 pageSubs.reclutamiento='Búsqueda, contacto, contratación y habilitación por orden de servicio';
 function recruitmentStageLabelV84(stage){return RECRUITMENT_STAGES_V84.find(s=>s.id===stage)?.label||'Libre';}
 function recruitmentStageIndexV84(stage){const index=RECRUITMENT_STAGES_V84.findIndex(s=>s.id===stage);return index<0?-1:index;}
@@ -5651,7 +5663,7 @@ function renderReclutamientoV84(){
     const asig=recruitmentAssignmentV84(worker.id,mant.id),validation=workerValidationV84(worker),matches=workerMatchesReqV84(worker,mant,document.getElementById('rec-esp')?.value||''),stage=asig?.recruitmentStage||'',other=workerOtherServiceV86(worker.id,mant.id);
     const qualification=recruitmentQualificationV84(worker,mant,validation,matches,other),lastFollow=asig?.recruitmentFollowUps?.[0];
     const missing=[validation.examIssues?`${validation.examIssues} exámenes`:null,validation.courseIssues?`${validation.courseIssues} cursos`:null,validation.docIssues?`${validation.docIssues} documentos/firma`:null].filter(Boolean).join(', ')||'Sin alertas críticas';
-    return `<tr><td><b>${eppEsc(worker.nombre)}</b><div class="worker-rut">${eppEsc(worker.rut||'')} · ${worker.tipo==='permanente'?'Personal permanente':'Personal temporal'}</div></td><td>${eppEsc(worker.cargo||'—')}<div class="worker-rut">${eppEsc(worker.especialidad||'Sin especialidad')}</div></td><td><span class="badge ${qualification.qualified?'badge-ok':'badge-warn'}">${qualification.qualified?'Compatible':'Requiere revisión'}</span><div class="worker-rut" title="${eppEsc(qualification.reasons.join(' · '))}">${eppEsc(qualification.reasons.join(' · '))}</div></td><td>${asig?`<select class="form-select" aria-label="Etapa de contratación de ${eppEsc(worker.nombre)}" onchange="updateRecruitmentStageV84('${worker.id}','${mant.id}',this.value)">${RECRUITMENT_STAGES_V84.map(s=>`<option value="${s.id}" ${stage===s.id?'selected':''}>${s.label}</option>`).join('')}</select>`:other?`<span class="badge badge-warn">No disponible</span><div class="worker-rut">${eppEsc(other.nombre||'otra orden')}</div>`:'<span class="badge badge-na">Disponible</span>'}</td><td><div style="display:flex;align-items:center;gap:8px;"><div class="prog" style="min-width:90px;"><div class="prog-fill ${progColor(validation.pct)}" style="width:${validation.pct}%;"></div></div><b>${validation.pct}%</b></div></td><td><span class="badge ${validation.ok?'badge-ok':'badge-warn'}">${eppEsc(missing)}</span></td><td>${asig?`<button class="btn btn-secondary btn-sm" onclick="openRecruitmentFollowUpV84('${worker.id}','${mant.id}')">Seguimiento</button><div class="worker-rut">${lastFollow?`${eppEsc(lastFollow.owner||'Sin responsable')} · ${eppEsc(lastFollow.nextDate||'sin fecha')}`:'Sin seguimiento'}</div>`:'—'}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap;">${asig?'<span class="badge badge-blue">En proceso</span>':other?'<span class="badge badge-warn">Ocupado</span>':`<button class="btn btn-primary btn-sm" onclick="assignRecruitmentWorkerV84('${worker.id}','${mant.id}')">Iniciar proceso</button>`}<button class="btn btn-secondary btn-sm" onclick="callRecruitmentWorkerV84('${worker.id}','${mant.id}')">WhatsApp</button><button class="btn btn-ghost btn-sm" onclick="generateRecruitmentContractV84('${worker.id}','${mant.id}')">Contrato</button><button class="btn btn-ghost btn-sm" onclick="openFicha('${worker.id}')">Ficha</button></div></td></tr>`;
+    return `<tr><td><b>${eppEsc(worker.nombre)}</b><div class="worker-rut" data-keep-worker-term>${eppEsc(worker.rut||'')} · ${worker.tipo==='permanente'?'Trabajador fijo':'Trabajador por proyecto'}</div></td><td>${eppEsc(worker.cargo||'—')}<div class="worker-rut">${eppEsc(worker.especialidad||'Sin especialidad')}</div></td><td><span class="badge ${qualification.qualified?'badge-ok':'badge-warn'}">${qualification.qualified?'Compatible':'Requiere revisión'}</span><div class="worker-rut" title="${eppEsc(qualification.reasons.join(' · '))}">${eppEsc(qualification.reasons.join(' · '))}</div></td><td>${asig?`<select class="form-select" aria-label="Etapa de contratación de ${eppEsc(worker.nombre)}" onchange="updateRecruitmentStageV84('${worker.id}','${mant.id}',this.value)">${RECRUITMENT_STAGES_V84.map(s=>`<option value="${s.id}" ${stage===s.id?'selected':''}>${s.label}</option>`).join('')}</select>`:other?`<span class="badge badge-warn">No disponible</span><div class="worker-rut">${eppEsc(other.nombre||'otra orden')}</div>`:'<span class="badge badge-na">Disponible</span>'}</td><td><div style="display:flex;align-items:center;gap:8px;"><div class="prog" style="min-width:90px;"><div class="prog-fill ${progColor(validation.pct)}" style="width:${validation.pct}%;"></div></div><b>${validation.pct}%</b></div></td><td><span class="badge ${validation.ok?'badge-ok':'badge-warn'}">${eppEsc(missing)}</span></td><td>${asig?`<button class="btn btn-secondary btn-sm" onclick="openRecruitmentFollowUpV84('${worker.id}','${mant.id}')">Seguimiento</button><div class="worker-rut">${lastFollow?`${eppEsc(lastFollow.owner||'Sin responsable')} · ${eppEsc(lastFollow.nextDate||'sin fecha')}`:'Sin seguimiento'}</div>`:'—'}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap;">${asig?'<span class="badge badge-blue">En proceso</span>':other?'<span class="badge badge-warn">Ocupado</span>':`<button class="btn btn-primary btn-sm" onclick="assignRecruitmentWorkerV84('${worker.id}','${mant.id}')">Iniciar proceso</button>`}<button class="btn btn-secondary btn-sm" onclick="callRecruitmentWorkerV84('${worker.id}','${mant.id}')">WhatsApp</button><button class="btn btn-ghost btn-sm" onclick="generateRecruitmentContractV84('${worker.id}','${mant.id}')">Contrato</button><button class="btn btn-ghost btn-sm" onclick="openFicha('${worker.id}')">Ficha</button></div></td></tr>`;
   }).join('')||'<tr><td colspan="8">No hay candidatos para los filtros seleccionados. Revisa la especialidad, disponibilidad o crea nuevas personas.</td></tr>'}</tbody>`;
 }
 function assignRecruitmentWorkerV84(workerId,mantId){
@@ -5722,7 +5734,7 @@ const renderPageV84Base=renderPage;renderPage=function(page){if(page==='reclutam
 const initSelectsV84Base=initSelects;initSelects=function(){initSelectsV84Base();renderRecruitmentSelectsV84();};
 
 // ===================== V8.5: ACCESO CENTRALIZADO A RECLUTAMIENTO =====================
-pageLabels.reclutamiento='Gestión de personal temporal';
+pageLabels.reclutamiento='Gestión de personal por proyecto';
 pageSubs.reclutamiento='Coordina candidatos, contratación y habilitación por orden de servicio';
 function openRecruitmentForMantV85(mantId){
   nav('reclutamiento');
@@ -5742,7 +5754,7 @@ function renderRecruitmentDashboardV85(){
   const totalAsig=rows.reduce((n,r)=>n+r.stats.asigs.length,0);
   const totalSigned=rows.reduce((n,r)=>n+r.stats.signed,0);
   const totalGap=rows.reduce((n,r)=>n+r.gap,0);
-  host.innerHTML=`<div class="card-header"><div><div class="card-title">📋 Gestión de personal temporal</div><div class="card-subtitle">Controla cupos, contactos, confirmaciones, contratos y habilitación por orden de servicio.</div></div><button class="btn btn-primary btn-sm" onclick="nav('reclutamiento')">Abrir gestión</button></div>
+  host.innerHTML=`<div class="card-header"><div><div class="card-title">📋 Gestión de personal por proyecto</div><div class="card-subtitle">Controla cupos, contactos, confirmaciones, contratos y habilitación por orden de servicio.</div></div><button class="btn btn-primary btn-sm" onclick="nav('reclutamiento')">Abrir gestión</button></div>
     <div class="kpi-grid" style="margin:10px 0 14px;">
       <div class="kpi kpi-blue"><div class="kpi-value">${totalReq}</div><div class="kpi-label">Cupos requeridos</div></div>
       <div class="kpi kpi-orange"><div class="kpi-value">${totalAsig}</div><div class="kpi-label">En reclutamiento</div></div>
@@ -6207,15 +6219,17 @@ function translateClientTerminology(value) {
     [/\bParada de Planta\b/gi,'Intervención programada'],
     [/\bShutdowns\b/gi,'Suspensiones programadas'],
     [/\bShutdown\b/gi,'Suspensión programada'],
-    [/\bCentro de Reclutamiento Spot\b/gi,'Gestión de personal temporal'],
-    [/\bCentro Reclutamiento Spot\b/gi,'Gestión de personal temporal'],
-    [/\bCentro Reclutamiento\b/gi,'Gestión de personal temporal'],
-    [/\bReclutamiento Spot\b/gi,'Gestión de personal temporal'],
-    [/\bCentro de Reclutamiento\b/gi,'Gestión de personal temporal'],
-    [/\bPool Esporádico\b/gi,'Base de personal temporal'],
-    [/\bBase de candidatos spot\b/gi,'Base de personas disponibles'],
-    [/\bPersonal de Planta\b/gi,'Personal permanente'],
-    [/\bpersonal planta\b/gi,'personal permanente'],
+    [/\bCentro de Reclutamiento Spot\b/gi,'Gestión de personal por proyecto'],
+    [/\bCentro Reclutamiento Spot\b/gi,'Gestión de personal por proyecto'],
+    [/\bCentro Reclutamiento\b/gi,'Gestión de personal por proyecto'],
+    [/\bReclutamiento Spot\b/gi,'Gestión de personal por proyecto'],
+    [/\bCentro de Reclutamiento\b/gi,'Gestión de personal por proyecto'],
+    [/\bPool Esporádico\b/gi,'Trabajador por proyecto'],
+    [/\bBase de personal temporal\b/gi,'Trabajador por proyecto'],
+    [/\bBase de candidatos spot\b/gi,'Trabajador disponible'],
+    [/\bPersonal de Planta\b/gi,'Trabajador fijo'],
+    [/\bPersonal permanente\b/gi,'Trabajador fijo'],
+    [/\bpersonal planta\b/gi,'trabajador fijo'],
     [/\bPlanta y spot\b/gi,'Permanente y temporal'],
     [/\bPersonal spot\b/gi,'Personal temporal'],
     [/\bPersonal esporádico\b/gi,'Personal temporal'],
@@ -6287,11 +6301,11 @@ function translateClientTerminology(value) {
 }
 function applyClientTerminology(root) {
   if(!root)return;
-  if(root.nodeType===Node.TEXT_NODE){const parent=root.parentElement;if(parent&&!parent.closest('#public-site')&&!['SCRIPT','STYLE','NOSCRIPT'].includes(parent.tagName)){const translated=translateClientTerminology(root.nodeValue);if(translated!==root.nodeValue)root.nodeValue=translated;}return;}
+  if(root.nodeType===Node.TEXT_NODE){const parent=root.parentElement;if(parent&&!parent.closest('#public-site')&&!parent.closest('[data-keep-worker-term]')&&!['SCRIPT','STYLE','NOSCRIPT'].includes(parent.tagName)){const translated=translateClientTerminology(root.nodeValue);if(translated!==root.nodeValue)root.nodeValue=translated;}return;}
   if(root.nodeType!==Node.ELEMENT_NODE&&root!==document.body)return;
   if(root!==document.body&&root.closest?.('#public-site'))return;
   const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let node;
-  while((node=walker.nextNode())){const parent=node.parentElement;if(!parent||parent.closest('#public-site')||['SCRIPT','STYLE','NOSCRIPT'].includes(parent.tagName))continue;const translated=translateClientTerminology(node.nodeValue);if(translated!==node.nodeValue)node.nodeValue=translated;}
+  while((node=walker.nextNode())){const parent=node.parentElement;if(!parent||parent.closest('#public-site')||parent.closest('[data-keep-worker-term]')||['SCRIPT','STYLE','NOSCRIPT'].includes(parent.tagName))continue;const translated=translateClientTerminology(node.nodeValue);if(translated!==node.nodeValue)node.nodeValue=translated;}
   root.querySelectorAll?.('[placeholder],[aria-label],[title]').forEach(element=>{if(element.closest('#public-site'))return;['placeholder','aria-label','title'].forEach(attribute=>{if(!element.hasAttribute(attribute))return;const value=element.getAttribute(attribute),translated=translateClientTerminology(value);if(value!==translated)element.setAttribute(attribute,translated);});});
 }
 let clientTerminologyObserver;
@@ -9197,7 +9211,7 @@ window.addEventListener('load',()=>{installWorkBookUiV125();renderWorkBookDashbo
 const NK_WORKSPACES_V126={
   todo:{label:'Todos los módulos',pages:null},
   comercial:{label:'Comercial',pages:['dashboard','oportunidades','mineras','contratos','reportes']},
-  personas:{label:'Personas y cumplimiento',pages:['dashboard','reclutamiento','trabajadores','personal-planta','epp','bloqueados','auditoria','acreditacion-empresa','examenes','cursos','alertas']},
+  personas:{label:'Personas y cumplimiento',pages:['dashboard','reclutamiento','trabajadores','epp','bloqueados','auditoria','acreditacion-empresa','examenes','cursos','alertas']},
   operaciones:{label:'Operaciones en terreno',pages:['dashboard','mineras','mantenciones','hoteleria','llamados','vehiculos','acreditacion-mandante','subcontratos','turnos','credenciales','incidentes','protocolos','operaciones-cloud','libro-obras','alertas','reportes']},
   administracion:{label:'Administración',pages:['dashboard','configuracion','transferencia','usuarios','bitacora','privacidad','clientes','reportes']}
 };
@@ -9725,7 +9739,7 @@ function renderWorkerQuickProfileV138(workerId){
   const worker=(S.trabajadores||[]).find(row=>String(row.id)===String(workerId)),host=document.getElementById('ficha-tab-datos');if(!worker||!host)return;
   document.getElementById('worker-quick-profile-v138')?.remove();
   const quick=workerQuickStatusV138(worker),percent=typeof acreditacion==='function'?acreditacion(worker):0,sector=worker.sector||'general',statusText=quick.status.status||'Disponible',statusClass=quick.status.blocked?'badge-err':percent>=85?'badge-ok':'badge-warn';
-  host.insertAdjacentHTML('afterbegin',`<div class="card" id="worker-quick-profile-v138" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Resumen de la persona</div><div class="card-subtitle">Estado, requisitos y próxima acción en una sola vista.</div></div><span class="badge ${statusClass}">${workerEscV138(statusText)}</span></div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0;"><span class="badge badge-blue">${workerEscV138(worker.tipo==='permanente'?'Personal permanente':'Personal temporal')}</span><select class="form-select" id="worker-sector-v138" onchange="saveWorkerSectorV138('${workerEscV138(worker.id)}')" style="max-width:230px;">${Object.entries(WORKER_SECTORS_V138).map(([key,label])=>`<option value="${key}" ${sector===key?'selected':''}>${workerEscV138(label)}</option>`).join('')}</select><span class="worker-rut">${workerEscV138(worker.especialidad||worker.cargo||'Cargo pendiente')} · ${workerEscV138(worker.rut||'Sin RUT')}</span></div><div class="kpi-grid" style="margin-top:12px;"><button type="button" class="kpi kpi-${percent>=85?'green':percent>=60?'orange':'red'}" onclick="showFichaTabV138('docs')"><div class="kpi-value">${percent}%</div><div class="kpi-label">Habilitación</div></button><button type="button" class="kpi kpi-blue" onclick="showFichaTabV138('hist')"><div class="kpi-value">${quick.assignments.length}</div><div class="kpi-label">Servicios activos</div></button><button type="button" class="kpi kpi-${quick.epp.missing?.length?'orange':'green'}" onclick="showFichaTabV138('epp')"><div class="kpi-value">${quick.epp.missing?.length||0}</div><div class="kpi-label">EPP pendiente</div></button><button type="button" class="kpi kpi-${quick.documents.length?'red':'green'}" onclick="showFichaTabV138('docs')"><div class="kpi-value">${quick.documents.length}</div><div class="kpi-label">Documentos por revisar</div></button></div><div class="cloud-note" style="margin-top:12px;"><b>Próxima acción:</b> ${quick.next.length?workerEscV138(quick.next.join(' · ')):'La persona no tiene pendientes críticos detectados.'}</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><button class="btn btn-primary btn-sm" onclick="showFichaTabV138('docs')">Revisar documentos</button><button class="btn btn-secondary btn-sm" onclick="showFichaTabV138('epp')">Ver EPP y tallas</button><button class="btn btn-secondary btn-sm" onclick="showFichaTabV138('hist')">Ver historial</button></div></div>`);
+  host.insertAdjacentHTML('afterbegin',`<div class="card" id="worker-quick-profile-v138" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Resumen de la persona</div><div class="card-subtitle">Estado, requisitos y próxima acción en una sola vista.</div></div><span class="badge ${statusClass}">${workerEscV138(statusText)}</span></div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0;"><span class="badge badge-blue" data-keep-worker-term>${workerEscV138(worker.tipo==='permanente'?'Trabajador fijo':'Trabajador por proyecto')}</span><select class="form-select" id="worker-sector-v138" onchange="saveWorkerSectorV138('${workerEscV138(worker.id)}')" style="max-width:230px;">${Object.entries(WORKER_SECTORS_V138).map(([key,label])=>`<option value="${key}" ${sector===key?'selected':''}>${workerEscV138(label)}</option>`).join('')}</select><span class="worker-rut">${workerEscV138(worker.especialidad||worker.cargo||'Cargo pendiente')} · ${workerEscV138(worker.rut||'Sin RUT')}</span></div><div class="kpi-grid" style="margin-top:12px;"><button type="button" class="kpi kpi-${percent>=85?'green':percent>=60?'orange':'red'}" onclick="showFichaTabV138('docs')"><div class="kpi-value">${percent}%</div><div class="kpi-label">Habilitación</div></button><button type="button" class="kpi kpi-blue" onclick="showFichaTabV138('hist')"><div class="kpi-value">${quick.assignments.length}</div><div class="kpi-label">Servicios activos</div></button><button type="button" class="kpi kpi-${quick.epp.missing?.length?'orange':'green'}" onclick="showFichaTabV138('epp')"><div class="kpi-value">${quick.epp.missing?.length||0}</div><div class="kpi-label">EPP pendiente</div></button><button type="button" class="kpi kpi-${quick.documents.length?'red':'green'}" onclick="showFichaTabV138('docs')"><div class="kpi-value">${quick.documents.length}</div><div class="kpi-label">Documentos por revisar</div></button></div><div class="cloud-note" style="margin-top:12px;"><b>Próxima acción:</b> ${quick.next.length?workerEscV138(quick.next.join(' · ')):'La persona no tiene pendientes críticos detectados.'}</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><button class="btn btn-primary btn-sm" onclick="showFichaTabV138('docs')">Revisar documentos</button><button class="btn btn-secondary btn-sm" onclick="showFichaTabV138('epp')">Ver EPP y tallas</button><button class="btn btn-secondary btn-sm" onclick="showFichaTabV138('hist')">Ver historial</button></div></div>`);
 }
 const openFichaV138Base=openFicha;
 openFicha=function(workerId){openFichaV138Base(workerId);renderWorkerQuickProfileV138(workerId);};
