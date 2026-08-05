@@ -933,43 +933,63 @@ td { padding:12px 14px; }
   <div class="sidebar-logo">
     <div style="display:flex;align-items:center;gap:10px;"><div class="logo-mark" style="width:34px;height:34px;border-radius:10px;">N</div><div><div class="sidebar-logo-title">Nexo Klar</div><div class="sidebar-logo-sub">Sitio privado · Datos claros</div></div></div>
   </div>
-  <div class="nav-group-label">Inicio</div>
+  <div class="nav-group-label">Centro de control</div>
   <div class="nav-item active" onclick="nav('dashboard')">🏠 Panel General</div>
   <div class="nav-item" onclick="nav('alertas')">🔔 Alertas <span class="nav-badge" id="badge-alertas">0</span></div>
+  <div class="nav-item" onclick="nav('reclutamiento')">📋 Gestión de personal temporal</div>
   <div class="nav-item" onclick="nav('operaciones-cloud')">📡 Centro Operativo</div>
-  <div class="nav-item" id="nav-work-book-v125" onclick="nav('libro-obras')">📖 Libro de Obra <span class="nav-badge" id="badge-work-book-v125">0</span></div>
 
-  <div class="nav-group-label">Relación comercial</div>
-  <div class="nav-item" onclick="nav('oportunidades')">💼 Prospectos y Oportunidades</div>
-  <div class="nav-item" onclick="nav('mineras')">🏢 Clientes</div>
-  <div class="nav-item" onclick="nav('contratos')">📝 Contratos y Firmas <span class="nav-badge nav-badge-orange" id="badge-firmas">0</span></div>
-  <div class="nav-item" onclick="nav('mantenciones')">🔧 Órdenes de Servicio</div>
-  <div class="nav-item" onclick="nav('subcontratos')">🏗️ Subcontratos</div>
-
-  <div class="nav-group-label">Personas</div>
-  <div class="nav-item" onclick="nav('reclutamiento')">📋 Gestión de personal por proyecto</div>
+  <div class="nav-group-label">Capital humano</div>
   <div class="nav-item" onclick="nav('trabajadores')">👷 Personas</div>
   <div class="nav-item" onclick="nav('turnos')">🕒 Turnos y asistencia</div>
-  <div class="nav-item" onclick="nav('epp')">🦺 EPP y Entregas <span class="nav-badge nav-badge-orange" id="badge-epp">0</span></div>
-  <div class="nav-item" onclick="nav('cursos')">📚 Cursos</div>
-  <div class="nav-item" onclick="nav('examenes')">🧪 Exámenes</div>
+  <div class="nav-item" onclick="nav('epp')">🦺 Protección personal y entregas <span class="nav-badge nav-badge-orange" id="badge-epp">0</span></div>
+  <div class="nav-item" onclick="nav('cursos')">📚 Formación y certificaciones</div>
+  <div class="nav-item" onclick="nav('examenes')">🧪 Exámenes y aptitudes</div>
   <div class="nav-item" onclick="nav('protocolos')">🩺 Salud Ocupacional</div>
   <div class="nav-item" onclick="nav('bloqueados')">🚫 Restringidos</div>
 
-  <div class="nav-group-label">Operación</div>
-  <div class="nav-item" onclick="nav('llamados')">📲 Llamados WA</div>
-  <div class="nav-item" onclick="nav('vehiculos')">🚙 Vehículos y Equipos</div>
+  <div class="nav-group-label">Gestión operacional</div>
+  <div class="nav-item" onclick="nav('llamados')">📲 Comunicaciones y convocatorias</div>
+  <div class="nav-item" onclick="nav('vehiculos')">🚙 Vehículos, activos y equipos</div>
   <div class="nav-item" onclick="nav('hoteleria')">🛏️ Alojamientos y Estadías</div>
   <div class="nav-item" onclick="nav('credenciales')">🎫 Credenciales</div>
 
-  <div class="nav-group-label">Cumplimiento</div>
+  <div class="nav-group-label">Contratistas</div>
+  <div class="nav-item" onclick="nav('contratistas')">🏗️ Terceros y subcontratos</div>
+  <div class="nav-item" onclick="openContractorWorkspaceV146('contratos')">📑 Contratos y convenios</div>
+  <div class="nav-item" onclick="openContractorWorkspaceV146('personas')">👥 Personal del contratista</div>
+  <div class="nav-item" onclick="openContractorWorkspaceV146('cumplimiento')">✅ Habilitaciones y cumplimiento</div>
+  <div class="nav-item" onclick="openContractorWorkspaceV146('evaluacion')">📊 Evaluación de desempeño</div>
+
+  <div class="nav-group-label">Relación comercial</div>
+  <div class="nav-item" onclick="nav('mineras')">🏢 Clientes</div>
+  <div class="nav-item" onclick="nav('contratos')">📝 Contratos y Firmas <span class="nav-badge nav-badge-orange" id="badge-firmas">0</span></div>
+  <div class="nav-item" onclick="nav('mantenciones')">🔧 Órdenes de Servicio</div>
+
+  <div class="nav-group-label">Cumplimiento y calidad</div>
   <div class="nav-item" onclick="nav('acreditacion-empresa')">🏢 Documentación de la Empresa</div>
   <div class="nav-item" onclick="nav('acreditacion-mandante')">✅ Habilitación del Cliente</div>
-  <div class="nav-item" onclick="nav('incidentes')">⚠️ Incidentes y NC</div>
+  <div class="nav-item" onclick="nav('incidentes')">⚠️ Incidentes y no conformidades</div>
   <div class="nav-item" onclick="nav('auditoria')">📋 Auditoría</div>
 
-  <div class="nav-group-label">Gestión</div>
-  <div class="nav-item" onclick="nav('reportes')">📊 Reportes</div>
+  <div class="nav-group-label">Gestión de proyectos y negocios</div>
+  <div class="nav-item" id="nav-work-book-v125" onclick="nav('libro-obras')">📖 Libro de Obra <span class="nav-badge" id="badge-work-book-v125">0</span></div>
+  <div class="nav-item" onclick="nav('oportunidades')">💼 Prospectos y oportunidades</div>
+
+  <div class="nav-group-label">Activos, equipos e inventario</div>
+  <div class="nav-item" onclick="nav('activos-inventario')">📊 Inventario y stock</div>
+  <div class="nav-item" onclick="openAssetsWorkspaceV146('maquinaria')">🚜 Maquinaria</div>
+  <div class="nav-item" onclick="openAssetsWorkspaceV146('equipos')">🧰 Equipos e instrumentos</div>
+  <div class="nav-item" onclick="openAssetsWorkspaceV146('herramientas')">🔧 Herramientas</div>
+  <div class="nav-item" onclick="openAssetsWorkspaceV146('materiales')">📦 Materiales y ferretería</div>
+  <div class="nav-item" onclick="openAssetsWorkspaceV146('insumos')">🧪 Insumos y consumibles</div>
+  <div class="nav-item" onclick="openAssetsWorkspaceV146('bodegas')">🏢 Bodegas y almacenes</div>
+  <div class="nav-item" onclick="openAssetsWorkspaceV146('movimientos')">🔄 Movimientos de inventario</div>
+  <div class="nav-item" onclick="openAssetsWorkspaceV146('mantenimiento')">🛠️ Mantenimiento</div>
+  <div class="nav-item" onclick="openAssetsWorkspaceV146('asignaciones')">📋 Asignaciones y préstamos</div>
+
+  <div class="nav-group-label">Gestión y administración</div>
+  <div class="nav-item" onclick="nav('reportes')">📊 Reportes y analítica</div>
   <div class="nav-item" onclick="nav('configuracion')">⚙️ Configuración Empresa</div>
   <div class="nav-item" onclick="nav('transferencia')">↕️ Importar / Exportar</div>
   <div class="nav-item" onclick="nav('usuarios')">👥 Usuarios y Permisos</div>
@@ -1662,6 +1682,20 @@ td { padding:12px 14px; }
     <div class="card">
       <div class="table-wrap"><table id="clientes-table"></table></div>
     </div>
+  </div>
+  <div id="page-contratistas" class="page">
+    <div class="section-header">
+      <div><div class="section-title">🏗️ Terceros y subcontratos</div><div class="section-sub">Empresas externas, personas, contratos, cumplimiento y evaluación en una sola vista.</div></div>
+      <div class="section-actions"><button class="btn btn-primary" type="button" onclick="addSubcontrato()">+ Agregar contratista</button></div>
+    </div>
+    <div id="contractor-workspace-v146"></div>
+  </div>
+  <div id="page-activos-inventario" class="page">
+    <div class="section-header">
+      <div><div class="section-title">📊 Activos, equipos e inventario</div><div class="section-sub">Registra activos, materiales y existencias; relaciónalos con bodegas, personas y órdenes de servicio.</div></div>
+      <div class="section-actions"><button class="btn btn-primary" type="button" onclick="openInventoryItemModalV146()">+ Registrar activo o existencia</button></div>
+    </div>
+    <div id="assets-workspace-v146"></div>
   </div>
 </div>
 <!-- MODALS -->
@@ -2690,7 +2724,8 @@ const pageLabels = {
   dashboard:'Dashboard','mineras':'Por Cliente',alertas:'Alertas',trabajadores:'Personas',
   bloqueados:'Restringidos',auditoria:'Auditoría Documental',mantenciones:'Mantenciones',
   contratos:'Contratos y Firmas',hoteleria:'Hotelería',llamados:'Llamados WA',
-  examenes:'Exámenes Médicos',cursos:'Cursos',reportes:'Reportes',clientes:'Clientes Nexo Klar'
+  examenes:'Exámenes y aptitudes',cursos:'Formación y certificaciones',reportes:'Reportes y analítica',clientes:'Clientes Nexo Klar',
+  contratistas:'Terceros y subcontratos', 'activos-inventario':'Activos, equipos e inventario'
 };
 const pageSubs = {
   dashboard:'Resumen operativo · Nexo Klar',
@@ -2706,7 +2741,9 @@ const pageSubs = {
   examenes:'Control de exámenes médicos ocupacionales',
   cursos:'Certificaciones y cursos de seguridad',
   reportes:'Exportación de datos y reportería',
-  clientes:'Administración interna de clientes y sitios privados'
+  clientes:'Administración interna de clientes y sitios privados',
+  contratistas:'Empresas externas, sus contratos, personal, documentos y evaluación de desempeño',
+  'activos-inventario':'Existencias, activos, bodegas, movimientos, mantenimiento y préstamos'
 };
 
 function nav(page) {
@@ -10027,5 +10064,46 @@ renderIncidentes=function(){
 
 <script src="assets/nexo-klar-guidance.js"></script>
 <script src="assets/nexo-klar-enterprise.js"></script>
+<script>
+// V14.6 · Espacios comerciales para contratistas y activos, construidos sobre la misma data operativa.
+let contractorWorkspaceV146='resumen',assetsWorkspaceV146='inventario';
+const ASSET_CATEGORIES_V146={maquinaria:'Maquinaria',equipos:'Equipos e instrumentos',herramientas:'Herramientas',materiales:'Materiales y ferretería',insumos:'Insumos y consumibles'};
+function escV146(value){return typeof esc94==='function'?esc94(value):String(value??'');}
+function contractorPeopleV146(id){return (S.trabajadores||[]).filter(person=>person.subcontratoId===id||person.subcontractId===id);}
+function contractorScoreV146(row){const documents=subcontractComplianceV144(row),saved=Number(row.performanceScore);return Number.isFinite(saved)&&saved>0?saved:documents.percent;}
+function openContractorWorkspaceV146(tab='resumen'){contractorWorkspaceV146=tab;nav('contratistas');}
+function renderContractorWorkspaceV146(){
+  ensureV6Collections();const host=document.getElementById('contractor-workspace-v146');if(!host)return;const rows=S.subcontratos||[],tabs=[['resumen','Resumen'],['contratos','Contratos y convenios'],['personas','Personal'],['cumplimiento','Cumplimiento'],['evaluacion','Evaluación']];
+  const controls=`<div class="card" style="margin-bottom:16px;"><div class="tab-bar" style="margin:0;">${tabs.map(([id,label])=>`<button class="tab-btn ${contractorWorkspaceV146===id?'active':''}" onclick="openContractorWorkspaceV146('${id}')">${label}</button>`).join('')}</div></div>`;
+  const summary=`<div class="kpi-grid"><div class="kpi kpi-blue"><div class="kpi-value">${rows.length}</div><div class="kpi-label">Empresas registradas</div></div><div class="kpi kpi-green"><div class="kpi-value">${rows.filter(row=>row.estado==='vigente').length}</div><div class="kpi-label">Vigentes</div></div><div class="kpi kpi-orange"><div class="kpi-value">${rows.reduce((total,row)=>total+contractorPeopleV146(row.id).length,0)}</div><div class="kpi-label">Personas vinculadas</div></div><div class="kpi kpi-red"><div class="kpi-value">${rows.filter(row=>subcontractComplianceV144(row).missing>0).length}</div><div class="kpi-label">Con pendientes</div></div></div>`;
+  let body='';
+  if(contractorWorkspaceV146==='contratos')body=`<div class="card"><div class="card-header"><div><div class="card-title">Contratos, convenios y órdenes de compra</div><div class="card-subtitle">Cada documento conserva versiones, vigencia y responsable de renovación.</div></div></div><div class="table-wrap"><table><thead><tr><th>Empresa</th><th>Contrato / convenio</th><th>Órdenes de compra</th><th>Vigencia</th><th>Documentos</th><th></th></tr></thead><tbody>${rows.map(row=>`<tr><td><b>${escV146(row.razon)}</b><div class="worker-rut">${escV146(row.rut||'Sin RUT')}</div></td><td>${escV146(row.contratoRef||contratoNombre(row.contratoId))}</td><td>${escV146((row.ocs||[]).join(', ')||'—')}</td><td>${escV146(row.contratoVence||'Sin fecha')}</td><td>${(row.documents||[]).length} versión(es)</td><td><button class="btn btn-secondary btn-sm" onclick="openSubcontractV82('${row.id}')">Gestionar</button></td></tr>`).join('')||'<tr><td colspan="6">Registra una empresa externa para asociar sus contratos y convenios.</td></tr>'}</tbody></table></div></div>`;
+  else if(contractorWorkspaceV146==='personas')body=`<div class="card"><div class="card-header"><div><div class="card-title">Personal del contratista</div><div class="card-subtitle">Relaciona cada persona con su empresa externa; sus turnos, formación, aptitudes y restricciones permanecen en la ficha individual.</div></div><button class="btn btn-secondary btn-sm" onclick="nav('trabajadores')">Ver personas</button></div><div class="table-wrap"><table><thead><tr><th>Empresa externa</th><th>Personas asociadas</th><th>Habilitadas</th><th>Restringidas</th><th>Acción</th></tr></thead><tbody>${rows.map(row=>{const people=contractorPeopleV146(row.id);return `<tr><td><b>${escV146(row.razon)}</b></td><td>${people.length?people.map(person=>escV146(person.nombre)).join('<br>'):'Sin personal asociado'}</td><td>${people.filter(person=>!person.bloqueado).length}</td><td>${people.filter(person=>person.bloqueado).length}</td><td><button class="btn btn-secondary btn-sm" onclick="openSubcontractV82('${row.id}')">Abrir ficha</button></td></tr>`;}).join('')||'<tr><td colspan="5">No hay contratistas registrados.</td></tr>'}</tbody></table></div></div>`;
+  else if(contractorWorkspaceV146==='cumplimiento')body=`<div class="card"><div class="card-header"><div><div class="card-title">Habilitaciones y cumplimiento</div><div class="card-subtitle">Control de requisitos laborales, previsionales, seguridad, seguros y exigencias particulares del cliente.</div></div></div><div class="table-wrap"><table><thead><tr><th>Empresa externa</th><th>Base documental</th><th>Pendientes</th><th>Estado</th><th></th></tr></thead><tbody>${rows.map(row=>{const compliance=subcontractComplianceV144(row);return `<tr><td><b>${escV146(row.razon)}</b></td><td>${compliance.valid}/${compliance.total} (${compliance.percent}%)</td><td>${compliance.missing}</td><td><span class="badge ${compliance.missing?'badge-err':'badge-ok'}">${compliance.missing?'Requiere gestión':'Al día'}</span></td><td><button class="btn btn-secondary btn-sm" onclick="openSubcontractV82('${row.id}')">Revisar documentos</button></td></tr>`;}).join('')||'<tr><td colspan="5">No hay contratistas registrados.</td></tr>'}</tbody></table></div></div>`;
+  else if(contractorWorkspaceV146==='evaluacion')body=`<div class="card"><div class="card-header"><div><div class="card-title">Evaluación de desempeño</div><div class="card-subtitle">Registra evaluación operativa de 1 a 5. La calificación queda en la ficha del contratista y sirve para comparar cumplimiento y desempeño.</div></div></div><div class="table-wrap"><table><thead><tr><th>Empresa externa</th><th>Cumplimiento</th><th>Seguridad</th><th>Calidad / servicio</th><th>Resultado</th><th></th></tr></thead><tbody>${rows.map(row=>`<tr><td><b>${escV146(row.razon)}</b></td>${['complianceRating','safetyRating','serviceRating'].map(field=>`<td><input class="form-input" type="number" min="1" max="5" value="${Number(row[field])||''}" placeholder="1-5" onchange="saveContractorEvaluationV146('${row.id}','${field}',this.value)" style="width:78px"></td>`).join('')}<td><span class="badge ${contractorScoreV146(row)>=80?'badge-ok':contractorScoreV146(row)>=60?'badge-warn':'badge-err'}">${contractorScoreV146(row)}%</span></td><td><button class="btn btn-secondary btn-sm" onclick="openSubcontractV82('${row.id}')">Ficha</button></td></tr>`).join('')||'<tr><td colspan="6">No hay contratistas registrados.</td></tr>'}</tbody></table></div></div>`;
+  else body=`${summary}<div class="card" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Empresas externas activas</div><div class="card-subtitle">Crea una empresa, carga sus documentos y vincúlala con contrato, orden de servicio y personal.</div></div><button class="btn btn-secondary btn-sm" onclick="exportSubcontratos()">Exportar</button></div><div class="table-wrap"><table><thead><tr><th>Empresa</th><th>Servicios</th><th>Responsable</th><th>Personas</th><th>Cumplimiento</th><th></th></tr></thead><tbody>${rows.map(row=>{const compliance=subcontractComplianceV144(row);return `<tr><td><b>${escV146(row.razon)}</b><div class="worker-rut">${escV146(row.rut||'Sin RUT')}</div></td><td>${escV146(row.servicios||'—')}</td><td>${escV146(row.responsable||'—')}</td><td>${contractorPeopleV146(row.id).length}</td><td>${compliance.percent}%</td><td><button class="btn btn-secondary btn-sm" onclick="openSubcontractV82('${row.id}')">Abrir ficha</button></td></tr>`;}).join('')||'<tr><td colspan="6">Aún no hay contratistas registrados.</td></tr>'}</tbody></table></div></div>`;
+  host.innerHTML=controls+body;
+}
+function saveContractorEvaluationV146(id,field,value){const row=(S.subcontratos||[]).find(item=>item.id===id);if(!row)return;row[field]=Math.max(1,Math.min(5,Number(value)||0));const ratings=['complianceRating','safetyRating','serviceRating'].map(key=>Number(row[key])||0).filter(Boolean);row.performanceScore=ratings.length?Math.round(ratings.reduce((sum,item)=>sum+item,0)/ratings.length*20):0;row.updatedAt=new Date().toISOString();persistTenant();renderContractorWorkspaceV146();}
+function openAssetsWorkspaceV146(tab='inventario'){assetsWorkspaceV146=tab;nav('activos-inventario');}
+function inventoryCategoryV146(item){const source=`${item.type||''} ${item.category||''} ${item.name||''}`.toLowerCase();if(/maquin/.test(source))return 'maquinaria';if(/herramient|tool/.test(source))return 'herramientas';if(/material|ferreter/.test(source))return 'materiales';if(/insumo|consumible|epp/.test(source))return 'insumos';return 'equipos';}
+function renderAssetsWorkspaceV146(){
+  ensureV95Collections();const host=document.getElementById('assets-workspace-v146');if(!host)return;const items=S.inventoryItems||[],warehouses=S.warehouses||[],moves=S.inventoryMovements||[],tabs=[['inventario','Inventario y stock'],['maquinaria','Maquinaria'],['equipos','Equipos'],['herramientas','Herramientas'],['materiales','Materiales'],['insumos','Insumos'],['bodegas','Bodegas'],['movimientos','Movimientos'],['mantenimiento','Mantenimiento'],['asignaciones','Asignaciones']];
+  const controls=`<div class="card" style="margin-bottom:16px;"><div class="tab-bar" style="margin:0;overflow:auto;">${tabs.map(([id,label])=>`<button class="tab-btn ${assetsWorkspaceV146===id?'active':''}" onclick="openAssetsWorkspaceV146('${id}')">${label}</button>`).join('')}</div></div>`;
+  const itemTable=rows=>`<div class="table-wrap"><table><thead><tr><th>Recurso</th><th>Tipo</th><th>Stock total</th><th>Mínimo</th><th>Bodega / ubicación</th><th>Estado</th></tr></thead><tbody>${rows.map(item=>`<tr><td><b>${escV146(item.name)}</b><div class="worker-rut">${escV146(item.code||item.serie||'')}</div></td><td>${escV146(item.type||'Recurso')}</td><td>${Number(item.stock)||0}</td><td>${Number(item.minStock)||0}</td><td>${escV146(item.location||'Bodega')}</td><td><span class="badge ${Number(item.stock)<=Number(item.minStock)?'badge-err':'badge-ok'}">${Number(item.stock)<=Number(item.minStock)?'Reponer':'Disponible'}</span></td></tr>`).join('')||'<tr><td colspan="6">No hay registros en esta categoría. Use “Registrar activo o existencia” para cargar el primero.</td></tr>'}</tbody></table></div>`;
+  let body='';
+  if(['maquinaria','equipos','herramientas','materiales','insumos'].includes(assetsWorkspaceV146)){const rows=items.filter(item=>inventoryCategoryV146(item)===assetsWorkspaceV146);body=`<div class="card"><div class="card-header"><div><div class="card-title">${ASSET_CATEGORIES_V146[assetsWorkspaceV146]}</div><div class="card-subtitle">Catálogo centralizado, saldo, mínimo, ubicación y trazabilidad por movimiento.</div></div><button class="btn btn-primary btn-sm" onclick="openInventoryItemModalV146('${assetsWorkspaceV146}')">+ Agregar</button></div>${itemTable(rows)}</div>`;}
+  else if(assetsWorkspaceV146==='bodegas')body=`<div class="card"><div class="card-header"><div><div class="card-title">Bodegas y almacenes</div><div class="card-subtitle">Cada bodega administra su propio saldo. Puedes registrar una bodega central, móvil, de terreno o por sucursal.</div></div><button class="btn btn-primary btn-sm" onclick="openWarehouseV134()">+ Crear bodega</button></div><div class="table-wrap"><table><thead><tr><th>Bodega</th><th>Tipo</th><th>Ubicación</th><th>Responsable</th><th>Existencias</th></tr></thead><tbody>${warehouses.map(warehouse=>`<tr><td><b>${escV146(warehouse.name)}</b></td><td>${escV146(warehouse.type||'General')}</td><td>${escV146(warehouse.zone||'—')}</td><td>${escV146(warehouse.responsible||'—')}</td><td>${items.reduce((total,item)=>total+Number(item.stockByLocation?.[warehouse.id]||0),0)}</td></tr>`).join('')||'<tr><td colspan="5">Crea una bodega para comenzar a distribuir existencias.</td></tr>'}</tbody></table></div></div>`;
+  else if(assetsWorkspaceV146==='movimientos'||assetsWorkspaceV146==='asignaciones'){const rows=assetsWorkspaceV146==='asignaciones'?moves.filter(move=>move.workerId||move.projectId):moves;body=`<div class="card"><div class="card-header"><div><div class="card-title">${assetsWorkspaceV146==='asignaciones'?'Asignaciones y préstamos':'Movimientos de inventario'}</div><div class="card-subtitle">Cada registro conserva fecha, responsable, persona, orden de servicio y respaldo cuando corresponde.</div></div><button class="btn btn-primary btn-sm" onclick="nav('operaciones-cloud')">Registrar movimiento</button></div><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Movimiento</th><th>Recurso</th><th>Persona / orden</th><th>Firma</th></tr></thead><tbody>${rows.slice(0,40).map(move=>{const item=items.find(entry=>entry.id===move.itemId);return `<tr><td>${String(move.at||'').slice(0,10)||'—'}</td><td>${escV146(move.type||'')}</td><td>${escV146(item?.name||move.itemId||'—')}</td><td>${escV146(trabNombre(move.workerId)||mantNombre(move.projectId)||'—')}</td><td>${move.signed?'<span class="badge badge-ok">Respaldado</span>':'<span class="badge badge-warn">Pendiente</span>'}</td></tr>`;}).join('')||'<tr><td colspan="5">No hay movimientos registrados.</td></tr>'}</tbody></table></div></div>`;}
+  else if(assetsWorkspaceV146==='mantenimiento'){const rows=S.vehiculos||[];body=`<div class="card"><div class="card-header"><div><div class="card-title">Mantenimiento de activos</div><div class="card-subtitle">Controla vehículos y equipos con responsable, documentos, certificaciones y vencimientos.</div></div><button class="btn btn-secondary btn-sm" onclick="nav('vehiculos')">Gestionar vehículos y equipos</button></div><div class="table-wrap"><table><thead><tr><th>Activo</th><th>Tipo</th><th>Operador</th><th>Revisión / certificación</th><th>Estado</th></tr></thead><tbody>${rows.map(asset=>`<tr><td><b>${escV146(asset.nombre||asset.patente||asset.serie||'Activo')}</b></td><td>${escV146(asset.tipo||'—')}</td><td>${escV146(trabNombre(asset.operadorId)||'—')}</td><td>${escV146(asset.revisionTecnica||asset.certificacion||'Sin fecha')}</td><td><span class="badge ${vehAlertCountV64(asset)?'badge-warn':'badge-ok'}">${vehAlertCountV64(asset)?'Revisar':'Vigente'}</span></td></tr>`).join('')||'<tr><td colspan="5">No hay activos vehiculares registrados.</td></tr>'}</tbody></table></div></div>`;}
+  else body=`<div class="kpi-grid"><div class="kpi kpi-blue"><div class="kpi-value">${items.length}</div><div class="kpi-label">Recursos registrados</div></div><div class="kpi kpi-green"><div class="kpi-value">${warehouses.length}</div><div class="kpi-label">Bodegas activas</div></div><div class="kpi kpi-orange"><div class="kpi-value">${moves.length}</div><div class="kpi-label">Movimientos trazables</div></div><div class="kpi kpi-red"><div class="kpi-value">${items.filter(item=>Number(item.stock)<=Number(item.minStock)).length}</div><div class="kpi-label">Reposiciones requeridas</div></div></div><div class="card" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Inventario y stock</div><div class="card-subtitle">Consulta existencias, mínimos, costos y ubicación. Registra el recurso una vez y úsalo en bodegas, entregas y órdenes de servicio.</div></div><button class="btn btn-secondary btn-sm" onclick="nav('operaciones-cloud')">Abrir Centro Operativo</button></div>${itemTable(items)}</div>`;
+  host.innerHTML=controls+body;
+}
+function ensureInventoryItemModalV146(){if(document.getElementById('modal-inventory-item-v146'))return;document.body.insertAdjacentHTML('beforeend',`<div class="modal-overlay" id="modal-inventory-item-v146"><div class="modal"><div class="modal-header"><div class="modal-title">Registrar activo o existencia</div><button class="modal-close" type="button" onclick="closeModal('modal-inventory-item-v146')">✕</button></div><form onsubmit="saveInventoryItemV146(event)"><div class="modal-body"><div class="cloud-note" style="margin-bottom:14px;">Registra maquinaria, equipos, herramientas, materiales o consumibles. Si aún no existe una categoría, selecciona “Otro” y escribe la clasificación.</div><div class="form-grid"><div class="form-group"><label class="form-label">Categoría *</label><select class="form-select" id="v146-item-category"><option value="maquinaria">Maquinaria</option><option value="equipos">Equipos e instrumentos</option><option value="herramientas">Herramientas</option><option value="materiales">Materiales y ferretería</option><option value="insumos">Insumos y consumibles</option><option value="otro">Otro</option></select></div><div class="form-group"><label class="form-label">Nombre *</label><input class="form-input" id="v146-item-name" required placeholder="Ej: Taladro inalámbrico 18V"></div><div class="form-group"><label class="form-label">Código / serie</label><input class="form-input" id="v146-item-code" placeholder="Código interno, patente o serie"></div><div class="form-group"><label class="form-label">Unidad</label><input class="form-input" id="v146-item-unit" value="unidad"></div><div class="form-group"><label class="form-label">Bodega inicial</label><select class="form-select" id="v146-item-warehouse"></select></div><div class="form-group"><label class="form-label">Cantidad inicial</label><input class="form-input" id="v146-item-qty" type="number" min="0" value="0"></div><div class="form-group"><label class="form-label">Stock mínimo</label><input class="form-input" id="v146-item-min" type="number" min="0" value="0"></div><div class="form-group"><label class="form-label">Costo unitario (CLP)</label><input class="form-input" id="v146-item-cost" type="number" min="0" value="0"></div><div class="form-group"><label class="form-label">Vida útil (días)</label><input class="form-input" id="v146-item-life" type="number" min="0" value="0"></div><div class="form-group full"><label class="form-label">Observación</label><textarea class="form-textarea" id="v146-item-notes" placeholder="Marca, modelo, proveedor, condición, ubicación o requisito de mantenimiento."></textarea></div></div></div><div class="modal-footer"><button class="btn btn-ghost" type="button" onclick="closeModal('modal-inventory-item-v146')">Cancelar</button><button class="btn btn-primary" type="submit">Guardar registro</button></div></form></div></div>`);}
+function openInventoryItemModalV146(category='equipos'){ensureV95Collections();ensureInventoryItemModalV146();const warehouse=document.getElementById('v146-item-warehouse');warehouse.innerHTML='<option value="">Sin bodega inicial</option>'+(S.warehouses||[]).map(row=>`<option value="${escV146(row.id)}">${escV146(row.name)}</option>`).join('');document.getElementById('v146-item-category').value=category==='inventario'?'equipos':category;['v146-item-name','v146-item-code','v146-item-notes'].forEach(id=>document.getElementById(id).value='');['v146-item-qty','v146-item-min','v146-item-cost','v146-item-life'].forEach(id=>document.getElementById(id).value='0');document.getElementById('v146-item-unit').value='unidad';openModal('modal-inventory-item-v146');}
+function saveInventoryItemV146(event){event.preventDefault();ensureV95Collections();const category=document.getElementById('v146-item-category').value,name=document.getElementById('v146-item-name').value.trim(),code=document.getElementById('v146-item-code').value.trim(),warehouseId=document.getElementById('v146-item-warehouse').value,qty=Number(document.getElementById('v146-item-qty').value)||0,minStock=Number(document.getElementById('v146-item-min').value)||0,unitCost=Number(document.getElementById('v146-item-cost').value)||0,lifeDays=Number(document.getElementById('v146-item-life').value)||0,notes=document.getElementById('v146-item-notes').value.trim();if(!name)return toast('Ingresa el nombre del recurso','err');if((S.inventoryItems||[]).some(item=>String(item.name||'').toLowerCase()===name.toLowerCase()&&String(item.code||'')===code))return toast('Ya existe un recurso con el mismo nombre y código','err');const item={id:`inv_${Date.now()}`,type:ASSET_CATEGORIES_V146[category]||'Otro',category,name,code,unit:'unidad',stock:qty,minStock,unitCost,lifeDays,location:(S.warehouses||[]).find(row=>row.id===warehouseId)?.name||'',stockByLocation:warehouseId?{[warehouseId]:qty}:{},notes,createdAt:new Date().toISOString()};S.inventoryItems.push(item);if(qty&&warehouseId)S.inventoryMovements.unshift({id:`mov_${Date.now()}`,itemId:item.id,warehouseId,type:'reposicion',qty,stockBefore:0,stockAfter:qty,notes,signed:false,at:new Date().toISOString(),user:currentTenantUser?.email||'usuario'});recordHistoryV90?.('inventario',item.id,'Activo o existencia registrada',{},item,notes);persistTenant();closeModal('modal-inventory-item-v146');renderAssetsWorkspaceV146();toast('Activo o existencia registrada');}
+const renderPageV146Base=renderPage;
+renderPage=function(page){renderPageV146Base(page);if(page==='contratistas')renderContractorWorkspaceV146();if(page==='activos-inventario')renderAssetsWorkspaceV146();};
+</script>
 </body>
 </html>

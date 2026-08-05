@@ -45,8 +45,8 @@ test('visible terminology supports multiple industries without changing legacy d
 });
 
 test('people navigation is centralized with fixed, project, available and restricted views', () => {
-  const peopleStart = html.indexOf('<div class="nav-group-label">Personas</div>');
-  const operationsStart = html.indexOf('<div class="nav-group-label">Operación</div>');
+  const peopleStart = html.indexOf('<div class="nav-group-label">Capital humano</div>');
+  const operationsStart = html.indexOf('<div class="nav-group-label">Gestión operacional</div>');
   const peopleNavigation = html.slice(peopleStart, operationsStart);
 
   assert.match(peopleNavigation, /onclick="nav\('trabajadores'\)"/);
@@ -66,15 +66,23 @@ test('visible worker restriction language is standardized without changing inter
   assert.match(html, /bloqueado:\s*false/);
 });
 
-test('work book remains visible in the Inicio group', () => {
-  const generalStart = html.indexOf('<div class="nav-group-label">Inicio</div>');
-  const commercialStart = html.indexOf('<div class="nav-group-label">Relación comercial</div>');
-  const generalNavigation = html.slice(generalStart, commercialStart);
+test('work book remains visible in the project and business management group', () => {
+  const generalStart = html.indexOf('<div class="nav-group-label">Gestión de proyectos y negocios</div>');
+  const nextStart = html.indexOf('<div class="nav-group-label">Activos, equipos e inventario</div>');
+  const generalNavigation = html.slice(generalStart, nextStart);
 
   assert.match(generalNavigation, /id="nav-work-book-v125"/);
   assert.match(generalNavigation, /📖 Libro de Obra/);
-  assert.ok(
-    generalNavigation.indexOf("nav('libro-obras')") > generalNavigation.indexOf("nav('operaciones-cloud')"),
-    'Libro de Obra must appear after Centro Operativo'
-  );
+  assert.ok(generalNavigation.includes("nav('oportunidades')"));
+});
+
+test('contractor and asset workspaces reuse operational data instead of creating silos', () => {
+  for (const label of ['Contratistas', 'Activos, equipos e inventario', 'Contratos y convenios', 'Bodegas y almacenes', 'Movimientos de inventario']) {
+    assert.ok(html.includes(label), `missing workspace entry: ${label}`);
+  }
+  for (const fn of ['renderContractorWorkspaceV146', 'renderAssetsWorkspaceV146', 'saveInventoryItemV146', 'saveContractorEvaluationV146']) {
+    assert.match(html, new RegExp(`function ${fn}`));
+  }
+  assert.match(html, /subcontractComplianceV144\(row\)/);
+  assert.match(html, /S\.inventoryMovements\.unshift/);
 });
