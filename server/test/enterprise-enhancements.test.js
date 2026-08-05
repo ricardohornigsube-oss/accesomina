@@ -122,3 +122,10 @@ test('inventory uses physical counts, controlled receipts and code lookup withou
     assert.ok(html.includes(visibleAction), `missing inventory control action: ${visibleAction}`);
   }
 });
+
+test('asset workspace keeps the selected area visible in the sidebar and workspace path', () => {
+  for (const feature of ['ASSET_AREA_LABELS_V155', 'syncAssetNavigationV155', 'injectAssetPathV155']) {
+    assert.ok(html.includes(feature), `missing asset navigation feature: ${feature}`);
+  }
+  assert.ok(html.includes('Estás en'), 'missing visible asset workspace path');
+});

@@ -20,7 +20,8 @@ const requiredCapabilities=[
   'Órdenes y desempeño operativo','Asignar a orden','F30-1 sin período acreditado',
   'saveContractorOrderV153','installF301PeriodV153',
   'Control de existencias','Conteo físico','Recibir reposición','Buscar código',
-  'saveInventoryCountV154','saveInventoryReceiptV154','findInventoryCodeV154'
+  'saveInventoryCountV154','saveInventoryReceiptV154','findInventoryCodeV154',
+  'ASSET_AREA_LABELS_V155','syncAssetNavigationV155','Estás en'
 ];
 for(const capability of requiredCapabilities){
   if(!local.includes(capability))errors.push(`Local frontend is missing required capability: ${capability}`);
