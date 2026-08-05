@@ -92,3 +92,18 @@ test('communications track responses and assign only confirmed people to an orde
   assert.match(cloudClient, /useEmail=options\.channel!==['"]WhatsApp['"]/);
   assert.match(cloudClient, /NexoKlarEnterprise\?\.enrichCallout/);
 });
+
+test('contractors, assets, EPP, reservations and replenishment stay connected in the private workspace', () => {
+  for (const feature of [
+    'contractorApprovalV150', 'injectContractorPrequalificationV150',
+    'saveContractorPrequalificationV150', 'assetOpenLoanMovementV150',
+    'saveAssetReturnV150', 'installEppInventoryBridgeV151',
+    'saveEppDelivery=async function', 'assetReservationConflictV152',
+    'saveAssetReservationV152', 'openReplenishmentV152', 'saveReplenishmentV152'
+  ]) assert.ok(html.includes(feature), `missing connected operational flow: ${feature}`);
+  for (const visibleAction of [
+    'Precalificación y seguimiento', 'Descontar EPP de la bodega',
+    'Reserva para orden de servicio', 'Solicitar reposición',
+    'Préstamos atrasados', 'Reposición por bodega'
+  ]) assert.ok(html.includes(visibleAction), `missing client-facing action: ${visibleAction}`);
+});

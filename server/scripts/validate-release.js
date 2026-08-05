@@ -8,6 +8,20 @@ const hash=value=>crypto.createHash('sha256').update(value).digest('hex');
 const local=read('AccesoMina_v6.html'),publicHtml=read('public/index.html');
 
 if(hash(local)!==hash(publicHtml))errors.push('AccesoMina_v6.html and public/index.html are not synchronized');
+const requiredCapabilities=[
+  'Panel General','Alertas','Centro Operativo','Libro de Obra',
+  'Prospectos y oportunidades','Clientes','Contratos y Firmas','Órdenes de Servicio','Terceros y subcontratos',
+  'Personas','Turnos y asistencia','Protección personal y entregas','Formación y certificaciones','Exámenes y aptitudes','Restringidos',
+  'Comunicaciones y convocatorias','Vehículos, activos y equipos','Alojamientos y Estadías','Credenciales',
+  'Documentación de la Empresa','Habilitación del Cliente','Incidentes y no conformidades','Auditoría',
+  'Reportes y analítica','Configuración Empresa','Importar / Exportar','Usuarios y Permisos','Bitácora de Cambios','Privacidad y Datos',
+  'Precalificación y seguimiento','Descontar EPP de la bodega','Reserva para orden de servicio','Solicitar reposición',
+  'saveAssetReturnV150','saveEppDelivery=async function','saveAssetReservationV152','saveReplenishmentV152'
+];
+for(const capability of requiredCapabilities){
+  if(!local.includes(capability))errors.push(`Local frontend is missing required capability: ${capability}`);
+  if(!publicHtml.includes(capability))errors.push(`Production frontend is missing required capability: ${capability}`);
+}
 for(const [file,html] of [['AccesoMina_v6.html',local],['public/index.html',publicHtml]]){
   const scripts=[...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(match=>match[1]);
   scripts.forEach((source,index)=>{try{new Function(source);}catch(error){errors.push(`${file} inline script ${index}: ${error.message}`);}});
