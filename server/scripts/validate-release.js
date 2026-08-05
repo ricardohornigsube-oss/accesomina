@@ -28,7 +28,7 @@ const requiredCapabilities=[
   'openInventoryLocationV156','saveInventoryLocationV156','Ubicaciones internas',
   'v156-item-lot','v156-item-expiry',
   "openAssetsWorkspaceV146('epp')",'EPP y protección personal','openInventoryItemModalV157Base',
-  'injectEppInventoryHubV158','Control de EPP por bodega','openEppMovementV158','saveEppMovementV158','hideOperationalEppEntryV158',
+  'injectEppInventoryHubV158','injectEppOperationGuideV158','Control de EPP por bodega','openEppMovementV158','saveEppMovementV158','hideOperationalEppEntryV158',
   'Personas con antecedentes por gestionar','Cada persona aparece una sola vez','Regularizar documento'
 ];
 for(const capability of requiredCapabilities){

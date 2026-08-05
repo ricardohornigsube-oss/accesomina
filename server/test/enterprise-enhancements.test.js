@@ -151,7 +151,8 @@ test('EPP stock, movements and deliveries are managed from the assets workspace'
   for (const feature of [
     'injectEppInventoryHubV158', 'Control de EPP por bodega', 'openEppMovementV158',
     'saveEppMovementV158', 'Registrar entrega', 'openEppDelivery()',
-    'hideOperationalEppEntryV158', 'Registrar movimiento'
+    'hideOperationalEppEntryV158', 'injectEppOperationGuideV158',
+    'Gestión guiada de EPP', 'Registrar movimiento'
   ]) assert.ok(html.includes(feature), `missing centralized EPP operation: ${feature}`);
 });
 
