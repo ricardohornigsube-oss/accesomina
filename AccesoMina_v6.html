@@ -10266,5 +10266,40 @@ renderAssetsWorkspaceV146=function(){
   const anchor=host.querySelector('.card');anchor?.insertAdjacentHTML('afterend',`<div class="card" id="asset-action-center-v150" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Control diario de recursos</div><div class="card-subtitle">Consulta disponibilidad, reposición y custodia antes de comprometer un recurso a una orden de servicio.</div></div></div><div class="kpi-grid"><div class="kpi kpi-green"><div class="kpi-value">${available}</div><div class="kpi-label">Activos disponibles</div></div><div class="kpi kpi-red"><div class="kpi-value">${lowByWarehouse.length}</div><div class="kpi-label">Reposición por bodega</div></div><div class="kpi kpi-orange"><div class="kpi-value">${dueLoans.length}</div><div class="kpi-label">Préstamos atrasados</div></div><div class="kpi kpi-blue"><div class="kpi-value">${movements.filter(assetOpenLoanMovementV150).length}</div><div class="kpi-label">Recursos bajo custodia</div></div></div>${lowByWarehouse.length||dueLoans.length?`<div class="cloud-note" style="margin-top:12px;">${lowByWarehouse.length?`Reponer: ${escV146(lowByWarehouse.slice(0,4).join(' · '))}. `:''}${dueLoans.length?`Hay ${dueLoans.length} préstamo(s) con devolución pendiente.`:''}</div>`:''}</div>`);
 };
 </script>
+<script>
+// V15.1 · EPP conectado a bodega, persona, orden de servicio y costo real.
+function eppInventoryItemV151(name){return (S.inventoryItems||[]).find(item=>String(item.type||'').toLowerCase()==='epp'&&String(item.name||'').trim().toLowerCase()===String(name||'').trim().toLowerCase());}
+function installEppInventoryBridgeV151(){
+  const service=document.getElementById('epp-mant'),target=service?.closest('.form-group');
+  if(!target||document.getElementById('epp-inv-warehouse'))return;
+  target.insertAdjacentHTML('afterend',`<div class="form-group"><label class="form-label">Bodega de origen</label><select class="form-select" id="epp-inv-warehouse"><option value="">No descontar inventario</option></select><div class="worker-rut" style="margin-top:5px;">Seleccione una bodega para descontar automáticamente el EPP entregado.</div></div><div class="form-group"><label class="form-label">Control de stock</label><label style="display:flex;gap:8px;align-items:center;margin-top:9px;"><input type="checkbox" id="epp-inv-discount"> Descontar EPP de la bodega</label><div class="worker-rut" style="margin-top:5px;">La entrega seguirá guardando talla, acta, lote, costo y vida útil.</div></div>`);
+}
+const openEppDeliveryV151Base=openEppDelivery;
+openEppDelivery=function(workerId=''){
+  openEppDeliveryV151Base(workerId);ensureV95Collections();installEppInventoryBridgeV151();
+  const warehouse=document.getElementById('epp-inv-warehouse'),eligible=(S.warehouses||[]);warehouse.innerHTML='<option value="">No descontar inventario</option>'+eligible.map(row=>`<option value="${eppEsc(row.id)}">${eppEsc(row.name)}</option>`).join('');
+  const preferred=eligible.find(row=>/central/i.test(row.name||''))||eligible[0];if(preferred)warehouse.value=preferred.id;document.getElementById('epp-inv-discount').checked=!!preferred;
+};
+const saveEppDeliveryV151Base=saveEppDelivery;
+saveEppDelivery=async function(){
+  ensureV95Collections();const warehouseId=document.getElementById('epp-inv-warehouse')?.value||'',discount=!!document.getElementById('epp-inv-discount')?.checked,draft=eppDraftItems.map(item=>({...item})),workerId=document.getElementById('epp-trab')?.value||'',projectId=document.getElementById('epp-mant')?.value||'';
+  if(discount){
+    if(!warehouseId)return toast('Selecciona la bodega de origen o desmarca el descuento de inventario','err');
+    const unavailable=draft.find(entry=>{const item=eppInventoryItemV151(entry.itemName),available=Number(item?.stockByLocation?.[warehouseId]||0);return !item||available<Number(entry.qty||1);});
+    if(unavailable)return toast(`Stock insuficiente para ${unavailable.itemName} en la bodega seleccionada. Ingresa o repone el EPP antes de entregar.`, 'err');
+  }
+  const deliveriesBefore=(S.eppDeliveries||[]).length;await saveEppDeliveryV151Base();
+  if(!discount||(S.eppDeliveries||[]).length<=deliveriesBefore)return;
+  const deliveries=(S.eppDeliveries||[]).filter(entry=>entry.workerId===workerId).slice(-draft.length),now=new Date().toISOString();
+  draft.forEach((entry,index)=>{
+    const item=eppInventoryItemV151(entry.itemName),delivery=deliveries[index];if(!item)return;const before=JSON.parse(JSON.stringify(item)),qty=Number(entry.qty)||1;
+    item.stockByLocation=item.stockByLocation||{};const stockBefore=Number(item.stockByLocation[warehouseId]||0);item.stockByLocation[warehouseId]=stockBefore-qty;item.stock=Object.values(item.stockByLocation).reduce((total,value)=>total+Number(value||0),0);
+    if(delivery){Object.assign(delivery,{warehouseId,inventoryItemId:item.id,source:'inventario_epp',unitCost:Number(item.unitCost)||0,lifeDays:Number(item.lifeDays)||delivery.lifeDays||0,projectId});}
+    S.inventoryMovements.unshift({id:`mov_epp_${Date.now()}_${index}`,itemId:item.id,warehouseId,type:'entrega',qty,workerId,projectId,signed:!!delivery?.fileName,stockBefore,stockAfter:Number(item.stockByLocation[warehouseId]),notes:`Entrega de EPP a ${trabNombre(workerId)||'persona'}${projectId?` · ${mantNombre(projectId)}`:''}`,eppDeliveryId:delivery?.id||'',at:now,user:currentTenantUser?.email||'usuario'});
+    recordHistoryV90?.('inventario',item.id,'EPP entregado desde bodega',before,item,`Entrega a ${trabNombre(workerId)||'persona'} · ${entry.itemName}`);
+  });
+  persistTenant();renderEpp();renderAssetsWorkspaceV146();renderV94OperationsSuite();updateBadges();toast('Entrega EPP registrada y stock de bodega actualizado');
+};
+</script>
 </body>
 </html>
