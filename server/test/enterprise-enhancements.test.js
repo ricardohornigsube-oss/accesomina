@@ -99,11 +99,15 @@ test('contractors, assets, EPP, reservations and replenishment stay connected in
     'saveContractorPrequalificationV150', 'assetOpenLoanMovementV150',
     'saveAssetReturnV150', 'installEppInventoryBridgeV151',
     'saveEppDelivery=async function', 'assetReservationConflictV152',
-    'saveAssetReservationV152', 'openReplenishmentV152', 'saveReplenishmentV152'
+    'saveAssetReservationV152', 'openReplenishmentV152', 'saveReplenishmentV152',
+    'contractorDirectOrdersV153', 'saveContractorOrderV153',
+    'removeContractorOrderV153', 'installF301PeriodV153'
   ]) assert.ok(html.includes(feature), `missing connected operational flow: ${feature}`);
   for (const visibleAction of [
     'Precalificación y seguimiento', 'Descontar EPP de la bodega',
     'Reserva para orden de servicio', 'Solicitar reposición',
-    'Préstamos atrasados', 'Reposición por bodega'
+    'Préstamos atrasados', 'Reposición por bodega',
+    'Órdenes y desempeño operativo', 'Asignar a orden',
+    'F30-1 sin período acreditado'
   ]) assert.ok(html.includes(visibleAction), `missing client-facing action: ${visibleAction}`);
 });
