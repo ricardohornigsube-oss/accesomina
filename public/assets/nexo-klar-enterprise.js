@@ -187,7 +187,7 @@
 
   const KPI_LABELS = {
     personas: "Personas", clientes: "Clientes", contratos: "Contratos", ordenes: "Órdenes",
-    listos: "Listas para ejecutar", alertas: "Alertas", bloqueados: "Personas bloqueadas", firmas: "Firmas pendientes"
+    listos: "Listas para ejecutar", alertas: "Alertas", bloqueados: "Personas restringidas", firmas: "Firmas pendientes"
   };
   const SHORTCUTS = {
     mineras: "Clientes", mantenciones: "Órdenes", trabajadores: "Personas", alertas: "Alertas",
@@ -496,7 +496,7 @@
     ensureState();
     (S.subcontratos || []).forEach((row) => { row.operationalBlock = subcontractScore(row).blocked; });
     const rows = (S.subcontratos || []).map((row) => ({ row, status: subcontractScore(row) }));
-    upsertAfterHeader("subcontratos", "nk128-subcontract-compliance", `<div class="card" id="nk128-subcontract-compliance" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Cumplimiento y bloqueo automático</div><div class="card-subtitle">Un tercero queda bloqueado operacionalmente cuando falta o vence documentación crítica.</div></div></div><div class="table-wrap"><table><thead><tr><th>Tercero</th><th>Cumplimiento</th><th>Faltantes críticos</th><th>Estado operativo</th></tr></thead><tbody>${rows.map(({ row, status }) => `<tr><td><b>${esc(row.razon)}</b><div class="worker-rut">${esc(row.rut)}</div></td><td><b>${status.score}%</b></td><td>${status.missing.map((key) => `<span class="badge badge-err">${esc(key.toUpperCase())}</span>`).join(" ") || '<span class="badge badge-ok">Sin brechas</span>'}</td><td><span class="badge ${status.blocked ? "badge-err" : "badge-ok"}">${status.blocked ? "Bloqueado" : "Habilitado"}</span></td></tr>`).join("") || '<tr><td colspan="4">Sin terceros registrados.</td></tr>'}</tbody></table></div></div>`);
+    upsertAfterHeader("subcontratos", "nk128-subcontract-compliance", `<div class="card" id="nk128-subcontract-compliance" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Cumplimiento y restricción automática</div><div class="card-subtitle">Un tercero queda restringido operacionalmente cuando falta o vence documentación crítica.</div></div></div><div class="table-wrap"><table><thead><tr><th>Tercero</th><th>Cumplimiento</th><th>Faltantes críticos</th><th>Estado operativo</th></tr></thead><tbody>${rows.map(({ row, status }) => `<tr><td><b>${esc(row.razon)}</b><div class="worker-rut">${esc(row.rut)}</div></td><td><b>${status.score}%</b></td><td>${status.missing.map((key) => `<span class="badge badge-err">${esc(key.toUpperCase())}</span>`).join(" ") || '<span class="badge badge-ok">Sin brechas</span>'}</td><td><span class="badge ${status.blocked ? "badge-err" : "badge-ok"}">${status.blocked ? "Restringido" : "Habilitado"}</span></td></tr>`).join("") || '<tr><td colspan="4">Sin terceros registrados.</td></tr>'}</tbody></table></div></div>`);
   }
 
   function renderEppInventoryBridge() {

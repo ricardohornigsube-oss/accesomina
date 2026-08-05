@@ -6230,6 +6230,18 @@ function translateClientTerminology(value) {
     [/\bPersonal de Planta\b/gi,'Trabajador fijo'],
     [/\bPersonal permanente\b/gi,'Trabajador fijo'],
     [/\bpersonal planta\b/gi,'trabajador fijo'],
+    [/\bPersonas bloqueadas\b/gi,'Personas restringidas'],
+    [/\bPersona bloqueada\b/gi,'Persona restringida'],
+    [/\bBloqueados\b/gi,'Restringidos'],
+    [/\bBloqueado\b/gi,'Restringido'],
+    [/\bbloqueados\b/gi,'restringidos'],
+    [/\bbloqueado\b/gi,'restringido'],
+    [/\bBloqueos automáticos\b/gi,'Restricciones automáticas'],
+    [/\bbloqueos principales\b/gi,'restricciones principales'],
+    [/\bBloquear y corregir\b/gi,'Restringir y corregir'],
+    [/\bBloquear credencial\b/gi,'Restringir credencial'],
+    [/\bbloqueo si falta firma\b/gi,'restricción si falta firma'],
+    [/\bbloqueos y auditoria\b/gi,'restricciones y auditoría'],
     [/\bPlanta y spot\b/gi,'Permanente y temporal'],
     [/\bPersonal spot\b/gi,'Personal temporal'],
     [/\bPersonal esporádico\b/gi,'Personal temporal'],
@@ -7017,7 +7029,7 @@ function renderDocAiV97(){
     <div class="card-header"><div><div class="card-title">Motor documental inteligente real</div><div class="card-subtitle">Flujo preparado para OCR, firma, QR, emisor, fotografía, integridad, score y revisión humana final.</div></div><span class="badge badge-warn">Conectores listos</span></div>
     <div class="table-wrap" style="margin-top:12px;"><table><thead><tr><th>Documento</th><th>Relación</th><th>Validaciones</th><th>Score</th><th>Decisión</th><th>Evidencia</th></tr></thead><tbody>${docs.map(d=>{
       const parts=confidencePartsV97(d).filter(p=>p[1]!==null).map(([label,ok])=>`<span class="badge ${ok?'badge-ok':'badge-warn'}">${escV97(label)}</span>`).join(' ');
-      const score=Number(d.score)||0,decision=score>=80?'Aprobar con revisión humana':score>=55?'Observar y solicitar respaldo':'Rechazar / bloquear ingreso';
+      const score=Number(d.score)||0,decision=score>=80?'Aprobar con revisión humana':score>=55?'Observar y solicitar respaldo':'Rechazar / restringir ingreso';
       return `<tr><td><b>${escV97(d.type||'Documento')}</b><div class="worker-rut">${escV97(d.owner||'')}</div></td><td>${escV97(d.relation||d.source||'')}</td><td>${parts}</td><td><b>${score}%</b></td><td>${escV97(decision)}</td><td><button class="btn btn-secondary btn-sm" onclick="exportV94Csv('documentos')">Trazabilidad</button></td></tr>`;
     }).join('')||'<tr><td colspan="6">Sin documentos para revisar.</td></tr>'}</tbody></table></div>
     <div class="cloud-note">En producción se conectan proveedores reales de OCR, firma electrónica, antivirus, validación QR y emisor. La aprobación final queda registrada por usuario, fecha, observación y evidencia.</div>
@@ -7615,7 +7627,7 @@ renderFocusedOperationsV98=function(){renderFocusedOperationsV110Base();hideOpsD
 const renderPageV110Base=renderPage;
 renderPage=function(page){renderPageV110Base(page);if(page==='operaciones-cloud')setTimeout(hideOpsDuplicateCardsV110,0);};
 
-// ===================== V10.11: CALIFICAR O BLOQUEAR PERSONAL =====================
+// ===================== V10.11: CALIFICAR O RESTRINGIR PERSONAL =====================
 const WORKER_FLOW_STATES_V111=[
   ['disponible','Disponible'],
   ['convocado','Convocado / llamado'],
@@ -7674,6 +7686,7 @@ function filteredWorkersV111(){
   let workers=[...(S.trabajadores||[])];
   if(currentTrabTab==='planta')workers=workers.filter(t=>t.tipo==='permanente'&&!t.bloqueado);
   else if(currentTrabTab==='esporadico')workers=workers.filter(t=>t.tipo==='esporadico'&&!t.bloqueado);
+  else if(currentTrabTab==='disponible')workers=workers.filter(t=>!t.bloqueado&&t.disponibilidad==='disponible');
   else if(currentTrabTab==='bloqueado')workers=workers.filter(t=>t.bloqueado);
   if(txt)workers=workers.filter(t=>String(t.nombre||'').toLowerCase().includes(txt)||String(t.rut||'').toLowerCase().includes(txt));
   if(esp)workers=workers.filter(t=>t.especialidad===esp);
@@ -7688,11 +7701,11 @@ function installWorkerQualificationListV111(){
   const table=document.getElementById('trab-table');if(!table)return;
   const page=document.getElementById('page-trabajadores');
   if(page&&!document.getElementById('trab-v111-help')){
-    page.querySelector('.filters')?.insertAdjacentHTML('afterend','<div class="cloud-note" id="trab-v111-help" style="margin:0 0 14px;">Para calificar o bloquear personal, usa el botón <b>Calificar / bloquear</b> en cada fila o abre la ficha del trabajador. Aplica para personal de planta y esporádico.</div>');
+    page.querySelector('.filters')?.insertAdjacentHTML('afterend','<div class="cloud-note" id="trab-v111-help" style="margin:0 0 14px;">Para calificar o restringir personal, usa el botón <b>Calificar / restringir</b> en cada fila o abre la ficha de la persona. Aplica para trabajadores fijos y por proyecto.</div>');
   }
-  table.querySelectorAll('thead tr').forEach(tr=>{if(!tr.querySelector('[data-v111]'))tr.insertAdjacentHTML('beforeend','<th data-v111>Calificar / bloquear</th>');});
+  table.querySelectorAll('thead tr').forEach(tr=>{if(!tr.querySelector('[data-v111]'))tr.insertAdjacentHTML('beforeend','<th data-v111>Calificar / restringir</th>');});
   const rows=[...table.querySelectorAll('tbody tr')],workers=filteredWorkersV111();
-  rows.forEach((tr,i)=>{const t=workers[i];if(!t)return;tr.querySelectorAll('[data-v111-action]').forEach(btn=>btn.remove());if(!tr.querySelector('[data-v111]'))tr.insertAdjacentHTML('beforeend',`<td data-v111>${workerDecisionBadgeV111(t)}<div style="margin-top:6px;"><button class="btn btn-secondary btn-sm" onclick="openFicha('${t.id}');setTimeout(()=>document.getElementById('worker-v111-qualification')?.scrollIntoView({behavior:'smooth',block:'start'}),120);">Calificar / bloquear</button></div></td>`);});
+  rows.forEach((tr,i)=>{const t=workers[i];if(!t)return;tr.querySelectorAll('[data-v111-action]').forEach(btn=>btn.remove());if(!tr.querySelector('[data-v111]'))tr.insertAdjacentHTML('beforeend',`<td data-v111>${workerDecisionBadgeV111(t)}<div style="margin-top:6px;"><button class="btn btn-secondary btn-sm" onclick="openFicha('${t.id}');setTimeout(()=>document.getElementById('worker-v111-qualification')?.scrollIntoView({behavior:'smooth',block:'start'}),120);">Calificar / restringir</button></div></td>`);});
 }
 const openFichaV111Base=openFicha;
 openFicha=function(id){openFichaV111Base(id);const t=S.trabajadores.find(w=>w.id===id),host=document.getElementById('ficha-tab-datos');if(t&&host&&!document.getElementById('worker-v111-qualification'))host.insertAdjacentHTML('afterbegin',renderWorkerQualificationPanelV111(t));};

@@ -58,6 +58,14 @@ test('people navigation is centralized with fixed, project, available and restri
   assert.match(html, /if\(page==='personal-planta'\)/);
 });
 
+test('visible worker restriction language is standardized without changing internal state keys', () => {
+  for (const label of ['Calificar / restringir', 'Personas restringidas', 'Restringidos']) {
+    assert.ok(html.includes(label), `missing restriction label: ${label}`);
+  }
+  assert.match(html, /\[\/\\bbloqueado\\b\/gi,'restringido'\]/);
+  assert.match(html, /bloqueado:\s*false/);
+});
+
 test('work book remains visible in the Inicio group', () => {
   const generalStart = html.indexOf('<div class="nav-group-label">Inicio</div>');
   const commercialStart = html.indexOf('<div class="nav-group-label">Relación comercial</div>');
