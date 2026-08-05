@@ -85,6 +85,8 @@ test('every private navigation group can collapse without hiding the active modu
     assert.match(html, new RegExp(`function ${fn}`));
   }
   assert.match(enterpriseCss, /nav-group-label\.is-collapsed .nav-group-toggle/);
+  assert.match(html, /nav-item-collapsed-v147/);
+  assert.match(enterpriseCss, /\.nav-item\.nav-item-collapsed-v147\s*\{\s*display: none !important;/);
 });
 
 test('contractor and asset workspaces reuse operational data instead of creating silos', () => {
