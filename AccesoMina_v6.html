@@ -1215,11 +1215,11 @@ td { padding:12px 14px; }
     <div class="cloud-note" style="margin-bottom:16px;">La matriz sugerida es un punto de partida. Prevención debe confirmar cada EPP según la matriz de riesgos, condiciones reales, ficha técnica, certificación y exigencias del mandante.</div>
     <div class="filters">
       <input class="filter-input" id="filt-epp-txt" placeholder="🔍 Trabajador, RUT o cargo..." oninput="renderEpp()">
-      <select class="filter-select" id="filt-epp-tipo" onchange="renderEpp()"><option value="">Todos los trabajadores</option><option value="permanente">🏭 Trabajador fijo</option><option value="esporadico">⚡ Trabajador por proyecto</option><option value="disponible">🟢 Trabajador disponible</option><option value="restringido">🚫 Restringidos</option></select>
+      <select class="filter-select" id="filt-epp-tipo" data-keep-worker-term onchange="renderEpp()"><option value="">Todas las personas</option><option value="permanente">🏭 Trabajador fijo</option><option value="esporadico">⚡ Trabajador por proyecto</option><option value="disponible">🟢 Trabajador disponible</option><option value="restringido">🚫 Restringidos</option></select>
       <select class="filter-select" id="filt-epp-mant" onchange="renderEpp()"><option value="">Todos los proyectos / mantenciones</option></select>
       <select class="filter-select" id="filt-epp-estado" onchange="renderEpp()"><option value="">Todos los estados</option><option value="pendiente">Entrega pendiente</option><option value="vigente">Entrega vigente</option><option value="reposicion">Reposición próxima/vencida</option><option value="medidas">Faltan medidas</option></select>
     </div>
-    <div class="tab-bar epp-segment-tabs" id="epp-personnel-segments" aria-label="Filtrar EPP por segmento de personas">
+    <div class="tab-bar epp-segment-tabs" id="epp-personnel-segments" data-keep-worker-term aria-label="Filtrar EPP por segmento de personas">
       <span class="filter-label">Segmento de personas</span>
       <button class="tab-btn active" type="button" data-epp-segment="" onclick="setEppWorkerSegment('')">Todas las personas</button>
       <button class="tab-btn" type="button" data-epp-segment="permanente" onclick="setEppWorkerSegment('permanente')">🏭 Trabajador fijo</button>
