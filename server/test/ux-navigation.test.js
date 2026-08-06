@@ -34,9 +34,9 @@ test('visible terminology supports multiple industries without changing legacy d
     'Órdenes de Servicio',
     'Gestión de personal por proyecto',
     'Trabajador fijo',
-    'Habilitación por cliente',
+    'Habilitación del cliente',
     'Cumplimiento corporativo',
-    'Alojamiento y estadías',
+    'Alojamientos y estadías',
     'Credenciales de acceso',
     'Libro de Obra'
   ]) assert.ok(html.includes(neutralLabel), `missing neutral label: ${neutralLabel}`);
@@ -108,4 +108,17 @@ test('private workspace uses one visual system for typography, controls and data
     assert.ok(enterpriseCss.includes(rule), `missing private UI rule: ${rule}`);
   }
   assert.match(html, /button, input, select, textarea \{ font:inherit; \}/);
+});
+
+test('private workspace uses one canonical vocabulary in navigation, headers and permissions', () => {
+  for (const label of [
+    'Panel General', 'Órdenes de servicio', 'Personas', 'Protección personal y entregas',
+    'Alojamientos y estadías', 'Vehículos, activos y equipos', 'Terceros y subcontratos',
+    'Habilitación del cliente', 'Credenciales de acceso', 'Inventario y existencias',
+    'Prospectos y oportunidades', 'Reportes y analítica'
+  ]) assert.ok(html.includes(label), `missing canonical label: ${label}`);
+
+  assert.match(html, /const NK_PRIVATE_LABELS_V160/);
+  assert.match(html, /function applyPrivateTerminologyV160/);
+  assert.match(html, /\.card-title \{ font-size:16px; line-height:1\.4; font-weight:700; \}/);
 });

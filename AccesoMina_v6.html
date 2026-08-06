@@ -435,7 +435,7 @@ button, input, select, textarea { font:inherit; }
 .section-actions { gap:var(--space-2); flex-wrap:wrap; }
 .card { border-radius:var(--radius-md); padding:var(--space-5); box-shadow:0 1px 2px rgba(20,18,31,.04); }
 .card-header { gap:var(--space-3); flex-wrap:wrap; margin-bottom:var(--space-4); }
-.card-title { font-size:16px; line-height:1.4; font-weight:750; }
+.card-title { font-size:16px; line-height:1.4; font-weight:700; }
 .card-subtitle { font-size:13px; line-height:1.45; margin-top:var(--space-1); }
 .grid-2,.grid-3,.grid-4,.kpi-grid { gap:var(--space-4); }
 .kpi-grid { margin-bottom:var(--space-6); }
@@ -461,11 +461,11 @@ button, input, select, textarea { font:inherit; }
 
 /* Dense data stays legible. */
 table { font-size:13px; line-height:1.45; }
-th { padding:11px 14px; font-size:11px; font-weight:750; letter-spacing:.06em; }
+th { padding:11px 14px; font-size:11px; font-weight:700; letter-spacing:.06em; }
 td { padding:12px 14px; }
 .badge,.chip,.tag { min-height:24px; padding:3px 8px; font-size:11px; font-weight:700; }
 .tab-bar { gap:var(--space-1); margin-bottom:var(--space-5); }
-.tab-btn { min-height:40px; padding:9px 14px; border-radius:var(--radius-sm) var(--radius-sm) 0 0; font-size:13px; font-weight:650; }
+.tab-btn { min-height:40px; padding:9px 14px; border-radius:var(--radius-sm) var(--radius-sm) 0 0; font-size:13px; font-weight:600; }
 .alert-item { gap:var(--space-3); padding:var(--space-3) var(--space-4); border-radius:var(--radius-md); }
 
 /* Modals are complete, centered work surfaces rather than browser-like popups. */
@@ -481,8 +481,8 @@ td { padding:12px 14px; }
 .sidebar-logo { padding:20px; }
 .sidebar-logo-title { letter-spacing:0; }
 .nav-group-label { padding:20px 20px 7px; font-size:10px; letter-spacing:.12em; }
-.nav-item { min-height:42px; padding:10px 20px; font-size:13px; font-weight:550; line-height:1.35; }
-.nav-item.active { font-weight:750; }
+.nav-item { min-height:42px; padding:10px 20px; font-size:13px; font-weight:500; line-height:1.35; }
+.nav-item.active { font-weight:700; }
 .topbar-title { font-size:20px; line-height:1.25; }
 .topbar-subtitle { font-size:13px; line-height:1.4; }
 
@@ -996,7 +996,7 @@ td { padding:12px 14px; }
   <div class="nav-item" onclick="nav('oportunidades')">💼 Prospectos y oportunidades</div>
 
   <div class="nav-group-label" data-nav-group="activos-inventario" role="button" tabindex="0" aria-expanded="true" onclick="toggleNavGroupV147(this)" onkeydown="navGroupKeydownV147(event,this)"><span>Activos, Equipos e Inventario</span><span class="nav-group-toggle" aria-hidden="true">⌄</span></div>
-  <div class="nav-item" onclick="nav('activos-inventario')">📊 Inventario y stock</div>
+  <div class="nav-item" onclick="nav('activos-inventario')">📊 Inventario y existencias</div>
   <div class="nav-item" onclick="openAssetsWorkspaceV146('maquinaria')">🚜 Maquinaria</div>
   <div class="nav-item" onclick="openAssetsWorkspaceV146('equipos')">🧰 Equipos e instrumentos</div>
   <div class="nav-item" onclick="openAssetsWorkspaceV146('herramientas')">🔧 Herramientas</div>
@@ -2741,23 +2741,23 @@ function updateBadges() {
 // ===================== NAVIGATION =====================
 let currentPage = 'dashboard';
 const pageLabels = {
-  dashboard:'Dashboard','mineras':'Por Cliente',alertas:'Alertas',trabajadores:'Personas',
-  bloqueados:'Restringidos',auditoria:'Auditoría Documental',mantenciones:'Mantenciones',
-  contratos:'Contratos y Firmas',hoteleria:'Hotelería',llamados:'Llamados WA',
+  dashboard:'Panel General',mineras:'Clientes',alertas:'Alertas',trabajadores:'Personas',
+  bloqueados:'Restringidos',auditoria:'Auditoría',mantenciones:'Órdenes de servicio',
+  contratos:'Contratos y firmas',hoteleria:'Alojamientos y estadías',llamados:'Comunicaciones y convocatorias',
   examenes:'Exámenes y aptitudes',cursos:'Formación y certificaciones',reportes:'Reportes y analítica',clientes:'Clientes Nexo Klar',
   contratistas:'Terceros y subcontratos', 'activos-inventario':'Activos, equipos e inventario'
 };
 const pageSubs = {
-  dashboard:'Resumen operativo · Nexo Klar',
-  mineras:'Vista consolidada por mandante',
+  dashboard:'Resumen operativo de la empresa',
+  mineras:'Vista integral de clientes, contratos y órdenes de servicio',
   alertas:'Documentos y certificaciones próximos a vencer',
   trabajadores:'Personal fijo, por proyecto, disponible y restringido en una sola vista',
   bloqueados:'Personas con restricción operativa',
-  auditoria:'Estado de documentación por trabajador',
-  mantenciones:'Paradas, shutdowns y mantenciones mayores',
+  auditoria:'Validación documental, evidencias y trazabilidad',
+  mantenciones:'Planificación, recursos, avances y control de ejecución',
   contratos:'Marco contractual y firmas digitales',
-  hoteleria:'Gestión de alojamiento en terreno',
-  llamados:'Convocatorias vía WhatsApp',
+  hoteleria:'Disponibilidad, asignaciones, costos y estadías',
+  llamados:'Mensajes, confirmaciones y seguimiento de convocatorias',
   examenes:'Control de exámenes médicos ocupacionales',
   cursos:'Certificaciones y cursos de seguridad',
   reportes:'Exportación de datos y reportería',
@@ -6240,8 +6240,8 @@ function translateClientTerminology(value) {
   let translated=String(value||'');
   const terms=[
     [/\bPor Cliente\b/gi,'Cliente'],
-    [/\bAcreditación por Mandante\b/gi,'Habilitación por cliente'],
-    [/\bAcreditación Mandante\b/gi,'Habilitación por cliente'],
+    [/\bAcreditación por Mandante\b/gi,'Habilitación del cliente'],
+    [/\bAcreditación Mandante\b/gi,'Habilitación del cliente'],
     [/\bContacto mandante\b/gi,'Contacto del cliente'],
     [/\bAdministrador mandante\b/gi,'Responsable contractual del cliente'],
     [/\bCliente\s*\/\s*Mandante\b/gi,'Cliente'],
@@ -6324,7 +6324,7 @@ function translateClientTerminology(value) {
     [/\bAcreditaciones\b/gi,'Habilitaciones'],
     [/\bAcreditación\b/gi,'Habilitación'],
     [/\bAcreditado\b/gi,'Habilitado'],
-    [/\bHotelería\b/gi,'Alojamiento y estadías'],
+    [/\bHotelería\b/gi,'Alojamientos y estadías'],
     [/\bLlamados WA\b/gi,'Comunicaciones y convocatorias'],
     [/\bIncidentes y NC\b/gi,'Incidentes y no conformidades'],
     [/\bProtocolos Salud\b/gi,'Salud ocupacional'],
@@ -6333,7 +6333,8 @@ function translateClientTerminology(value) {
     [/\bLibro diario de obra\b/gi,'Registro diario del servicio'],
     [/\bLEAD\s*\/\s*Oportunidades\b/gi,'Prospectos y oportunidades'],
     [/\bLEAD\b/gi,'Prospecto'],
-    [/\bDashboard\b/gi,'Panel de control'],
+    [/\bDashboard ejecutivo\b/gi,'Panel ejecutivo'],
+    [/\bDashboard\b/gi,'Panel General'],
     [/\bTrabajadores\b/gi,'Personas'],
     [/\bTrabajador\b/gi,'Persona'],
     [/(?<!Terceros y )\bSubcontratos\b/gi,'Terceros y subcontratos'],
@@ -9348,7 +9349,7 @@ function ensureCloudAdminModalsV126(){
     <div class="modal-overlay" id="modal-cloud-result-v126"><div class="modal"><div class="modal-header"><div class="modal-title">Acceso temporal creado</div><button class="modal-close" onclick="closeModal('modal-cloud-result-v126')">✕</button></div><div class="modal-body" id="cloud-result-body-v126"></div><div class="modal-footer"><button class="btn btn-primary" onclick="closeModal('modal-cloud-result-v126')">Entendido</button></div></div></div>`);
 }
 let cloudUserContextV126=null;
-const cloudModulesV126={trabajadores:'Trabajadores',epp:'EPP y entregas',auditoria:'Auditoría',mantenciones:'Servicios',contratos:'Contratos y firmas',hoteleria:'Hotelería',llamados:'WhatsApp',vehiculos:'Vehículos y equipos',subcontratos:'Subcontratos',turnos:'Turnos y jornada',credenciales:'Credenciales',incidentes:'Incidentes',protocolos:'Salud ocupacional',reportes:'Reportes'};
+const cloudModulesV126={trabajadores:'Personas',epp:'Protección personal y entregas',auditoria:'Auditoría',mantenciones:'Órdenes de servicio',contratos:'Contratos y firmas',hoteleria:'Alojamientos y estadías',llamados:'Comunicaciones y convocatorias',vehiculos:'Vehículos, activos y equipos',subcontratos:'Terceros y subcontratos',turnos:'Turnos y asistencia',credenciales:'Credenciales de acceso',incidentes:'Incidentes y no conformidades',protocolos:'Salud ocupacional',reportes:'Reportes y analítica'};
 function openCloudTenantV126(){ensureCloudAdminModalsV126();document.querySelector('#modal-cloud-tenant-v126 form').reset();document.getElementById('ct126-phone').value='+569';openModal('modal-cloud-tenant-v126');}
 async function saveCloudTenantV126(event){
   event.preventDefault();const companyName=document.getElementById('ct126-company').value.trim(),rut=document.getElementById('ct126-rut').value.trim(),adminName=document.getElementById('ct126-admin').value.trim(),email=document.getElementById('ct126-email').value.trim(),phone=document.getElementById('ct126-phone').value.trim();
@@ -10462,6 +10463,43 @@ const openAssetsWorkspaceV159Base=openAssetsWorkspaceV146;
 openAssetsWorkspaceV146=function(tab='inventario'){openAssetsWorkspaceV159Base(tab);setTimeout(()=>renderAssetsWorkspaceV146(),0);};
 const renderAssetsWorkspaceV159Base=renderAssetsWorkspaceV146;
 renderAssetsWorkspaceV146=function(){renderAssetsWorkspaceV159Base();injectAssignmentsWorkspaceV159();};
+</script>
+<script>
+// V16.0 · Catálogo único de terminología visible para el sitio privado.
+const NK_PRIVATE_LABELS_V160=Object.freeze({
+  dashboard:'Panel General',mineras:'Clientes',alertas:'Alertas',reclutamiento:'Gestión de personal por proyecto',
+  trabajadores:'Personas',bloqueados:'Restringidos',turnos:'Turnos y asistencia',epp:'Protección personal y entregas',
+  cursos:'Formación y certificaciones',examenes:'Exámenes y aptitudes',protocolos:'Salud ocupacional',
+  contratistas:'Terceros y subcontratos',llamados:'Comunicaciones y convocatorias',vehiculos:'Vehículos, activos y equipos',
+  hoteleria:'Alojamientos y estadías',credenciales:'Credenciales de acceso',contratos:'Contratos y firmas',
+  mantenciones:'Órdenes de servicio','acreditacion-empresa':'Cumplimiento corporativo',
+  'acreditacion-mandante':'Habilitación del cliente',incidentes:'Incidentes y no conformidades',auditoria:'Auditoría',
+  'libro-obras':'Libro de obra',oportunidades:'Prospectos y oportunidades','activos-inventario':'Activos, equipos e inventario',
+  reportes:'Reportes y analítica',configuracion:'Configuración de la empresa',transferencia:'Importar y exportar',
+  usuarios:'Usuarios y permisos',bitacora:'Bitácora de cambios',privacidad:'Privacidad y datos'
+});
+const NK_PRIVATE_SUBTITLES_V160=Object.freeze({
+  dashboard:'Resumen operativo de la empresa',mineras:'Vista integral de clientes, contratos y órdenes de servicio',
+  reclutamiento:'Disponibilidad, convocatorias, contratación y habilitación por orden de servicio',
+  trabajadores:'Personas fijas, por proyecto, disponibles y restringidas en una sola vista',
+  epp:'Protección por cargo, riesgo, talla y destino operacional',mantenciones:'Planificación, recursos, avances y control de ejecución',
+  hoteleria:'Disponibilidad, asignaciones, costos y estadías',llamados:'Mensajes, confirmaciones y seguimiento de convocatorias',
+  auditoria:'Validación documental, evidencias y trazabilidad',reportes:'Información operativa y ejecutiva para decidir con contexto'
+});
+function applyPrivateTerminologyV160(){
+  Object.assign(pageLabels,NK_PRIVATE_LABELS_V160);Object.assign(pageSubs,NK_PRIVATE_SUBTITLES_V160);
+  document.querySelectorAll('#sidebar .nav-item').forEach(item=>{
+    const page=item.getAttribute('onclick')?.match(/^nav\('([^']+)'\)$/)?.[1],label=NK_PRIVATE_LABELS_V160[page];
+    if(!label)return;
+    const badge=item.querySelector('.nav-badge');
+    item.replaceChildren(document.createTextNode(`${item.textContent.match(/^\S+/)?.[0]||''} ${label}`.trim()));
+    if(badge)item.append(' ',badge);
+  });
+  applyClientTerminology(document.getElementById('sidebar'));
+}
+const renderPageV160Base=renderPage;
+renderPage=function(page){renderPageV160Base(page);applyPrivateTerminologyV160();};
+applyPrivateTerminologyV160();
 </script>
 </body>
 </html>
