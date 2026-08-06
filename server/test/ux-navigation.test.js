@@ -59,6 +59,17 @@ test('people navigation is centralized with fixed, project, available and restri
   assert.match(html, /if\(page==='personal-planta'\)/);
 });
 
+test('personnel filters use the same four operational segments', () => {
+  const eppFilterStart = html.indexOf('id="filt-epp-tipo"');
+  const eppFilter = html.slice(eppFilterStart, eppFilterStart + 700);
+  for (const label of ['Trabajador fijo', 'Trabajador por proyecto', 'Trabajador disponible', 'Restringidos']) {
+    assert.ok(eppFilter.includes(label), `missing EPP segment: ${label}`);
+  }
+  assert.match(html, /type==='restringido'\?Boolean\(t\.bloqueado\)/);
+  assert.match(html, /type==='disponible'\?!t\.bloqueado/);
+  assert.match(html, /const NK_PERSONNEL_LABELS_V162/);
+});
+
 test('visible worker restriction language is standardized without changing internal state keys', () => {
   for (const label of ['Calificar / restringir', 'Personas restringidas', 'Restringidos']) {
     assert.ok(html.includes(label), `missing restriction label: ${label}`);
