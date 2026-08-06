@@ -10,6 +10,8 @@ const productionScript = fs.readFileSync(new URL('public/assets/nexo-klar-enterp
 const styles = fs.readFileSync(new URL('assets/nexo-klar-enterprise.css', root), 'utf8');
 const productionStyles = fs.readFileSync(new URL('public/assets/nexo-klar-enterprise.css', root), 'utf8');
 const cloudClient = fs.readFileSync(new URL('public/cloud-client.js', root), 'utf8');
+const tenantControl = fs.readFileSync(new URL('public/assets/tenant-control-plane-v169.js', root), 'utf8');
+const tenantsRoute = fs.readFileSync(new URL('server/routes/tenants.js', root), 'utf8');
 
 test('enterprise enhancements are loaded and production assets stay synchronized', () => {
   assert.match(html, /assets\/nexo-klar-enterprise\.css/);
@@ -17,6 +19,14 @@ test('enterprise enhancements are loaded and production assets stay synchronized
   assert.equal(html, production);
   assert.equal(script, productionScript);
   assert.equal(styles, productionStyles);
+  assert.match(html, /assets\/tenant-control-plane-v169\.js/);
+});
+
+test('Nexo Klar administration includes a tenant control plane', () => {
+  for (const feature of ['ficha 360°','Soporte centralizado','Exportar respaldo','Alta guiada']) assert.match(tenantControl, new RegExp(feature));
+  for (const endpoint of ["/:id/control", "/:id/tickets", "/:id/export-backup"]) assert.match(tenantsRoute, new RegExp(endpoint.replaceAll('/','\\/')));
+  assert.match(tenantsRoute, /tenant\.control_updated/);
+  assert.match(tenantsRoute, /tenant\.backup_exported/);
 });
 
 test('V4 magenta and indigo is the default light identity with a complete dark alternative', () => {
