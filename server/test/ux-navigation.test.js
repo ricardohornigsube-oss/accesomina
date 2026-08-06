@@ -123,6 +123,25 @@ test('contractor and asset workspaces reuse operational data instead of creating
   assert.match(html, /S\.inventoryMovements\.unshift/);
 });
 
+test('contractor governance connects requirements, F30-1, performance and portal access', () => {
+  for (const feature of [
+    'CONTRACTOR_REQUIREMENT_PROFILES_V164',
+    'function contractorMonthlyComplianceV164',
+    'function contractorOperationalStateV164',
+    'function saveContractorGovernanceV164',
+    'function saveContractorPerformanceV164',
+    'function saveContractorPortalInviteV164',
+    'Control 360 del contratista',
+    'Habilitación y acciones prioritarias',
+    'F30-1 pendiente',
+    'Invitar al portal'
+  ]) assert.ok(html.includes(feature), `missing contractor governance feature: ${feature}`);
+
+  assert.match(html, /requirementsProfile=document\.getElementById\('v164-profile'\)/);
+  assert.match(html, /S\.contractorPortalInvites\.unshift/);
+  assert.match(html, /recordHistoryV90\?\.\('subcontrato'/);
+});
+
 test('private workspace uses one visual system for typography, controls and data tables', () => {
   for (const token of ['--font-sans', '--space-4', '--radius-md', '--focus-ring']) {
     assert.ok(html.includes(token), `missing UI token: ${token}`);

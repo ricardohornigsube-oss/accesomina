@@ -10594,6 +10594,101 @@ function setEppWorkerSegment(segment){
 }
 const renderEppV163Base=renderEpp;
 renderEpp=function(){renderEppV163Base();syncEppWorkerSegmentsV163();};
+
+// V16.4 · Gobierno integral de terceros y subcontratos.
+const CONTRACTOR_REQUIREMENT_PROFILES_V164=Object.freeze({
+  estandar:{label:'Estándar',help:'Servicios generales y proveedores con riesgo operacional habitual.',keys:['contract','f301','contributions']},
+  alto_riesgo:{label:'Alto riesgo',help:'Servicios con exposición relevante, trabajo en terreno o exigencias HSE reforzadas.',keys:['contract','f301','contributions','mutual','preventive','emergency','insurance']},
+  transporte:{label:'Transporte y logística',help:'Transporte de personas, carga, equipos o materiales.',keys:['contract','f301','contributions','mutual','preventive','insurance']},
+  critico:{label:'Crítico',help:'Trabajos críticos o proveedores estratégicos con control documental ampliado.',keys:['contract','f301','contributions','payroll','lre','termination','mutual','preventive','emergency','insurance','tax']}
+});
+function contractorProfileV164(row){
+  const key=String(row?.requirementsProfile||'estandar').toLowerCase().replace(/\s+/g,'_').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  return CONTRACTOR_REQUIREMENT_PROFILES_V164[key]||CONTRACTOR_REQUIREMENT_PROFILES_V164.estandar;
+}
+function contractorRequirementsV164(row){
+  const profile=contractorProfileV164(row);
+  return profile.keys.map(key=>subcontractRequirementV144(key)).filter(Boolean);
+}
+const subcontractComplianceV164Base=subcontractComplianceV144;
+subcontractComplianceV144=function(row){
+  const requirements=contractorRequirementsV164(row);
+  const valid=requirements.filter(requirement=>subcontractRequirementStateV144(row,requirement).label==='Vigente').length;
+  return {total:requirements.length,valid,missing:requirements.length-valid,percent:requirements.length?Math.round(valid/requirements.length*100):100,profile:contractorProfileV164(row).label};
+};
+function contractorMonthlyComplianceV164(row){
+  const latest=(row.documents||[]).filter(document=>document.requirementKey==='f301').sort((a,b)=>String(b.uploadedAt||'').localeCompare(String(a.uploadedAt||'')))[0];
+  const reference=new Date();reference.setMonth(reference.getMonth()-1);reference.setDate(1);
+  const referenceMonth=reference.toISOString().slice(0,7);
+  const covered=Boolean(latest?.periodStart&&latest?.periodEnd&&String(latest.periodStart).slice(0,7)<=referenceMonth&&String(latest.periodEnd).slice(0,7)>=referenceMonth);
+  return {referenceMonth,covered,latest,period:latest?.periodStart&&latest?.periodEnd?`${latest.periodStart} a ${latest.periodEnd}`:'Sin período acreditado'};
+}
+function contractorOperationalStateV164(row){
+  const compliance=subcontractComplianceV144(row),approval=typeof contractorApprovalV150==='function'?contractorApprovalV150(row):{value:row.approvalStatus||'Pendiente de revisión'},monthly=contractorMonthlyComplianceV164(row),people=contractorPeopleV146(row.id),restricted=people.filter(person=>person.bloqueado).length;
+  if(String(row.estado||'').toLowerCase()==='bloqueado'||approval.value==='Restringido')return {label:'Restringido',className:'badge-err',reason:'La empresa está restringida para operar.'};
+  if(compliance.missing)return {label:'Faltan requisitos',className:'badge-err',reason:`Faltan ${compliance.missing} requisito(s) del perfil ${compliance.profile}.`};
+  if(!monthly.covered)return {label:'F30-1 pendiente',className:'badge-warn',reason:`Falta acreditar el período ${monthly.referenceMonth}.`};
+  if(approval.value!=='Habilitado')return {label:'Pendiente de aprobación',className:'badge-warn',reason:'La documentación está disponible; falta aprobación formal.'};
+  if(restricted)return {label:'Habilitado con restricciones',className:'badge-warn',reason:`Hay ${restricted} persona(s) restringida(s).`};
+  return {label:'Habilitado',className:'badge-ok',reason:'Documentación, período laboral y aprobación al día.'};
+}
+function contractorEscV164(value){return typeof escV146==='function'?escV146(value):String(value??'');}
+function saveContractorGovernanceV164(id){
+  const row=(S.subcontratos||[]).find(item=>String(item.id)===String(id));if(!row)return;
+  const before=JSON.parse(JSON.stringify(row));
+  row.requirementsProfile=document.getElementById('v164-profile')?.value||'estandar';
+  row.nextAction=document.getElementById('v164-next-action')?.value.trim()||'';
+  row.nextActionDue=document.getElementById('v164-next-due')?.value||'';
+  row.nextActionOwner=document.getElementById('v164-next-owner')?.value.trim()||'';
+  row.availableCapacity=Number(document.getElementById('v164-capacity')?.value)||0;
+  row.updatedAt=new Date().toISOString();
+  row.followUps=row.followUps||[];
+  row.followUps.unshift({id:`gov_${Date.now()}`,date:hoy(),type:'gobierno_tercero',detail:`Perfil ${contractorProfileV164(row).label}${row.nextAction?` · próxima acción: ${row.nextAction}`:''}`,owner:currentTenantUser?.email||'usuario',at:new Date().toISOString()});
+  recordHistoryV90?.('subcontrato',row.id,'Gobierno y requisitos actualizados',before,row,row.nextAction||'Actualización de perfil');
+  persistTenant();renderContractorWorkspaceV146();openSubcontractV82(id);toast('Perfil, capacidad y seguimiento actualizados');
+}
+function saveContractorPerformanceV164(id){
+  const row=(S.subcontratos||[]).find(item=>String(item.id)===String(id));if(!row)return;
+  const before=JSON.parse(JSON.stringify(row));
+  ['complianceRating','safetyRating','serviceRating','qualityRating','commercialRating','clientRating'].forEach(key=>{row[key]=Math.max(0,Math.min(5,Number(document.getElementById(`v164-${key}`)?.value)||0));});
+  row.recontractable=document.getElementById('v164-recontractable')?.value||'Pendiente';
+  row.performanceComment=document.getElementById('v164-performance-comment')?.value.trim()||'';
+  const values=['complianceRating','safetyRating','serviceRating','qualityRating','commercialRating','clientRating'].map(key=>Number(row[key])||0).filter(Boolean);
+  row.performanceScore=values.length?Math.round(values.reduce((total,value)=>total+value,0)/values.length*20):0;
+  row.updatedAt=new Date().toISOString();
+  recordHistoryV90?.('subcontrato',row.id,'Evaluación de desempeño actualizada',before,row,row.performanceComment||`Resultado ${row.performanceScore}%`);
+  persistTenant();renderContractorWorkspaceV146();openSubcontractV82(id);toast('Evaluación de desempeño actualizada');
+}
+function ensureContractorPortalModalV164(){
+  if(document.getElementById('modal-contractor-portal-v164'))return;
+  document.body.insertAdjacentHTML('beforeend',`<div class="modal-overlay" id="modal-contractor-portal-v164"><div class="modal"><div class="modal-header"><div class="modal-title">Invitar al portal del contratista</div><button class="modal-close" type="button" onclick="closeModal('modal-contractor-portal-v164')">✕</button></div><form onsubmit="saveContractorPortalInviteV164(event)"><div class="modal-body"><div class="cloud-note">La invitación deja un registro de acceso solicitado para que la empresa externa cargue documentos y responda observaciones. El acceso no entrega permisos sobre otros clientes ni terceros.</div><input type="hidden" id="v164-portal-contractor"><div class="form-grid"><div class="form-group"><label class="form-label">Contacto autorizado *</label><input class="form-input" id="v164-portal-name" required></div><div class="form-group"><label class="form-label">Correo *</label><input class="form-input" id="v164-portal-email" type="email" required></div><div class="form-group"><label class="form-label">Acceso hasta</label><input class="form-input" id="v164-portal-expires" type="date"></div><div class="form-group"><label class="form-label">Alcance</label><select class="form-select" id="v164-portal-scope"><option value="documentos">Cargar y renovar documentos</option><option value="documentos_personal">Documentos y personal</option><option value="lectura">Solo lectura</option></select></div></div></div><div class="modal-footer"><button class="btn btn-ghost" type="button" onclick="closeModal('modal-contractor-portal-v164')">Cancelar</button><button class="btn btn-primary" type="submit">Registrar invitación</button></div></form></div></div>`);
+}
+function openContractorPortalInviteV164(id){
+  const row=(S.subcontratos||[]).find(item=>String(item.id)===String(id));if(!row)return;ensureContractorPortalModalV164();
+  document.getElementById('v164-portal-contractor').value=row.id;document.getElementById('v164-portal-name').value=row.responsable||'';document.getElementById('v164-portal-email').value=row.email||'';document.getElementById('v164-portal-expires').value='';document.getElementById('v164-portal-scope').value='documentos';openModal('modal-contractor-portal-v164');
+}
+function saveContractorPortalInviteV164(event){
+  event.preventDefault();const id=document.getElementById('v164-portal-contractor').value,row=(S.subcontratos||[]).find(item=>String(item.id)===String(id));if(!row)return;
+  S.contractorPortalInvites=S.contractorPortalInvites||[];
+  const invite={id:`cpi_${Date.now()}`,contractorId:id,name:document.getElementById('v164-portal-name').value.trim(),email:document.getElementById('v164-portal-email').value.trim(),expiresAt:document.getElementById('v164-portal-expires').value||'',scope:document.getElementById('v164-portal-scope').value,status:'pendiente',createdAt:new Date().toISOString(),createdBy:currentTenantUser?.email||'usuario'};
+  S.contractorPortalInvites.unshift(invite);row.portalInvite=invite;row.updatedAt=new Date().toISOString();row.followUps=row.followUps||[];row.followUps.unshift({id:`portal_${Date.now()}`,date:hoy(),type:'invitacion_portal',detail:`Invitación registrada para ${invite.email} · ${invite.scope}`,owner:invite.createdBy,at:invite.createdAt});persistTenant();closeModal('modal-contractor-portal-v164');openSubcontractV82(id);toast('Invitación registrada. El envío externo se realizará al conectar el canal de correo.');
+}
+function injectContractor360V164(id){
+  const row=(S.subcontratos||[]).find(item=>String(item.id)===String(id)),body=document.getElementById('v81-detail-body');if(!row||!body||document.getElementById('subc-governance-v164'))return;
+  const compliance=subcontractComplianceV144(row),state=contractorOperationalStateV164(row),monthly=contractorMonthlyComplianceV164(row),profile=contractorProfileV164(row),people=contractorPeopleV146(row.id),score=typeof contractorScoreV153==='function'?contractorScoreV153(row):Number(row.performanceScore)||0,orders=typeof contractorOrdersV149==='function'?contractorOrdersV149(row):[];
+  const requirementSummary=contractorRequirementsV164(row).map(requirement=>{const status=subcontractRequirementStateV144(row,requirement);return `<span class="badge ${status.className}" title="${contractorEscV164(requirement.label)}">${contractorEscV164(requirement.label)}: ${contractorEscV164(status.label)}</span>`;}).join(' ');
+  body.insertAdjacentHTML('afterbegin',`<div class="card" id="subc-governance-v164" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Control 360 del contratista</div><div class="card-subtitle">Define requisitos por riesgo, controla el período laboral, personal, órdenes, desempeño y próxima acción desde una sola ficha.</div></div><span class="badge ${state.className}">${contractorEscV164(state.label)}</span></div><div class="cloud-note" style="margin-top:12px;"><b>Estado operativo:</b> ${contractorEscV164(state.reason)}</div><div class="kpi-grid" style="margin-top:12px;"><div class="kpi kpi-blue"><div class="kpi-value">${compliance.percent}%</div><div class="kpi-label">Cumplimiento del perfil</div></div><div class="kpi kpi-${monthly.covered?'green':'orange'}"><div class="kpi-value">${monthly.covered?'Al día':'Pendiente'}</div><div class="kpi-label">F30-1 · ${contractorEscV164(monthly.referenceMonth)}</div></div><div class="kpi kpi-${people.some(person=>person.bloqueado)?'red':'green'}"><div class="kpi-value">${people.length}</div><div class="kpi-label">Personas vinculadas</div></div><div class="kpi kpi-blue"><div class="kpi-value">${orders.length}</div><div class="kpi-label">Órdenes asociadas</div></div></div><div class="form-grid" style="margin-top:14px;"><div class="form-group"><label class="form-label">Perfil de requisitos</label><select class="form-select" id="v164-profile">${Object.entries(CONTRACTOR_REQUIREMENT_PROFILES_V164).map(([key,item])=>`<option value="${key}" ${contractorProfileV164(row)===item?'selected':''}>${contractorEscV164(item.label)}</option>`).join('')}</select><div class="worker-rut">${contractorEscV164(profile.help)}</div></div><div class="form-group"><label class="form-label">Capacidad disponible</label><input class="form-input" id="v164-capacity" type="number" min="0" value="${Number(row.availableCapacity)||0}" placeholder="Personas disponibles"></div><div class="form-group"><label class="form-label">Próxima acción</label><input class="form-input" id="v164-next-action" value="${contractorEscV164(row.nextAction||'')}" placeholder="Ej: renovar F30-1"></div><div class="form-group"><label class="form-label">Fecha compromiso</label><input class="form-input" id="v164-next-due" type="date" value="${contractorEscV164(row.nextActionDue||'')}"></div><div class="form-group full"><label class="form-label">Responsable interno</label><input class="form-input" id="v164-next-owner" value="${contractorEscV164(row.nextActionOwner||'')}" placeholder="Nombre o correo"></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><button class="btn btn-primary btn-sm" type="button" onclick="saveContractorGovernanceV164('${contractorEscV164(row.id)}')">Guardar control</button><button class="btn btn-secondary btn-sm" type="button" onclick="openSubcontractDocumentV144('${contractorEscV164(row.id)}','f301')">Renovar F30-1</button><button class="btn btn-secondary btn-sm" type="button" onclick="openContractorPortalInviteV164('${contractorEscV164(row.id)}')">Invitar al portal</button></div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;">${requirementSummary||'<span class="worker-rut">No hay requisitos definidos.</span>'}</div></div><div class="card" id="subc-performance-v164" style="margin-bottom:16px;"><div class="card-header"><div><div class="card-title">Evaluación de desempeño</div><div class="card-subtitle">Combina cumplimiento, seguridad, calidad, servicio, relación comercial y evaluación del cliente para decidir continuidad.</div></div><span class="badge ${score>=80?'badge-ok':score>=60?'badge-warn':'badge-err'}">${score}%</span></div><div class="form-grid" style="margin-top:12px;">${[['complianceRating','Cumplimiento'],['safetyRating','Seguridad'],['serviceRating','Servicio'],['qualityRating','Calidad'],['commercialRating','Gestión comercial'],['clientRating','Evaluación cliente']].map(([key,label])=>`<div class="form-group"><label class="form-label">${label} (1 a 5)</label><input class="form-input" id="v164-${key}" type="number" min="1" max="5" value="${Number(row[key])||''}" placeholder="1 a 5"></div>`).join('')}<div class="form-group"><label class="form-label">Recontratable</label><select class="form-select" id="v164-recontractable">${['Pendiente','Sí','Condicionado','No'].map(value=>`<option ${row.recontractable===value?'selected':''}>${value}</option>`).join('')}</select></div><div class="form-group full"><label class="form-label">Comentario de evaluación</label><textarea class="form-textarea" id="v164-performance-comment" placeholder="Fortalezas, incumplimientos, compromisos o condición para volver a contratar.">${contractorEscV164(row.performanceComment||'')}</textarea></div></div><button class="btn btn-secondary btn-sm" type="button" onclick="saveContractorPerformanceV164('${contractorEscV164(row.id)}')">Guardar evaluación</button></div>`);
+}
+function injectContractorWorkspaceV164(){
+  if(contractorWorkspaceV146!=='resumen')return;const host=document.getElementById('contractor-workspace-v146');if(!host||document.getElementById('contractor-governance-summary-v164'))return;
+  const rows=S.subcontratos||[];
+  const content=`<div class="card" id="contractor-governance-summary-v164" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Habilitación y acciones prioritarias</div><div class="card-subtitle">Lectura rápida para decidir qué tercero puede operar, qué debe renovar y quién debe gestionar cada pendiente.</div></div></div><div class="table-wrap"><table><thead><tr><th>Empresa externa</th><th>Estado operativo</th><th>F30-1 mensual</th><th>Próxima acción</th><th>Desempeño</th><th></th></tr></thead><tbody>${rows.map(row=>{const state=contractorOperationalStateV164(row),monthly=contractorMonthlyComplianceV164(row),score=typeof contractorScoreV153==='function'?contractorScoreV153(row):Number(row.performanceScore)||0;return `<tr><td><b>${contractorEscV164(row.razon)}</b><div class="worker-rut">${contractorEscV164(contractorProfileV164(row).label)} · ${contractorEscV164(row.rut||'Sin RUT')}</div></td><td><span class="badge ${state.className}">${contractorEscV164(state.label)}</span></td><td><span class="badge ${monthly.covered?'badge-ok':'badge-warn'}">${monthly.covered?'Acreditado':'Pendiente'}</span><div class="worker-rut">${contractorEscV164(monthly.referenceMonth)}</div></td><td>${contractorEscV164(row.nextAction||'Sin acción registrada')}<div class="worker-rut">${contractorEscV164(row.nextActionOwner||'Sin responsable')} · ${contractorEscV164(row.nextActionDue||'Sin fecha')}</div></td><td>${score}%</td><td><button class="btn btn-secondary btn-sm" type="button" onclick="openSubcontractV82('${contractorEscV164(row.id)}')">Abrir control 360</button></td></tr>`;}).join('')||'<tr><td colspan="6">Registra una empresa externa para iniciar su habilitación.</td></tr>'}</tbody></table></div></div>`;
+  host.insertAdjacentHTML('beforeend',content);
+}
+const openSubcontractV164Base=openSubcontractV82;
+openSubcontractV82=function(id){openSubcontractV164Base(id);injectContractor360V164(id);};
+const renderContractorWorkspaceV164Base=renderContractorWorkspaceV146;
+renderContractorWorkspaceV146=function(){renderContractorWorkspaceV164Base();injectContractorWorkspaceV164();};
 </script>
 </body>
 </html>
