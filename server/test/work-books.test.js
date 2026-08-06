@@ -7,6 +7,7 @@ import { validateTenantState } from '../validation.js';
 const workBookRoute = fs.readFileSync(new URL('../routes/work-books.js', import.meta.url), 'utf8');
 const frontend = fs.readFileSync(new URL('../../AccesoMina_v6.html', import.meta.url), 'utf8');
 const signatureMigration = fs.readFileSync(new URL('../../database/postgres/018_work_book_signature_requests.sql', import.meta.url), 'utf8');
+const governanceMigration = fs.readFileSync(new URL('../../database/postgres/020_work_book_governance.sql', import.meta.url), 'utf8');
 
 function validState() {
   return {
@@ -83,4 +84,12 @@ test('work book signature requests are tenant isolated and deduplicated', () => 
   assert.match(signatureMigration, /FORCE ROW LEVEL SECURITY/);
   assert.match(signatureMigration, /idx_work_book_signature_active/);
   assert.match(signatureMigration, /pendiente_configuracion/);
+});
+
+test('work book keeps approval and signature callback controls available', () => {
+  assert.match(workBookRoute, /entries\/:id\/approvals/);
+  assert.match(workBookRoute, /workBookSignatureCallbacksRouter\.post/);
+  assert.match(workBookRoute, /SIGNATURE_CALLBACK_UNAUTHORIZED/);
+  assert.match(governanceMigration, /work_book_entry_approvals/);
+  assert.match(governanceMigration, /FORCE ROW LEVEL SECURITY/);
 });

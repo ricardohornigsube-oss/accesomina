@@ -35,7 +35,7 @@ export const config = Object.freeze({
     token: process.env.WHATSAPP_ACCESS_TOKEN || ''
   },
   integrations: {
-    signature: { url: process.env.SIGNATURE_API_URL || '', token: process.env.SIGNATURE_API_TOKEN || '' },
+    signature: { url: process.env.SIGNATURE_API_URL || '', token: process.env.SIGNATURE_API_TOKEN || '', webhookSecret: process.env.SIGNATURE_WEBHOOK_SECRET || '' },
     erp: { url: process.env.ERP_WEBHOOK_URL || '', token: process.env.ERP_WEBHOOK_TOKEN || '' },
     accreditation: { url: process.env.ACCREDITATION_WEBHOOK_URL || '', token: process.env.ACCREDITATION_WEBHOOK_TOKEN || '' }
   }

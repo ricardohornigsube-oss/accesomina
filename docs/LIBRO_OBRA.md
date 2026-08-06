@@ -15,7 +15,9 @@ de horas hombre, dotación, equipos, clima y avance diario.
 4. Adjuntar evidencias desde el almacenamiento privado.
 5. Guardar como borrador o enviar a firma.
 6. Gestionar observaciones y firma.
-7. Cerrar la anotación cuando el compromiso se encuentre resuelto.
+7. Registrar las revisiones de redacción, supervisión, cliente o inspección.
+8. Generar el comprobante imprimible de la anotación, con contexto, evidencia, revisiones, firmas e historial.
+9. Cerrar la anotación cuando el compromiso se encuentre resuelto.
 
 Estados permitidos:
 
@@ -34,6 +36,7 @@ y el contexto anterior.
 - `work_books`: cabecera, folio, alcance y estado general del libro.
 - `work_book_entries`: anotaciones correlativas, compromisos, firma y evidencias.
 - `work_book_entry_history`: historial append-only de cambios y responsables.
+- `work_book_entry_approvals`: revisión por rol, decisión, comentario y evidencia.
 - `audit_log`: auditoría transversal de creación y actualización.
 - Row Level Security y `FORCE ROW LEVEL SECURITY` aíslan cada empresa.
 - Los folios se generan bajo bloqueo transaccional para evitar colisiones.
@@ -46,6 +49,8 @@ API:
 - `POST /api/work-books/entries`
 - `PATCH /api/work-books/entries/:id`
 - `POST /api/work-books/entries/:id/signature-requests`
+- `POST /api/work-books/entries/:id/approvals`
+- `POST /api/callbacks/signature` (callback del proveedor, protegido por secreto)
 
 ## Solicitud de firma electrónica
 
@@ -86,6 +91,26 @@ Las solicitudes se almacenan en `work_book_signature_requests`, aisladas por
 empresa mediante Row Level Security. Solo puede existir una solicitud activa por
 anotación para evitar envíos duplicados.
 
+## Confirmación del proveedor de firma
+
+Una vez configurado el proveedor, este debe informar el estado real de cada
+sobre a `POST /api/callbacks/signature`. El callback requiere el encabezado
+`x-nexo-signature-secret`, configurado como `SIGNATURE_WEBHOOK_SECRET` o como
+secreto de integración de la empresa. Nexo Klar registra los estados `enviada`,
+`entregada`, `vista`, `firmada`, `rechazada` o `vencida`, además del enlace al
+documento firmado y del certificado que entregue el proveedor.
+
+Una firma solo se marca como firmada cuando el proveedor confirma el sobre. La
+solicitud de firma, por sí sola, nunca equivale a una firma realizada.
+
+## Revisión y comprobante
+
+Las anotaciones abiertas permiten registrar una revisión como redactor,
+supervisor, cliente o inspector. Una observación o rechazo deja la anotación en
+estado `observado` y se conserva en el historial. Desde la ficha se puede
+generar un comprobante imprimible/PDF con su identificador de verificación,
+contexto, evidencia, revisiones, firmas e historial.
+
 ## Permisos
 
 Pueden crear y actualizar anotaciones:
@@ -102,7 +127,8 @@ empresa y token CSRF para operaciones de escritura.
 ## Producción
 
 Antes del despliegue debe aplicarse la migración
-`database/postgres/017_work_book.sql`. Los archivos adjuntos utilizan el flujo
+`database/postgres/017_work_book.sql`, `018_work_book_signature_requests.sql`
+y `020_work_book_governance.sql`. Los archivos adjuntos utilizan el flujo
 privado existente, con revisión antivirus y almacenamiento S3 compatible en
 producción.
 
