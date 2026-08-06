@@ -73,7 +73,7 @@ test('work book remains visible in the project and business management group', (
   const generalNavigation = html.slice(generalStart, nextStart);
 
   assert.match(generalNavigation, /id="nav-work-book-v125"/);
-  assert.match(generalNavigation, /📖 Libro de Obra/);
+  assert.match(generalNavigation, /📖 Libro de obra/);
   assert.ok(generalNavigation.includes("nav('oportunidades')"));
 });
 
