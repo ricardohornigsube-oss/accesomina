@@ -142,7 +142,7 @@ test('EPP is available as a connected inventory area without duplicating deliver
   for (const feature of [
     "openAssetsWorkspaceV146('epp')", 'EPP y protección personal',
     "['maquinaria','equipos','herramientas','epp','materiales','insumos']",
-    'Las entregas a personas se registran desde Protección personal y entregas',
+    'Las entregas a personas se registran desde Protección personal / EPP',
     'openInventoryItemModalV157Base'
   ]) assert.ok(html.includes(feature), `missing EPP inventory feature: ${feature}`);
 });

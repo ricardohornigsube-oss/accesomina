@@ -185,7 +185,7 @@ sections.push(...phase('5', 'Cumplimiento, habilitación y acreditación',
 
 sections.push(...phase('6', 'Recursos para la operación',
   'Preparar los recursos físicos y logísticos necesarios para que las personas ejecuten una orden de servicio con seguridad y continuidad.',
-  'Protección personal y entregas, Turnos y asistencia, Vehículos, activos y equipos, Alojamientos y Estadías, Comunicaciones y convocatorias.',
+  'Protección personal / EPP, Turnos y asistencia, Vehículos, activos y equipos, Alojamientos y Estadías, Comunicaciones y convocatorias.',
   [
     'Registre medidas de EPP de cada persona y entregue elementos con tipo, talla, fecha, estado, costo, vida útil y respaldo.',
     'Asigne turnos, fechas de ingreso y salida, horas trabajadas y asistencia a la persona y orden correspondiente.',
@@ -245,7 +245,7 @@ sections.push(
     ['Personas', 'Gestión de personal temporal', 'Convocar y habilitar dotación temporal.', 'Órdenes, requisitos, comunicaciones.'],
     ['Personas', 'Personas / Personal permanente', 'Mantener ficha y asignaciones.', 'Documentos, turnos, EPP, recursos.'],
     ['Personas', 'Turnos y asistencia', 'Controlar jornadas, entradas, salidas y HH.', 'Persona, orden, reportes, costos.'],
-    ['Personas', 'Protección personal y entregas', 'Entregar EPP y controlar vida útil.', 'Persona, inventario, orden, costo.'],
+    ['Personas', 'Protección personal / EPP', 'Entregar EPP y controlar vida útil.', 'Persona, inventario, orden, costo.'],
     ['Personas', 'Formación / Exámenes / Salud', 'Verificar competencias y aptitud.', 'Persona, requisito, habilitación, alertas.'],
     ['Personas', 'Restringidos', 'Evitar asignaciones no autorizadas.', 'Persona, requisitos, órdenes, alertas.'],
     ['Operación', 'Comunicaciones y convocatorias', 'Contactar y coordinar equipos.', 'Personas, órdenes, historial.'],

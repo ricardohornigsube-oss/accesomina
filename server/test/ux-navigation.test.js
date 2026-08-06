@@ -112,7 +112,7 @@ test('private workspace uses one visual system for typography, controls and data
 
 test('private workspace uses one canonical vocabulary in navigation, headers and permissions', () => {
   for (const label of [
-    'Panel General', 'Órdenes de servicio', 'Personas', 'Protección personal y entregas',
+    'Panel General', 'Órdenes de servicio', 'Personas', 'Protección personal / EPP',
     'Alojamientos y estadías', 'Vehículos, activos y equipos', 'Terceros y subcontratos',
     'Habilitación del cliente', 'Credenciales de acceso', 'Inventario y existencias',
     'Prospectos y oportunidades', 'Reportes y analítica'

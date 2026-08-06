@@ -14,7 +14,7 @@ if(hash(read('assets/nexo-klar-enterprise.js'))!==hash(read('public/assets/nexo-
 const requiredCapabilities=[
   'Panel General','Alertas','Centro Operativo','Libro de Obra',
   'Prospectos y oportunidades','Clientes','Contratos y Firmas','Órdenes de Servicio','Terceros y subcontratos',
-  'Personas','Turnos y asistencia','Protección personal y entregas','Formación y certificaciones','Exámenes y aptitudes','Restringidos',
+  'Personas','Turnos y asistencia','Protección personal / EPP','Formación y certificaciones','Exámenes y aptitudes','Restringidos',
   'Comunicaciones y convocatorias','Vehículos, activos y equipos','Alojamientos y Estadías','Credenciales',
   'Documentación de la Empresa','Habilitación del Cliente','Incidentes y no conformidades','Auditoría',
   'Reportes y analítica','Configuración Empresa','Importar / Exportar','Usuarios y Permisos','Bitácora de Cambios','Privacidad y Datos',
