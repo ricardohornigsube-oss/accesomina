@@ -10727,6 +10727,8 @@ saveNuevoTrab=function(){
 };
 const openSubcontractV165Base=openSubcontractV82;
 openSubcontractV82=function(id){openSubcontractV165Base(id);injectContractorPeopleV165(id);};
+const renderSubcontratosV165Base=renderSubcontratos;
+renderSubcontratos=function(){renderSubcontratosV165Base();const rows=typeof filteredSubcontractsV82==='function'?filteredSubcontractsV82():(S.subcontratos||[]);document.querySelectorAll('#subc-table tbody tr').forEach((tr,index)=>{const contractor=rows[index],cell=tr.lastElementChild;if(contractor&&cell&&!cell.querySelector('.subc-person-v165'))cell.insertAdjacentHTML('beforeend',` <button class="btn btn-secondary btn-sm subc-person-v165" type="button" onclick="openContractorPersonV165('${contractorEscV164(contractor.id)}')">+ Persona</button>`);});};
 </script>
 </body>
 </html>

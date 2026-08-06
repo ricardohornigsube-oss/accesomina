@@ -152,6 +152,7 @@ test('people can use all operational link profiles and contractors can register 
   assert.match(html, /subcontratoId:contractor\.id/);
   assert.match(html, /Ya existe una persona registrada con este RUT/);
   assert.match(html, /Personal del contratista/);
+  assert.match(html, /subc-person-v165/);
 });
 
 test('private workspace uses one visual system for typography, controls and data tables', () => {
