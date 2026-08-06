@@ -133,6 +133,9 @@ tr:hover td { background:var(--bg3); }
 .tab-btn { padding:9px 18px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:13px; font-weight:500; border-bottom:2px solid transparent; margin-bottom:-1px; transition:.15s; }
 .tab-btn.active { color:var(--orange); border-bottom-color:var(--orange); font-weight:700; }
 .tab-btn:hover:not(.active) { color:var(--text); }
+.epp-segment-tabs { align-items:center; flex-wrap:wrap; padding:0 0 8px; }
+.epp-segment-tabs .filter-label { color:var(--text-muted); font-size:12px; font-weight:700; margin:0 4px 0 0; white-space:nowrap; }
+.epp-segment-tabs .tab-btn { white-space:nowrap; }
 .tab-content { display:none; }
 .tab-content.active { display:block; }
 .filters { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:20px; padding:16px; background:var(--bg2); border:1px solid var(--border); border-radius:10px; }
@@ -258,7 +261,7 @@ tr:hover td { background:var(--bg3); }
   .btn-sm{padding:7px 10px;min-height:36px;}
 }
 @media(min-width:901px){.mobile-menu-button{display:none!important;}}
-@media(max-width:520px){body.private .kpi-grid{grid-template-columns:1fr!important;gap:10px}body.private .topbar-right{width:min(100%,320px);max-width:calc(100vw - 70px);grid-template-columns:1fr;margin-right:auto}body.private .filters{display:grid;grid-template-columns:1fr;overflow:visible}body.private .filters>*{width:100%;flex:auto}.kpi{padding:14px}.kpi-value{font-size:23px}.page{padding:12px 10px}.public-band{padding-left:16px;padding-right:16px}}
+@media(max-width:520px){body.private .kpi-grid{grid-template-columns:1fr!important;gap:10px}body.private .topbar-right{width:min(100%,320px);max-width:calc(100vw - 70px);grid-template-columns:1fr;margin-right:auto}body.private .filters{display:grid;grid-template-columns:1fr;overflow:visible}body.private .filters>*{width:100%;flex:auto}.epp-segment-tabs{align-items:stretch}.epp-segment-tabs .filter-label{width:100%;padding:7px 0}.epp-segment-tabs .tab-btn{flex:1 1 calc(50% - 4px);font-size:12px;padding-left:9px;padding-right:9px}.kpi{padding:14px}.kpi-value{font-size:23px}.page{padding:12px 10px}.public-band{padding-left:16px;padding-right:16px}}
 @media print { #sidebar,#topbar,.btn,.modal-overlay:not(.open){display:none!important;} #main{margin-left:0;} }
 /* ===== DOMIAN PUBLIC + PRIVATE ACCESS ===== */
 body.public #sidebar, body.public #main { display:none; }
@@ -1215,6 +1218,14 @@ td { padding:12px 14px; }
       <select class="filter-select" id="filt-epp-tipo" onchange="renderEpp()"><option value="">Todos los trabajadores</option><option value="permanente">🏭 Trabajador fijo</option><option value="esporadico">⚡ Trabajador por proyecto</option><option value="disponible">🟢 Trabajador disponible</option><option value="restringido">🚫 Restringidos</option></select>
       <select class="filter-select" id="filt-epp-mant" onchange="renderEpp()"><option value="">Todos los proyectos / mantenciones</option></select>
       <select class="filter-select" id="filt-epp-estado" onchange="renderEpp()"><option value="">Todos los estados</option><option value="pendiente">Entrega pendiente</option><option value="vigente">Entrega vigente</option><option value="reposicion">Reposición próxima/vencida</option><option value="medidas">Faltan medidas</option></select>
+    </div>
+    <div class="tab-bar epp-segment-tabs" id="epp-personnel-segments" aria-label="Filtrar EPP por segmento de personas">
+      <span class="filter-label">Segmento de personas</span>
+      <button class="tab-btn active" type="button" data-epp-segment="" onclick="setEppWorkerSegment('')">Todas las personas</button>
+      <button class="tab-btn" type="button" data-epp-segment="permanente" onclick="setEppWorkerSegment('permanente')">🏭 Trabajador fijo</button>
+      <button class="tab-btn" type="button" data-epp-segment="esporadico" onclick="setEppWorkerSegment('esporadico')">⚡ Trabajador por proyecto</button>
+      <button class="tab-btn" type="button" data-epp-segment="disponible" onclick="setEppWorkerSegment('disponible')">🟢 Trabajador disponible</button>
+      <button class="tab-btn" type="button" data-epp-segment="restringido" onclick="setEppWorkerSegment('restringido')">🚫 Restringidos</button>
     </div>
     <div class="kpi-grid" id="epp-kpis"></div>
     <div class="tab-bar"><button class="tab-btn active" onclick="setEppView('personas',this)">Personas</button><button class="tab-btn" onclick="setEppView('matriz',this)">Matriz por función</button><button class="tab-btn" onclick="setEppView('entregas',this)">Historial de entregas</button></div>
@@ -10562,6 +10573,27 @@ function applyPersonnelSegmentationV162(root=document.getElementById('app')){
 const renderPageV162Base=renderPage;
 renderPage=function(page){renderPageV162Base(page);applyPersonnelSegmentationV162();};
 applyPersonnelSegmentationV162();
+
+// V16.3 · Segmentos visibles de personas para el control de EPP.
+function syncEppWorkerSegmentsV163(){
+  const select=document.getElementById('filt-epp-tipo');
+  const segments=document.getElementById('epp-personnel-segments');
+  if(!select||!segments)return;
+  segments.querySelectorAll('[data-epp-segment]').forEach(button=>{
+    const active=button.dataset.eppSegment===select.value;
+    button.classList.toggle('active',active);
+    button.setAttribute('aria-pressed',active?'true':'false');
+  });
+  applyPersonnelSegmentationV162();
+}
+function setEppWorkerSegment(segment){
+  const select=document.getElementById('filt-epp-tipo');
+  if(!select)return;
+  select.value=segment;
+  renderEpp();
+}
+const renderEppV163Base=renderEpp;
+renderEpp=function(){renderEppV163Base();syncEppWorkerSegmentsV163();};
 </script>
 </body>
 </html>

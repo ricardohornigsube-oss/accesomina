@@ -70,6 +70,18 @@ test('personnel filters use the same four operational segments', () => {
   assert.match(html, /const NK_PERSONNEL_LABELS_V162/);
 });
 
+test('EPP shows an explicit operational segment control connected to its filter', () => {
+  const segmentStart = html.indexOf('id="epp-personnel-segments"');
+  const segments = html.slice(segmentStart, segmentStart + 1200);
+  assert.ok(segmentStart >= 0, 'EPP segment control is visible in the page');
+  for (const value of ['permanente', 'esporadico', 'disponible', 'restringido']) {
+    assert.match(segments, new RegExp(`data-epp-segment="${value}"`));
+  }
+  assert.match(html, /function setEppWorkerSegment\(segment\)/);
+  assert.match(html, /function syncEppWorkerSegmentsV163\(\)/);
+  assert.match(html, /select\.value=segment;/);
+});
+
 test('visible worker restriction language is standardized without changing internal state keys', () => {
   for (const label of ['Calificar / restringir', 'Personas restringidas', 'Restringidos']) {
     assert.ok(html.includes(label), `missing restriction label: ${label}`);
