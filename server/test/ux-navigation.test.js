@@ -123,6 +123,17 @@ test('contractor and asset workspaces reuse operational data instead of creating
   assert.match(html, /S\.inventoryMovements\.unshift/);
 });
 
+test('asset workspace includes preventive maintenance, reliability costs and operational alerts', () => {
+  for (const fn of ['ensureAssetReliabilityV167', 'saveAssetMaintenancePlanV167', 'saveAssetMaintenanceRecordV167', 'injectAssetReliabilityV167']) {
+    assert.match(html, new RegExp(`function ${fn}`));
+  }
+  for (const label of ['Confiabilidad y mantenimiento de activos', 'Programar preventivo', 'Registrar mantenimiento', 'Mantenimientos vencidos']) {
+    assert.ok(html.includes(label), `missing asset reliability feature: ${label}`);
+  }
+  assert.match(html, /assetMaintenancePlans/);
+  assert.match(html, /assetMaintenanceRecords/);
+});
+
 test('contractor governance connects requirements, F30-1, performance and portal access', () => {
   for (const feature of [
     'CONTRACTOR_REQUIREMENT_PROFILES_V164',
