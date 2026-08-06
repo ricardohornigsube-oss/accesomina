@@ -142,6 +142,18 @@ test('contractor governance connects requirements, F30-1, performance and portal
   assert.match(html, /recordHistoryV90\?\.\('subcontrato'/);
 });
 
+test('people can use all operational link profiles and contractors can register their own personnel', () => {
+  for (const label of ['Trabajador fijo', 'Trabajador por proyecto', 'Trabajador disponible']) {
+    assert.ok(html.includes(label), `missing worker link profile: ${label}`);
+  }
+  for (const fn of ['workerLinkProfileV165', 'openContractorPersonV165', 'saveContractorPersonV165', 'injectContractorPeopleV165']) {
+    assert.match(html, new RegExp(`function ${fn}`));
+  }
+  assert.match(html, /subcontratoId:contractor\.id/);
+  assert.match(html, /Ya existe una persona registrada con este RUT/);
+  assert.match(html, /Personal del contratista/);
+});
+
 test('private workspace uses one visual system for typography, controls and data tables', () => {
   for (const token of ['--font-sans', '--space-4', '--radius-md', '--focus-ring']) {
     assert.ok(html.includes(token), `missing UI token: ${token}`);

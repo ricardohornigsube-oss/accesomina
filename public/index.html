@@ -1771,8 +1771,8 @@ td { padding:12px 14px; }
         <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="nt-email" type="email" placeholder="correo@email.com"></div>
         <div class="form-group"><label class="form-label">Región</label><input class="form-input chile-region-input" id="nt-region" list="chile-regiones-list" placeholder="Buscar región..."></div>
         <div class="form-group"><label class="form-label">Comuna / ciudad</label><input class="form-input chile-comuna-input" id="nt-ciudad" list="chile-comunas-list" placeholder="Primero selecciona región"></div>
-        <div class="form-group"><label class="form-label">Tipo Contrato</label>
-          <select class="form-select" id="nt-tipo"><option value="permanente">Permanente / Planta</option><option value="esporadico">Esporádico por proyecto</option></select>
+        <div class="form-group"><label class="form-label">Tipo de vinculación</label>
+          <select class="form-select" id="nt-tipo"><option value="permanente">🏭 Trabajador fijo</option><option value="esporadico">⚡ Trabajador por proyecto</option><option value="disponible">🟢 Trabajador disponible</option></select>
         </div>
         <div class="form-group"><label class="form-label">Turno / jornada habitual</label>
           <select class="form-select" id="nt-regimen"><option value="5x2">5x2</option><option value="4x3">4x3</option><option value="7x7">7x7</option><option value="6x1">6x1</option><option value="turno_especial">Turno especial</option></select>
@@ -10689,6 +10689,44 @@ const openSubcontractV164Base=openSubcontractV82;
 openSubcontractV82=function(id){openSubcontractV164Base(id);injectContractor360V164(id);};
 const renderContractorWorkspaceV164Base=renderContractorWorkspaceV146;
 renderContractorWorkspaceV146=function(){renderContractorWorkspaceV164Base();injectContractorWorkspaceV164();};
+</script>
+<script>
+// V16.5 · Perfiles de vinculación y registro mínimo de personal externo.
+const WORKER_LINK_PROFILES_V165=Object.freeze({permanente:'Trabajador fijo',esporadico:'Trabajador por proyecto',disponible:'Trabajador disponible'});
+function workerLinkProfileV165(worker){return worker?.employmentProfile==='disponible'?'disponible':worker?.tipo==='permanente'?'permanente':'esporadico';}
+function ensureContractorPersonModalV165(){
+  if(document.getElementById('modal-contractor-person-v165'))return;
+  document.body.insertAdjacentHTML('beforeend',`<div class="modal-overlay" id="modal-contractor-person-v165"><div class="modal"><div class="modal-header"><div class="modal-title" id="v165-person-title">Registrar persona del contratista</div><button class="modal-close" type="button" onclick="closeModal('modal-contractor-person-v165')">✕</button></div><form onsubmit="saveContractorPersonV165(event)"><div class="modal-body"><div class="cloud-note" style="margin-bottom:14px;">Registra los datos mínimos para controlar a la persona externa. Después podrás completar formación, aptitudes, documentos, EPP y asignaciones desde su ficha individual.</div><input type="hidden" id="v165-contractor-id"><div class="form-grid"><div class="form-group full"><label class="form-label">Nombre completo *</label><input class="form-input" id="v165-person-name" required placeholder="Nombre y apellidos"></div><div class="form-group"><label class="form-label">RUT *</label><input class="form-input" id="v165-person-rut" required placeholder="12.345.678-9" onblur="this.value=formatRut(this.value)"></div><div class="form-group"><label class="form-label">Cargo o especialidad *</label><input class="form-input" id="v165-person-role" required placeholder="Ej: Técnico eléctrico"></div><div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="v165-person-phone" value="+569" placeholder="+569 1234 5678"></div><div class="form-group"><label class="form-label">Correo</label><input class="form-input" id="v165-person-email" type="email" placeholder="correo@empresa.cl"></div><div class="form-group full"><label class="form-label">Tipo de vinculación</label><select class="form-select" id="v165-person-profile"><option value="esporadico">⚡ Trabajador por proyecto</option><option value="disponible">🟢 Trabajador disponible</option><option value="permanente">🏭 Trabajador fijo</option></select></div></div></div><div class="modal-footer"><button class="btn btn-ghost" type="button" onclick="closeModal('modal-contractor-person-v165')">Cancelar</button><button class="btn btn-primary" type="submit">Registrar persona</button></div></form></div></div>`);
+}
+function openContractorPersonV165(contractorId){
+  const contractor=(S.subcontratos||[]).find(row=>String(row.id)===String(contractorId));if(!contractor)return;
+  ensureContractorPersonModalV165();document.getElementById('v165-person-title').textContent=`Registrar persona · ${contractor.razon}`;
+  document.getElementById('v165-contractor-id').value=contractor.id;
+  ['v165-person-name','v165-person-rut','v165-person-role','v165-person-email'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('v165-person-phone').value='+569';document.getElementById('v165-person-profile').value='esporadico';openModal('modal-contractor-person-v165');
+}
+function saveContractorPersonV165(event){
+  event.preventDefault();const contractor=(S.subcontratos||[]).find(row=>String(row.id)===String(document.getElementById('v165-contractor-id').value));if(!contractor)return;
+  const nombre=document.getElementById('v165-person-name').value.trim(),rut=formatRut(document.getElementById('v165-person-rut').value.trim()),cargo=document.getElementById('v165-person-role').value.trim(),profile=document.getElementById('v165-person-profile').value;
+  if(!nombre||!rut||!cargo)return toast('Completa nombre, RUT y cargo para registrar a la persona','err');
+  if(!isValidRut(rut))return toast('El RUT de la persona no es válido','err');
+  if((S.trabajadores||[]).some(person=>cleanRut(person.rut)===cleanRut(rut)))return toast('Ya existe una persona registrada con este RUT','err');
+  const person={id:`t${Date.now()}`,nombre,rut,cargo,especialidad:cargo,tel:document.getElementById('v165-person-phone').value.trim(),email:document.getElementById('v165-person-email').value.trim(),tipo:profile==='permanente'?'permanente':'esporadico',employmentProfile:profile,disponibilidad:profile==='permanente'?'asignado':'disponible',bloqueado:false,mineras:[],workerItems:[],subcontratoId:contractor.id,subcontractId:contractor.id,createdAt:new Date().toISOString()};
+  S.trabajadores.push(person);contractor.personal=contractorPeopleV146(contractor.id).length;contractor.updatedAt=new Date().toISOString();contractor.followUps=contractor.followUps||[];contractor.followUps.unshift({id:`person_${Date.now()}`,date:hoy(),type:'persona_registrada',detail:`${nombre} · ${WORKER_LINK_PROFILES_V165[profile]}`,owner:currentTenantUser?.email||'usuario',at:new Date().toISOString()});recordHistoryV90?.('subcontrato',contractor.id,'Persona externa registrada',{},person,`${nombre} · ${rut}`);persistTenant();closeModal('modal-contractor-person-v165');renderContractorWorkspaceV146();openSubcontractV82(contractor.id);toast('Persona registrada y asociada al contratista');
+}
+function injectContractorPeopleV165(id){
+  const contractor=(S.subcontratos||[]).find(row=>String(row.id)===String(id)),body=document.getElementById('v81-detail-body');if(!contractor||!body||document.getElementById('contractor-people-v165'))return;
+  const people=contractorPeopleV146(contractor.id);
+  body.insertAdjacentHTML('beforeend',`<div class="card" id="contractor-people-v165" style="margin-top:16px;"><div class="card-header"><div><div class="card-title">Personal del contratista</div><div class="card-subtitle">Registra o vincula personas externas y completa su control desde una ficha individual.</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" type="button" onclick="openContractorPersonV165('${contractorEscV164(contractor.id)}')">+ Registrar persona</button><button class="btn btn-secondary btn-sm" type="button" onclick="openContractorPeopleModalV146('${contractorEscV164(contractor.id)}')">Vincular existentes</button></div></div><div class="table-wrap"><table><thead><tr><th>Persona</th><th>Cargo</th><th>Vinculación</th><th>Contacto</th><th>Estado</th><th></th></tr></thead><tbody>${people.map(person=>`<tr><td><b>${contractorEscV164(person.nombre)}</b><div class="worker-rut">${contractorEscV164(person.rut||'Sin RUT')}</div></td><td>${contractorEscV164(person.cargo||person.especialidad||'—')}</td><td><span class="badge badge-blue">${contractorEscV164(WORKER_LINK_PROFILES_V165[workerLinkProfileV165(person)])}</span></td><td>${contractorEscV164(person.tel||person.email||'—')}</td><td><span class="badge ${person.bloqueado?'badge-err':'badge-ok'}">${person.bloqueado?'Restringido':'Disponible'}</span></td><td><button class="btn btn-secondary btn-sm" type="button" onclick="openFicha('${contractorEscV164(person.id)}')">Ficha</button></td></tr>`).join('')||'<tr><td colspan="6">Aún no hay personas asociadas. Registra la primera para iniciar su control.</td></tr>'}</tbody></table></div></div>`);
+}
+const saveNuevoTrabV165Base=saveNuevoTrab;
+saveNuevoTrab=function(){
+  const selector=document.getElementById('nt-tipo'),profile=selector?.value||'esporadico',rut=formatRut(document.getElementById('nt-rut')?.value||'');
+  if(selector&&profile==='disponible')selector.value='esporadico';saveNuevoTrabV165Base();
+  const worker=(S.trabajadores||[]).find(person=>cleanRut(person.rut)===cleanRut(rut));if(worker&&!worker.employmentProfile){worker.employmentProfile=profile;worker.disponibilidad=profile==='disponible'?'disponible':worker.disponibilidad;persistTenant();}
+};
+const openSubcontractV165Base=openSubcontractV82;
+openSubcontractV82=function(id){openSubcontractV165Base(id);injectContractorPeopleV165(id);};
 </script>
 </body>
 </html>
