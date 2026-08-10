@@ -9,6 +9,8 @@ const script = fs.readFileSync(new URL('assets/nexo-klar-enterprise.js', root), 
 const productionScript = fs.readFileSync(new URL('public/assets/nexo-klar-enterprise.js', root), 'utf8');
 const styles = fs.readFileSync(new URL('assets/nexo-klar-enterprise.css', root), 'utf8');
 const productionStyles = fs.readFileSync(new URL('public/assets/nexo-klar-enterprise.css', root), 'utf8');
+const designSystem = fs.readFileSync(new URL('assets/nexo-klar-design-system-v170.css', root), 'utf8');
+const productionDesignSystem = fs.readFileSync(new URL('public/assets/nexo-klar-design-system-v170.css', root), 'utf8');
 const cloudClient = fs.readFileSync(new URL('public/cloud-client.js', root), 'utf8');
 const tenantControl = fs.readFileSync(new URL('public/assets/tenant-control-plane-v169.js', root), 'utf8');
 const tenantsRoute = fs.readFileSync(new URL('server/routes/tenants.js', root), 'utf8');
@@ -19,6 +21,8 @@ test('enterprise enhancements are loaded and production assets stay synchronized
   assert.equal(html, production);
   assert.equal(script, productionScript);
   assert.equal(styles, productionStyles);
+  assert.equal(designSystem, productionDesignSystem);
+  assert.match(html, /assets\/nexo-klar-design-system-v170\.css/);
   assert.match(html, /assets\/tenant-control-plane-v169\.js/);
 });
 
@@ -29,11 +33,14 @@ test('Nexo Klar administration includes a tenant control plane', () => {
   assert.match(tenantsRoute, /tenant\.backup_exported/);
 });
 
-test('V4 magenta and indigo is the default light identity with a complete dark alternative', () => {
-  assert.match(html, /--orange:\s*#e4006e/i);
-  assert.match(html, /--blue:\s*#2a2a8c/i);
-  assert.match(html, /--text:\s*#14121f/i);
-  assert.match(html, /--bg:\s*#f9f7fb/i);
+test('design system uses the approved indigo and electric teal identity with a complete dark alternative', () => {
+  assert.match(html, /--orange:\s*#2a2a8c/i);
+  assert.match(html, /--blue:\s*#00706a/i);
+  assert.match(html, /--text:\s*#141a20/i);
+  assert.match(html, /--bg:\s*#f4efe3/i);
+  assert.match(designSystem, /Manrope/);
+  assert.match(designSystem, /--nk-primary:\s*#2a2a8c/i);
+  assert.match(designSystem, /--nk-accent:\s*#00cfc1/i);
   assert.match(html, /body\.dark\s*\{/);
   assert.match(html, /<option value="light">Fondo claro<\/option><option value="dark">Fondo oscuro<\/option>/);
 });

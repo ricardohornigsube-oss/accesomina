@@ -12,40 +12,40 @@
 <title>Nexo Klar · Plataforma de gestión operativa</title>
 <style>
 :root {
-  --bg: #f9f7fb;
+  --bg: #f4efe3;
   --bg2: #ffffff;
-  --bg3: #f1eef5;
+  --bg3: #fbf9f5;
   --bg4: #ffffff;
-  --orange: #e4006e;
-  --orange-light: #f7d3e4;
-  --orange-dark: #a3004f;
-  --blue: #2a2a8c;
-  --blue-light: #7775c8;
-  --text: #14121f;
-  --text-muted: #5f5b70;
-  --text-dim: #7a7688;
-  --border: #ded9e5;
-  --border-light: #cfc8da;
-  --green: #16a34a;
-  --red: #dc2626;
-  --yellow: #d97706;
+  --orange: #2a2a8c;
+  --orange-light: #e6f2eb;
+  --orange-dark: #1a1a5e;
+  --blue: #00706a;
+  --blue-light: #00cfc1;
+  --text: #141a20;
+  --text-muted: #5d6b7a;
+  --text-dim: #8a96a1;
+  --border: #e3ded2;
+  --border-light: #c7d0d6;
+  --green: #1b7f4b;
+  --red: #b3261e;
+  --yellow: #c77700;
   --sidebar-w: 260px;
 }
 body.light {
-  --bg:#f9f7fb;--bg2:#ffffff;--bg3:#f1eef5;--bg4:#ffffff;
-  --orange:#e4006e;--orange-light:#f7d3e4;--orange-dark:#a3004f;
-  --blue:#2a2a8c;--blue-light:#7775c8;
-  --text:#14121f;--text-muted:#5f5b70;--text-dim:#7a7688;
-  --border:#ded9e5;--border-light:#cfc8da;
-  --green:#16a34a;--red:#dc2626;--yellow:#d97706;
+  --bg:#f4efe3;--bg2:#ffffff;--bg3:#fbf9f5;--bg4:#ffffff;
+  --orange:#2a2a8c;--orange-light:#e6f2eb;--orange-dark:#1a1a5e;
+  --blue:#00706a;--blue-light:#00cfc1;
+  --text:#141a20;--text-muted:#5d6b7a;--text-dim:#8a96a1;
+  --border:#e3ded2;--border-light:#c7d0d6;
+  --green:#1b7f4b;--red:#b3261e;--yellow:#c77700;
 }
 body.dark {
-  --bg:#14121f;--bg2:#1d1a2b;--bg3:#29253a;--bg4:#181624;
-  --orange:#ff3d90;--orange-light:#6b2148;--orange-dark:#e4006e;
-  --blue:#9c9ae8;--blue-light:#bbb9f4;
-  --text:#ffffff;--text-muted:#c8c3d2;--text-dim:#9993a8;
-  --border:#3d384d;--border-light:#534c65;
-  --green:#4ade80;--red:#f87171;--yellow:#fbbf24;
+  --bg:#12123a;--bg2:#1a1a4d;--bg3:#2c2c6b;--bg4:#1a1a4d;
+  --orange:#00cfc1;--orange-light:#064a47;--orange-dark:#00706a;
+  --blue:#5b7bff;--blue-light:#9a9ac4;
+  --text:#ededfa;--text-muted:#9a9ac4;--text-dim:#c7d0d6;
+  --border:#2c2c6b;--border-light:#43438a;
+  --green:#43c67b;--red:#ff7a70;--yellow:#e9a319;
 }
 * { box-sizing:border-box; margin:0; padding:0; }
 html, body { width:100%; max-width:100%; overflow-x:hidden; }
@@ -66,18 +66,18 @@ a { color:inherit; text-decoration:none; }
 .nav-group-toggle { font-size:15px; line-height:1; transition:transform .15s ease; }
 .nav-group-label.is-collapsed .nav-group-toggle { transform:rotate(-90deg); }
 .nav-group-label.tone-control { --group-color:#2a2a8c; }
-.nav-group-label.tone-people { --group-color:#a21caf; }
-.nav-group-label.tone-operations { --group-color:#e4006e; }
-.nav-group-label.tone-contractors { --group-color:#b45309; }
-.nav-group-label.tone-commercial { --group-color:#0f766e; }
-.nav-group-label.tone-compliance { --group-color:#15803d; }
-.nav-group-label.tone-projects { --group-color:#7c3aed; }
-.nav-group-label.tone-assets { --group-color:#2563eb; }
-.nav-group-label.tone-administration { --group-color:#475569; }
+.nav-group-label.tone-people { --group-color:#00706a; }
+.nav-group-label.tone-operations { --group-color:#1b7f4b; }
+.nav-group-label.tone-contractors { --group-color:#c77700; }
+.nav-group-label.tone-commercial { --group-color:#00706a; }
+.nav-group-label.tone-compliance { --group-color:#1b7f4b; }
+.nav-group-label.tone-projects { --group-color:#5b7bff; }
+.nav-group-label.tone-assets { --group-color:#2a2a8c; }
+.nav-group-label.tone-administration { --group-color:#5d6b7a; }
 .nav-item { display:flex; align-items:center; gap:10px; padding:10px 20px; color:var(--text-muted); cursor:pointer; font-size:13.5px; transition:all .15s; border-left:3px solid transparent; }
 .nav-item:hover { background:var(--bg2); color:var(--text); border-left-color:var(--border-light); }
 .nav-item.active { background:rgba(228,0,110,.12); color:var(--orange); border-left-color:var(--orange); font-weight:600; }
-.nav-item.asset-context-v155 { background:rgba(37,99,235,.10); color:#2563eb; border-left-color:#2563eb; font-weight:700; }
+.nav-item.asset-context-v155 { background:rgba(42,42,140,.10); color:#2a2a8c; border-left-color:#2a2a8c; font-weight:700; }
 .nav-badge { margin-left:auto; background:var(--red); color:white; border-radius:20px; padding:2px 8px; font-size:11px; font-weight:700; }
 .nav-badge-orange { background:var(--orange); }
 .sidebar-bottom { margin-top:auto; padding:16px 20px; border-top:1px solid var(--border); font-size:11px; color:var(--text-dim); line-height:1.6; }
@@ -420,11 +420,11 @@ body.private #main { display:block; }
 /* ===== NEXO KLAR UI/UX SYSTEM · BASELINE =====
    Tokens and component rules shared by public and private experiences. */
 :root {
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-sans: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px;
   --space-6:24px; --space-8:32px; --space-10:40px; --space-12:48px;
   --radius-sm:6px; --radius-md:8px; --radius-lg:12px;
-  --focus-ring:0 0 0 3px rgba(228,0,110,.18);
+  --focus-ring:0 0 0 3px rgba(0,207,193,.38);
 }
 body { font-family:var(--font-sans); font-size:14px; line-height:1.5; text-rendering:optimizeLegibility; }
 button, input, select, textarea { font:inherit; }
@@ -834,6 +834,7 @@ td { padding:12px 14px; }
 <link rel="stylesheet" href="assets/nexo-klar-guidance.css">
 <link rel="stylesheet" href="assets/nexo-klar-enterprise.css">
 <link rel="stylesheet" href="assets/nexo-klar-public-layout.css">
+<link rel="stylesheet" href="assets/nexo-klar-design-system-v170.css">
 </head>
 <body class="public">
 
