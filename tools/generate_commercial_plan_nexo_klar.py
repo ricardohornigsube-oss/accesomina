@@ -26,6 +26,8 @@ def border(cell, color=LINE, size='8'):
         tag='w:'+edge;el=borders.find(qn(tag))
         if el is None: el=OxmlElement(tag);borders.append(el)
         el.set(qn('w:val'),'single');el.set(qn('w:sz'),size);el.set(qn('w:color'),color)
+def prevent_row_split(row):
+    trPr=row._tr.get_or_add_trPr();el=OxmlElement('w:cantSplit');trPr.append(el)
 def set_cell(cell, text, bold=False, color=NAVY, size=9, align=None):
     cell.text='';p=cell.paragraphs[0]
     if align is not None:p.alignment=align
@@ -70,6 +72,22 @@ def add_table(doc,headers,rows,widths=None):
             if widths:cells[i].width=Inches(widths[i])
             shade(cells[i],ALT if idx%2==0 else 'FFFFFF');border(cells[i]);set_cell(cells[i],v,False,NAVY,8.5)
     doc.add_paragraph().paragraph_format.space_after=Pt(2)
+    return t
+def add_plan_card(doc, plan, focus, price, annual, scale, modules, value):
+    t=doc.add_table(rows=1,cols=2);t.alignment=WD_TABLE_ALIGNMENT.CENTER;t.autofit=False
+    t.columns[0].width=Inches(1.55);t.columns[1].width=Inches(5.55)
+    left,right=t.rows[0].cells;header=left.merge(right);shade(header,DEEP);border(header,DEEP)
+    set_cell(header,plan+'  |  '+price,True,'FFFFFF',12)
+    prevent_row_split(t.rows[0])
+    for label,content in [('Enfoque',focus),('Escala incluida',scale),('Módulos principales',modules),('Valor que habilita',value)]:
+        cells=t.add_row().cells
+        cells[0].width=Inches(1.55);cells[1].width=Inches(5.55)
+        shade(cells[0],PALE);shade(cells[1],'FFFFFF');border(cells[0]);border(cells[1])
+        set_cell(cells[0],label,True,DEEP,8.5)
+        set_cell(cells[1],content,False,NAVY,8.8)
+        prevent_row_split(t.rows[-1])
+    p=doc.add_paragraph();p.paragraph_format.space_after=Pt(5)
+    r=p.add_run('Pago anual anticipado: '+annual+' netos.');r.bold=True;r.font.name='Arial';r.font.size=Pt(8.5);r.font.color.rgb=hexrgb(TEAL_D)
     return t
 def page_break(doc): doc.add_page_break()
 def add_centered_picture(doc, path, width):
@@ -179,32 +197,35 @@ add_table(doc,['Referencia pública','Modelo comercial observado','Implicancia p
 ],[1.45,2.65,3.2])
 add_callout(doc,'Criterio comercial','No competir solo por precio. El precio base debe abrir la conversación; la implementación, los activos adicionales, las integraciones y el soporte reflejan el esfuerzo real y se cotizan por alcance.',PRIMARY)
 
+page_break(doc)
 add_title(doc,'7. Oferta SaaS recomendada','Tres planes claros, escalables y negociables')
-add_table(doc,['Plan','Incluye','Escala incluida','Precio lista neto CLP'],[
- ['Nexo Klar Base','Panel, clientes, contratos, órdenes de servicio, personas, alertas, documentos, reportes base, usuarios, configuración e importación/exportación.','Hasta 30 personas activas y 5 usuarios nominados.','$220.000 / mes'],
- ['Nexo Klar Operación','Todo Base + gestión de personal por proyecto, turnos, EPP, formación, exámenes, comunicaciones, vehículos, estadías, terceros, incidentes y Centro Operativo.','Hasta 75 personas activas y 10 usuarios nominados.','$390.000 / mes'],
- ['Nexo Klar Integral','Todo Operación + auditoría avanzada, habilitación del cliente, activos e inventario, costos, rentabilidad, automatizaciones, portal, API e identidad visual por empresa.','Hasta 200 personas activas y 20 usuarios nominados.','$690.000 / mes']
-],[1.35,3.45,1.2,1.3])
+add_body(doc,'Los precios se definieron con una lógica de valor: Nexo Klar no reemplaza una pantalla aislada, sino que conecta relación comercial, personas, cumplimiento, recursos, ejecución y control. La tarifa se ajusta por dotación activa y complejidad operacional, no por cantidad de pantallas abiertas.')
+add_plan_card(doc,'Nexo Klar Base','Ordenar la operación y dejar de depender de planillas.','$249.000 / mes','$2.689.200','Hasta 30 personas activas y 5 usuarios nominados.','Panel, clientes, contratos, órdenes de servicio, personas, alertas, documentos, reportes base, usuarios, configuración e importación/exportación.','Una fuente única para conocer el estado de clientes, contratos, órdenes, personas y vencimientos.')
+add_plan_card(doc,'Nexo Klar Operación','Coordinar personas y recursos en una operación de servicios recurrente.','$490.000 / mes','$5.292.000','Hasta 75 personas activas y 10 usuarios nominados.','Todo Base + gestión de personal por proyecto, turnos, EPP, formación, exámenes, comunicaciones, vehículos, estadías, terceros, incidentes y Centro Operativo.','Preparar servicios con mayor anticipación y reducir brechas de personas, documentos, recursos y coordinación.')
+add_callout(doc,'Valor por usuario','A capacidad completa, el costo mensual equivale a $49.800 por usuario Base, $49.000 por usuario Operación y $44.500 por usuario Integral. Este indicador sirve para explicar el valor de una herramienta compartida por equipos administrativos y operativos.',TEAL_D)
+page_break(doc)
+add_plan_card(doc,'Nexo Klar Integral','Gobierno operacional, cumplimiento avanzado y crecimiento multioperación.','$890.000 / mes','$9.612.000','Hasta 200 personas activas y 20 usuarios nominados.','Todo Operación + auditoría avanzada, habilitación del cliente, activos e inventario, costos, rentabilidad, automatizaciones, portal, API e identidad visual por empresa.','Entregar trazabilidad para gestión, auditoría, costos, expansión y decisiones ejecutivas.')
 add_table(doc,['Crecimiento y adicionales','Precio lista neto CLP','Regla comercial'],[
  ['Persona activa adicional','Base: $2.500 · Operación: $3.500 · Integral: $5.000 / mes','Cobrar solo sobre la dotación activa promedio del mes.'],
+ ['Usuario adicional','Base: $18.000 · Operación: $25.000 · Integral: $35.000 / mes','Solo para usuarios con acceso nominativo que excedan el plan.'],
  ['Libro de obra digital','Desde $95.000 / mes','Adicional por empresa; firma electrónica y mensajes se cobran según consumo del proveedor.'],
  ['Prospectos y oportunidades','Desde $65.000 / mes','Adicional comercial para conectar preventa, seguimiento y conversión.'],
  ['Integración, API o desarrollo específico','Desde $450.000 único + soporte mensual según alcance','Se cotiza después de una sesión de descubrimiento y no se promete como estándar.'],
  ['Almacenamiento extraordinario, OCR, firma o mensajería','Costo de proveedor + administración Nexo Klar','Se informa por separado antes de activar el servicio.']
 ],[2.15,1.55,3.6])
-add_body(doc,'Condición sugerida: contrato mínimo de 12 meses. Pago anual anticipado: 10% de descuento en la suscripción o bonificación parcial del onboarding, no ambos. Para clientes piloto, aplicar un descuento temporal y dejarlo expresamente limitado a los primeros 90 días.')
+add_body(doc,'Condición sugerida: contrato mínimo de 12 meses. Pago anual anticipado: 10% de descuento en la suscripción o bonificación parcial del onboarding, no ambos. Para clientes piloto, aplicar un descuento temporal y dejarlo expresamente limitado a los primeros 90 días. Banda de negociación recomendada: máximo 15% de descuento sobre tarifa lista, siempre a cambio de plazo anual, caso de éxito autorizado o volumen comprometido.')
 
 page_break(doc)
 add_title(doc,'8. Carga inicial y onboarding','Alternativas claras para no regalar trabajo crítico')
 add_table(doc,['Alternativa','Alcance','Precio neto CLP','Cuándo ofrecerla'],[
- ['Autoguiada','Plantillas, centro de ayuda, sesión de inicio de 90 minutos y revisión de carga del cliente.','Sin costo en contrato anual; $120.000 en mensual.','Empresa pequeña, datos ordenados y administrador disponible.'],
- ['Asistida','Configuración base, carga de hasta 50 personas, 2 clientes, 3 contratos/órdenes, importación CSV y 2 sesiones de capacitación.','$390.000 único','Oferta estándar para la mayoría de empresas de servicios.'],
- ['Operacional','Catálogos, matriz inicial, carga de hasta 150 personas, 5 clientes, 10 contratos/órdenes, recursos y 4 sesiones de capacitación.','$790.000 único','Cliente con varias operaciones, personal temporal o necesidad de partir rápido.'],
- ['Corporativa','Diagnóstico, depuración de datos, migración mayor, roles, identidad visual, capacitación por equipo y plan de adopción.','Desde $1.500.000 + alcance','Empresa multioperación, alto volumen o requerimientos particulares.']
+ ['Autoguiada','Plantillas, centro de ayuda, sesión de inicio de 90 minutos y revisión de carga del cliente.','Sin costo en contrato anual; $150.000 en mensual.','Empresa pequeña, datos ordenados y administrador disponible.'],
+ ['Asistida','Configuración base, carga de hasta 50 personas, 2 clientes, 3 contratos/órdenes, importación CSV y 2 sesiones de capacitación.','$490.000 único','Oferta estándar para la mayoría de empresas de servicios.'],
+ ['Operacional','Catálogos, matriz inicial, carga de hasta 150 personas, 5 clientes, 10 contratos/órdenes, recursos y 4 sesiones de capacitación.','$990.000 único','Cliente con varias operaciones, personal temporal o necesidad de partir rápido.'],
+ ['Corporativa','Diagnóstico, depuración de datos, migración mayor, roles, identidad visual, capacitación por equipo y plan de adopción.','Desde $2.500.000 + alcance','Empresa multioperación, alto volumen o requerimientos particulares.']
 ],[1.3,3.75,1.15,1.1])
 add_bullets(doc,[
  'Alternativa de cierre: descontar hasta el 50% del onboarding asistido u operacional contra el primer año pagado por anticipado. Evita que la carga inicial parezca una barrera, sin eliminar su valor.',
- 'Piloto recomendado: 60 días pagados a $250.000, acreditables al 100% a la implementación si se contrata un plan anual. No ofrecer pilotos ilimitados ni cargas masivas gratis.',
+ 'Piloto recomendado: 60 días pagados a $350.000, acreditables al 100% a la implementación si se contrata un plan anual. No ofrecer pilotos ilimitados ni cargas masivas gratis.',
  'La carga histórica, corrección de datos, parametrizaciones especiales e integraciones deben quedar fuera del precio base y documentarse en una orden de trabajo.'
 ])
 add_callout(doc,'Forma de vender la carga inicial','“Ustedes pueden cargar con plantillas y guía, o podemos dejar una operación real lista para trabajar. La diferencia es el alcance, el tiempo y el acompañamiento; la plataforma sigue siendo la misma.”',TEAL_D)
