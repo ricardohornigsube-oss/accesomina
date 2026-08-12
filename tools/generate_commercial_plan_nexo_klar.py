@@ -117,7 +117,7 @@ def make_diagram():
     im.save(IMG)
 
 make_diagram()
-doc=Document();sec=doc.sections[0];sec.top_margin=Inches(.62);sec.bottom_margin=Inches(.62);sec.left_margin=Inches(.72);sec.right_margin=Inches(.72);header_footer(sec)
+doc=Document();sec=doc.sections[0];sec.top_margin=Inches(.62);sec.bottom_margin=Inches(.62);sec.left_margin=Inches(.8);sec.right_margin=Inches(.8);header_footer(sec)
 
 # Cover
 doc.add_paragraph().paragraph_format.space_after=Pt(45)
@@ -125,7 +125,7 @@ p=doc.add_paragraph();r=p.add_run('NEXO KLAR SPA');r.bold=True;r.font.name='Aria
 p=doc.add_paragraph();p.paragraph_format.space_after=Pt(10);r=p.add_run('Plan Comercial\n2026–2027');r.bold=True;r.font.name='Arial';r.font.size=Pt(31);r.font.color.rgb=hexrgb(NAVY)
 p=doc.add_paragraph();p.paragraph_format.space_after=Pt(28);r=p.add_run('Funcionalidad, propuesta de valor, ventajas competitivas y estrategia para vender una plataforma SaaS de control operacional.');r.font.name='Arial';r.font.size=Pt(13);r.font.color.rgb=hexrgb(MUTED)
 add_callout(doc,'Objetivo','Transformar la funcionalidad existente en una oferta comercial simple: demostrar control, reducir riesgo operativo, acelerar la preparación de servicios y conservar la información dentro de cada empresa.',TEAL_D)
-add_centered_picture(doc,IMG,Inches(6.8))
+add_centered_picture(doc,IMG,Inches(6.25))
 p=doc.add_paragraph();p.alignment=WD_ALIGN_PARAGRAPH.CENTER;r=p.add_run('Documento interno para dirección, ventas y pilotos comerciales · 12 de agosto de 2026');r.font.name='Arial';r.font.size=Pt(8.5);r.font.color.rgb=hexrgb(MUTED)
 page_break(doc)
 
