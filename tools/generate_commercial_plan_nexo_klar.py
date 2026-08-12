@@ -72,6 +72,10 @@ def add_table(doc,headers,rows,widths=None):
     doc.add_paragraph().paragraph_format.space_after=Pt(2)
     return t
 def page_break(doc): doc.add_page_break()
+def add_centered_picture(doc, path, width):
+    p=doc.add_paragraph();p.alignment=WD_ALIGN_PARAGRAPH.CENTER
+    p.add_run().add_picture(str(path),width=width)
+    return p
 def header_footer(section):
     h=section.header.paragraphs[0];h.alignment=WD_ALIGN_PARAGRAPH.RIGHT;r=h.add_run('NEXO KLAR SPA · PLAN COMERCIAL');r.font.name='Arial';r.font.size=Pt(7.5);r.font.color.rgb=hexrgb(MUTED)
     f=section.footer.paragraphs[0];f.alignment=WD_ALIGN_PARAGRAPH.CENTER;r=f.add_run('Confidencial · Plan comercial 2026–2027');r.font.name='Arial';r.font.size=Pt(7.5);r.font.color.rgb=hexrgb(MUTED)
@@ -103,7 +107,7 @@ p=doc.add_paragraph();r=p.add_run('NEXO KLAR SPA');r.bold=True;r.font.name='Aria
 p=doc.add_paragraph();p.paragraph_format.space_after=Pt(10);r=p.add_run('Plan Comercial\n2026–2027');r.bold=True;r.font.name='Arial';r.font.size=Pt(31);r.font.color.rgb=hexrgb(NAVY)
 p=doc.add_paragraph();p.paragraph_format.space_after=Pt(28);r=p.add_run('Funcionalidad, propuesta de valor, ventajas competitivas y estrategia para vender una plataforma SaaS de control operacional.');r.font.name='Arial';r.font.size=Pt(13);r.font.color.rgb=hexrgb(MUTED)
 add_callout(doc,'Objetivo','Transformar la funcionalidad existente en una oferta comercial simple: demostrar control, reducir riesgo operativo, acelerar la preparación de servicios y conservar la información dentro de cada empresa.',TEAL_D)
-doc.add_picture(str(IMG),width=Inches(6.8))
+add_centered_picture(doc,IMG,Inches(6.8))
 p=doc.add_paragraph();p.alignment=WD_ALIGN_PARAGRAPH.CENTER;r=p.add_run('Documento interno para dirección, ventas y pilotos comerciales · 12 de agosto de 2026');r.font.name='Arial';r.font.size=Pt(8.5);r.font.color.rgb=hexrgb(MUTED)
 page_break(doc)
 
@@ -165,16 +169,48 @@ add_table(doc,['Perfil','Características','Decisor / usuario'],[
 add_body(doc,'La venta debe comenzar con un problema verificable y no con una lista de módulos: “¿Cuánto tiempo tardan en saber si una persona, vehículo o servicio está habilitado para ejecutar?”. Luego se demuestra el flujo conectado y se mide un indicador inicial.')
 add_callout(doc,'Oferta de entrada','Vender un piloto de 60 a 90 días con una operación acotada, una persona responsable del cliente, carga inicial guiada y objetivos medibles de tiempo, cumplimiento y trazabilidad.',PRIMARY)
 
-add_title(doc,'6. Oferta SaaS recomendada','Tres planes simples y servicios adicionales')
-add_table(doc,['Plan','Enfoque y módulos','Cliente objetivo','Precio referencial neto CLP'],[
- ['Nexo Klar Esencial','Clientes, contratos, órdenes de servicio, personas, alertas básicas, documentos, reportes, usuarios, configuración e importación/exportación.','Empresa que quiere dejar planillas y ordenar el control inicial.','$180.000/mes + setup $250.000'],
- ['Nexo Klar Operación','Todo Esencial + personal por proyecto, turnos, EPP, formación, exámenes, comunicaciones, vehículos, alojamiento, terceros, incidentes y centro operativo.','Empresa con servicios recurrentes y operación en terreno.','$320.000/mes + setup $350.000'],
- ['Nexo Klar Integral','Todo Operación + auditoría avanzada, habilitación, inventario, costos, rentabilidad, automatizaciones, portal, API, identidad visual y analítica ejecutiva.','Empresa multioperación o con alta exigencia de control y reportabilidad.','$520.000/mes + setup $500.000'],
- ['Adicional: Libro de obra digital','Registro formal, folios, evidencias, compromisos y solicitudes de firma.','Obras, montajes, servicios con hitos y trazabilidad contractual.','Cotizar por operación / proveedor de firma'],
- ['Adicional: Prospectos y oportunidades','Embudo, bitácora comercial, archivos, probabilidad y conversión a cliente.','Empresas que buscan conectar venta y operación.','Cotizar por plan o usuario comercial']
-],[1.25,3.05,1.65,1.35])
-add_body(doc,'Los precios son hipótesis comerciales iniciales para entrevistas y pilotos; deben ajustarse por número de personas, servicios activos, almacenamiento, acompañamiento, integraciones y nivel de soporte.')
-add_title(doc,'7. Estrategia de ventas','Proceso comercial repetible')
+add_title(doc,'6. Referencia de mercado y criterio de precio','Precio transparente, valor protegido y negociación simple')
+add_body(doc,'En Chile, gran parte de las plataformas de acreditación y gestión de contratistas cotiza según alcance, personas, sedes, documentos e implementación. En field service internacional se observa una combinación de suscripción por usuario, niveles funcionales, complementos y acompañamiento pagado. Nexo Klar debe ocupar esa lógica: una tarifa base clara, crecimiento por uso y servicios de implementación visibles.')
+add_table(doc,['Referencia pública','Modelo comercial observado','Implicancia para Nexo Klar'],[
+ ['FieldPulse','Precio por usuario y cotización personalizada por paquete; complementos de IA, flota, formularios y soporte.','Cobrar por escala y no esconder el valor de módulos o soporte especializado.'],
+ ['Housecall Pro','Planes públicos desde USD 59/mes y niveles superiores; suma usuarios y onboarding especializado en planes altos.','Mantener un plan de entrada simple y usar soporte/acompañamiento como diferenciador de niveles.'],
+ ['ServiceM8','Inicio autoguiado o implementación y capacitación con socios especializados.','Ofrecer carga autoguiada y carga asistida como alternativas, no una sola tarifa rígida.'],
+ ['Mercado chileno de contratistas','Plataformas de acreditación, cumplimiento y subcontratación normalmente solicitan cotización según empresa y alcance.','Posicionar Nexo Klar por valor integrado y cotización empresarial, manteniendo precios referenciales públicos.']
+],[1.45,2.65,3.2])
+add_callout(doc,'Criterio comercial','No competir solo por precio. El precio base debe abrir la conversación; la implementación, los activos adicionales, las integraciones y el soporte reflejan el esfuerzo real y se cotizan por alcance.',PRIMARY)
+
+add_title(doc,'7. Oferta SaaS recomendada','Tres planes claros, escalables y negociables')
+add_table(doc,['Plan','Incluye','Escala incluida','Precio lista neto CLP'],[
+ ['Nexo Klar Base','Panel, clientes, contratos, órdenes de servicio, personas, alertas, documentos, reportes base, usuarios, configuración e importación/exportación.','Hasta 30 personas activas y 5 usuarios nominados.','$220.000 / mes'],
+ ['Nexo Klar Operación','Todo Base + gestión de personal por proyecto, turnos, EPP, formación, exámenes, comunicaciones, vehículos, estadías, terceros, incidentes y Centro Operativo.','Hasta 75 personas activas y 10 usuarios nominados.','$390.000 / mes'],
+ ['Nexo Klar Integral','Todo Operación + auditoría avanzada, habilitación del cliente, activos e inventario, costos, rentabilidad, automatizaciones, portal, API e identidad visual por empresa.','Hasta 200 personas activas y 20 usuarios nominados.','$690.000 / mes']
+],[1.35,3.45,1.2,1.3])
+add_table(doc,['Crecimiento y adicionales','Precio lista neto CLP','Regla comercial'],[
+ ['Persona activa adicional','Base: $2.500 · Operación: $3.500 · Integral: $5.000 / mes','Cobrar solo sobre la dotación activa promedio del mes.'],
+ ['Libro de obra digital','Desde $95.000 / mes','Adicional por empresa; firma electrónica y mensajes se cobran según consumo del proveedor.'],
+ ['Prospectos y oportunidades','Desde $65.000 / mes','Adicional comercial para conectar preventa, seguimiento y conversión.'],
+ ['Integración, API o desarrollo específico','Desde $450.000 único + soporte mensual según alcance','Se cotiza después de una sesión de descubrimiento y no se promete como estándar.'],
+ ['Almacenamiento extraordinario, OCR, firma o mensajería','Costo de proveedor + administración Nexo Klar','Se informa por separado antes de activar el servicio.']
+],[2.15,1.55,3.6])
+add_body(doc,'Condición sugerida: contrato mínimo de 12 meses. Pago anual anticipado: 10% de descuento en la suscripción o bonificación parcial del onboarding, no ambos. Para clientes piloto, aplicar un descuento temporal y dejarlo expresamente limitado a los primeros 90 días.')
+
+page_break(doc)
+add_title(doc,'8. Carga inicial y onboarding','Alternativas claras para no regalar trabajo crítico')
+add_table(doc,['Alternativa','Alcance','Precio neto CLP','Cuándo ofrecerla'],[
+ ['Autoguiada','Plantillas, centro de ayuda, sesión de inicio de 90 minutos y revisión de carga del cliente.','Sin costo en contrato anual; $120.000 en mensual.','Empresa pequeña, datos ordenados y administrador disponible.'],
+ ['Asistida','Configuración base, carga de hasta 50 personas, 2 clientes, 3 contratos/órdenes, importación CSV y 2 sesiones de capacitación.','$390.000 único','Oferta estándar para la mayoría de empresas de servicios.'],
+ ['Operacional','Catálogos, matriz inicial, carga de hasta 150 personas, 5 clientes, 10 contratos/órdenes, recursos y 4 sesiones de capacitación.','$790.000 único','Cliente con varias operaciones, personal temporal o necesidad de partir rápido.'],
+ ['Corporativa','Diagnóstico, depuración de datos, migración mayor, roles, identidad visual, capacitación por equipo y plan de adopción.','Desde $1.500.000 + alcance','Empresa multioperación, alto volumen o requerimientos particulares.']
+],[1.3,3.75,1.15,1.1])
+add_bullets(doc,[
+ 'Alternativa de cierre: descontar hasta el 50% del onboarding asistido u operacional contra el primer año pagado por anticipado. Evita que la carga inicial parezca una barrera, sin eliminar su valor.',
+ 'Piloto recomendado: 60 días pagados a $250.000, acreditables al 100% a la implementación si se contrata un plan anual. No ofrecer pilotos ilimitados ni cargas masivas gratis.',
+ 'La carga histórica, corrección de datos, parametrizaciones especiales e integraciones deben quedar fuera del precio base y documentarse en una orden de trabajo.'
+])
+add_callout(doc,'Forma de vender la carga inicial','“Ustedes pueden cargar con plantillas y guía, o podemos dejar una operación real lista para trabajar. La diferencia es el alcance, el tiempo y el acompañamiento; la plataforma sigue siendo la misma.”',TEAL_D)
+
+page_break(doc)
+add_title(doc,'9. Estrategia de ventas','Proceso comercial repetible')
 add_table(doc,['Etapa','Acción','Entregable / métrica'],[
  ['1. Generar demanda','Contenido en LinkedIn, videos cortos por industria, red de contactos, alianzas con prevención/RR.HH. y referidos.','Lista de cuentas objetivo y reuniones calificadas.'],
  ['2. Descubrimiento','Entrevista de 30–45 minutos: proceso actual, planillas, servicios, documentos, personas, recursos y riesgo.','Mapa de dolor y caso de uso prioritario.'],
@@ -185,7 +221,7 @@ add_table(doc,['Etapa','Acción','Entregable / métrica'],[
 ],[1.05,3.1,3.15])
 add_callout(doc,'Regla de demo','No mostrar 30 pantallas. Mostrar un caso real con principio y fin: preparar un servicio, habilitar recursos, ejecutar, registrar evidencia y obtener un reporte.',TEAL_D)
 
-add_title(doc,'8. Plan de marketing de 90 días','Construir confianza antes de escalar')
+add_title(doc,'10. Plan de marketing de 90 días','Construir confianza antes de escalar')
 add_table(doc,['Periodo','Acciones principales','Resultado esperado'],[
  ['Días 1–30','Definir 3 industrias foco, página por caso de uso, demo con datos realistas, presentación comercial, guion de diagnóstico y 20 cuentas objetivo.','Mensaje claro y base de prospección.'],
  ['Días 31–60','Publicar 2 contenidos semanales, enviar mensajes personalizados, realizar demos, seleccionar 1–2 pilotos y levantar línea base.','Primeros pilotos y aprendizaje comercial.'],
@@ -198,7 +234,7 @@ add_bullets(doc,[
 ])
 page_break(doc)
 
-add_title(doc,'9. Métricas de venta y adopción','Cómo medir el plan')
+add_title(doc,'11. Métricas de venta y adopción','Cómo medir el plan')
 add_table(doc,['Nivel','Indicadores propuestos'],[
  ['Demanda','Cuentas objetivo contactadas, tasa de respuesta, reuniones de descubrimiento, demos realizadas y costo por reunión.'],
  ['Conversión','Demo → piloto, piloto → contrato anual, ciclo comercial, ticket mensual, setup vendido y adicionales activados.'],
@@ -214,7 +250,7 @@ add_table(doc,['Escenario','Clientes al mes 12','MRR estimado','Supuestos'],[
 ],[1.3,1.6,1.6,2.8])
 add_body(doc,'Estas proyecciones son escenarios de planificación, no promesas de facturación. Deben revisarse mensualmente con tasas reales de reunión, demo, piloto, cierre y churn.')
 
-add_title(doc,'10. Riesgos comerciales y cómo manejarlos','Vender con claridad')
+add_title(doc,'12. Riesgos comerciales y cómo manejarlos','Vender con claridad')
 add_table(doc,['Riesgo','Cómo tratarlo comercialmente'],[
  ['Prometer IA o firma como si ya estuvieran activas','Presentar OCR, firma, WhatsApp y validación documental como conectores preparados que requieren proveedor y configuración.'],
  ['Demasiados módulos en la primera demo','Partir con un proceso crítico y expandir por plan/adicionales.'],
@@ -225,7 +261,7 @@ add_table(doc,['Riesgo','Cómo tratarlo comercialmente'],[
 ],[2.3,4.7])
 add_callout(doc,'Decisión recomendada','Iniciar ventas con un piloto acotado en mantenimiento industrial, construcción o facilities; conservar minería como caso de uso profundo. Consolidar 2 casos de éxito antes de comprometer una expansión masiva o integraciones complejas.',AMBER)
 
-add_title(doc,'11. Próximos pasos de dirección','Plan de ejecución')
+add_title(doc,'13. Próximos pasos de dirección','Plan de ejecución')
 add_bullets(doc,[
  'Aprobar la oferta comercial de tres planes y los adicionales Libro de obra digital y Prospectos y oportunidades.',
  'Elegir tres industrias foco y preparar una demo específica para cada una usando la misma base funcional.',
@@ -237,11 +273,11 @@ add_bullets(doc,[
 add_callout(doc,'Cierre','Nexo Klar ya tiene la amplitud funcional para vender control operacional integrado. El foco comercial debe ser hacer tangible el valor: menos búsqueda, menos riesgo, más continuidad y decisiones con información conectada.',PRIMARY)
 add_heading(doc,'Referencias de mercado utilizadas')
 add_bullets(doc,[
- 'HabiPass: gestión de cumplimiento documental para contratistas en Chile.',
- 'Verify, SubCheck, PreveSafe y Fácil Control: control documental, subcontratación, alertas y trazabilidad de contratistas.',
- 'Praxedo: gestión de servicios técnicos en terreno, cuadrillas y operación de field service.',
- 'PlanningP3 y Worklite: operación, mantenimiento, inspecciones, prevención y contratistas.',
- 'Los precios del documento son una propuesta comercial de Nexo Klar y no una reproducción de tarifas de terceros.'
+ 'FieldPulse, página de precios: modelo por usuario, cotización por paquete y complementos operacionales (fieldpulse.com/pricing).',
+ 'Housecall Pro, página de precios: plan de entrada publicado desde USD 59/mes y acompañamiento especializado en niveles altos (housecallpro.com/pricing).',
+ 'ServiceM8, página de precios: alternativas de inicio autoguiado o implementación/capacitación con socios (servicem8.com/pricing).',
+ 'Codelco SUCAL, SmartCheck, SubCheck, Fácil Control, Vigenty y Documental.cl: referencias locales para acreditación, contratistas, trabajadores, vehículos y matrices de cumplimiento.',
+ 'Los valores en pesos chilenos de este documento son una propuesta comercial de Nexo Klar, no una reproducción de tarifas de terceros; se deben validar con clientes piloto y costos de soporte/cloud reales.'
 ])
 
 doc.save(str(OUT))
