@@ -36,7 +36,7 @@ def set_cell(cell, text, bold=False, color=NAVY, size=9, align=None):
     for cell_p in cell.paragraphs:
         cell_p.paragraph_format.space_after=Pt(3);cell_p.paragraph_format.space_before=Pt(3)
 def add_title(doc, text, subtitle=None):
-    p=doc.add_paragraph();p.paragraph_format.space_after=Pt(6)
+    p=doc.add_paragraph();p.paragraph_format.space_before=Pt(12);p.paragraph_format.space_after=Pt(6)
     r=p.add_run(text);r.bold=True;r.font.name='Arial';r.font.size=Pt(24);r.font.color.rgb=hexrgb(NAVY)
     if subtitle:
         p=doc.add_paragraph();p.paragraph_format.space_after=Pt(12)
@@ -140,6 +140,7 @@ add_table(doc,['Aspecto','Síntesis comercial'],[
 ],[1.55,5.25])
 add_callout(doc,'Mensaje central','“Nexo Klar ayuda a que la operación no dependa de planillas ni de una persona. Cada dato queda conectado, vigente y disponible para quien debe decidir o ejecutar.”',PRIMARY)
 
+page_break(doc)
 add_title(doc,'2. Revisión de funcionalidad y usabilidad','Valor real que hoy puede demostrarse')
 add_body(doc,'La plataforma cuenta con una base funcional amplia y conectada. La revisión automática actual registra 123 pruebas correctas, incluyendo relaciones entre módulos, aislamiento multiempresa, validación de duplicados, archivos, inventario, libro de obra, importación y exportación.')
 add_table(doc,['Bloque funcional','Qué resuelve para el cliente','Beneficio visible'],[
@@ -149,7 +150,7 @@ add_table(doc,['Bloque funcional','Qué resuelve para el cliente','Beneficio vis
  ['Ejecución y calidad','Centro operativo, libro de obra, incidentes, no conformidades, CAPA y auditoría.','Registrar evidencia, compromisos y acciones correctivas.'],
  ['Gobierno y decisión','Alertas, reportes, permisos, bitácora, privacidad, configuración e importación/exportación.','Control ejecutivo, continuidad y capacidad de auditoría.']
 ],[1.55,3.5,1.75])
-add_body(doc,'<b>Lectura de usabilidad.</b> La principal fortaleza es que el usuario puede iniciar desde un cliente, contrato u orden de servicio y llegar a las personas, documentos, recursos y evidencia relacionados. Esto reduce búsquedas y evita mantener registros paralelos.',bold_prefix='<b>Lectura de usabilidad.</b>')
+add_body(doc,'Lectura de usabilidad. La principal fortaleza es que el usuario puede iniciar desde un cliente, contrato u orden de servicio y llegar a las personas, documentos, recursos y evidencia relacionados. Esto reduce búsquedas y evita mantener registros paralelos.',bold_prefix='Lectura de usabilidad.')
 page_break(doc)
 
 add_title(doc,'3. Ventajas y beneficios comerciales','Por qué un cliente compraría Nexo Klar')
@@ -242,6 +243,7 @@ add_table(doc,['Etapa','Acción','Entregable / métrica'],[
 ],[1.05,3.1,3.15])
 add_callout(doc,'Regla de demo','No mostrar 30 pantallas. Mostrar un caso real con principio y fin: preparar un servicio, habilitar recursos, ejecutar, registrar evidencia y obtener un reporte.',TEAL_D)
 
+page_break(doc)
 add_title(doc,'10. Plan de marketing de 90 días','Construir confianza antes de escalar')
 add_table(doc,['Periodo','Acciones principales','Resultado esperado'],[
  ['Días 1–30','Definir 3 industrias foco, página por caso de uso, demo con datos realistas, presentación comercial, guion de diagnóstico y 20 cuentas objetivo.','Mensaje claro y base de prospección.'],
@@ -271,6 +273,7 @@ add_table(doc,['Escenario','Clientes al mes 12','MRR estimado','Supuestos'],[
 ],[1.3,1.6,1.6,2.8])
 add_body(doc,'Estas proyecciones son escenarios de planificación, no promesas de facturación. Deben revisarse mensualmente con tasas reales de reunión, demo, piloto, cierre y churn.')
 
+page_break(doc)
 add_title(doc,'12. Riesgos comerciales y cómo manejarlos','Vender con claridad')
 add_table(doc,['Riesgo','Cómo tratarlo comercialmente'],[
  ['Prometer IA o firma como si ya estuvieran activas','Presentar OCR, firma, WhatsApp y validación documental como conectores preparados que requieren proveedor y configuración.'],
@@ -282,6 +285,7 @@ add_table(doc,['Riesgo','Cómo tratarlo comercialmente'],[
 ],[2.3,4.7])
 add_callout(doc,'Decisión recomendada','Iniciar ventas con un piloto acotado en mantenimiento industrial, construcción o facilities; conservar minería como caso de uso profundo. Consolidar 2 casos de éxito antes de comprometer una expansión masiva o integraciones complejas.',AMBER)
 
+page_break(doc)
 add_title(doc,'13. Próximos pasos de dirección','Plan de ejecución')
 add_bullets(doc,[
  'Aprobar la oferta comercial de tres planes y los adicionales Libro de obra digital y Prospectos y oportunidades.',
