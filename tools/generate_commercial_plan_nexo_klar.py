@@ -15,6 +15,7 @@ OUT = ROOT / 'docs' / 'Plan_Comercial_Nexo_Klar_2026_2027.docx'
 IMG = ROOT / 'docs' / '_plan_comercial_nexo_klar_flujo.png'
 
 NAVY='141A20'; INDIGO='2A2A8C'; PRIMARY=INDIGO; DEEP='1A1A5E'; TEAL='00CFC1'; TEAL_D='00706A'; MUTED='5D6B7A'; LINE='E3DED2'; PALE='F0F0FA'; ALT='FBF9F5'; GREEN='1B7F4B'; AMBER='C77700'; RED='B3261E'
+CONTENT_WIDTH=6.6
 
 def hexrgb(value): return RGBColor.from_string(value)
 def shade(cell, color):
@@ -28,6 +29,13 @@ def border(cell, color=LINE, size='8'):
         el.set(qn('w:val'),'single');el.set(qn('w:sz'),size);el.set(qn('w:color'),color)
 def prevent_row_split(row):
     trPr=row._tr.get_or_add_trPr();el=OxmlElement('w:cantSplit');trPr.append(el)
+def cell_padding(cell, top=90, start=110, bottom=90, end=110):
+    tcPr=cell._tc.get_or_add_tcPr();mar=tcPr.first_child_found_in('w:tcMar')
+    if mar is None: mar=OxmlElement('w:tcMar');tcPr.append(mar)
+    for side,value in [('top',top),('start',start),('bottom',bottom),('end',end)]:
+        node=mar.find(qn('w:'+side))
+        if node is None: node=OxmlElement('w:'+side);mar.append(node)
+        node.set(qn('w:w'),str(value));node.set(qn('w:type'),'dxa')
 def set_cell(cell, text, bold=False, color=NAVY, size=9, align=None):
     cell.text='';p=cell.paragraphs[0]
     if align is not None:p.alignment=align
@@ -57,32 +65,41 @@ def add_bullets(doc,items):
         r=p.add_run(item);r.font.name='Arial';r.font.size=Pt(9.5);r.font.color.rgb=hexrgb(NAVY)
 def add_callout(doc,title,text,color=TEAL_D):
     t=doc.add_table(rows=1,cols=2);t.alignment=WD_TABLE_ALIGNMENT.CENTER;t.autofit=False
-    t.columns[0].width=Inches(1.35);t.columns[1].width=Inches(5.75)
+    t.columns[0].width=Inches(1.2);t.columns[1].width=Inches(5.4)
     c1,c2=t.rows[0].cells;shade(c1,'EAFBF9');shade(c2,'EAFBF9');border(c1,'BDEDE8');border(c2,'BDEDE8')
+    cell_padding(c1);cell_padding(c2)
     set_cell(c1,title,True,color,9);set_cell(c2,text,False,NAVY,9)
     doc.add_paragraph().paragraph_format.space_after=Pt(1)
 def add_table(doc,headers,rows,widths=None):
     t=doc.add_table(rows=1,cols=len(headers));t.alignment=WD_TABLE_ALIGNMENT.CENTER;t.autofit=False
+    scaled=None
+    if widths:
+        factor=CONTENT_WIDTH/sum(widths);scaled=[w*factor for w in widths]
     for i,h in enumerate(headers):
-        if widths:t.columns[i].width=Inches(widths[i])
+        if scaled:t.columns[i].width=Inches(scaled[i])
         shade(t.rows[0].cells[i],DEEP);border(t.rows[0].cells[i],DEEP);set_cell(t.rows[0].cells[i],h,True,'FFFFFF',8.5)
+        cell_padding(t.rows[0].cells[i])
     for idx,row in enumerate(rows):
         cells=t.add_row().cells
         for i,v in enumerate(row):
-            if widths:cells[i].width=Inches(widths[i])
+            if scaled:cells[i].width=Inches(scaled[i])
             shade(cells[i],ALT if idx%2==0 else 'FFFFFF');border(cells[i]);set_cell(cells[i],v,False,NAVY,8.5)
+            cell_padding(cells[i])
+        prevent_row_split(t.rows[-1])
     doc.add_paragraph().paragraph_format.space_after=Pt(2)
     return t
 def add_plan_card(doc, plan, focus, price, annual, scale, modules, value):
     t=doc.add_table(rows=1,cols=2);t.alignment=WD_TABLE_ALIGNMENT.CENTER;t.autofit=False
-    t.columns[0].width=Inches(1.55);t.columns[1].width=Inches(5.55)
+    t.columns[0].width=Inches(1.5);t.columns[1].width=Inches(5.1)
     left,right=t.rows[0].cells;header=left.merge(right);shade(header,DEEP);border(header,DEEP)
+    cell_padding(header,105,135,105,135)
     set_cell(header,plan+'  |  '+price,True,'FFFFFF',12)
     prevent_row_split(t.rows[0])
     for label,content in [('Enfoque',focus),('Escala incluida',scale),('Módulos principales',modules),('Valor que habilita',value)]:
         cells=t.add_row().cells
-        cells[0].width=Inches(1.55);cells[1].width=Inches(5.55)
+        cells[0].width=Inches(1.5);cells[1].width=Inches(5.1)
         shade(cells[0],PALE);shade(cells[1],'FFFFFF');border(cells[0]);border(cells[1])
+        cell_padding(cells[0]);cell_padding(cells[1])
         set_cell(cells[0],label,True,DEEP,8.5)
         set_cell(cells[1],content,False,NAVY,8.8)
         prevent_row_split(t.rows[-1])
@@ -91,9 +108,13 @@ def add_plan_card(doc, plan, focus, price, annual, scale, modules, value):
     return t
 def page_break(doc): doc.add_page_break()
 def add_centered_picture(doc, path, width):
-    p=doc.add_paragraph();p.alignment=WD_ALIGN_PARAGRAPH.CENTER
+    t=doc.add_table(rows=1,cols=1);t.alignment=WD_TABLE_ALIGNMENT.CENTER;t.autofit=False
+    t.columns[0].width=Inches(CONTENT_WIDTH)
+    cell=t.cell(0,0);shade(cell,'FFFFFF');border(cell,'D9DCE8','12');cell_padding(cell,130,130,130,130)
+    p=cell.paragraphs[0];p.alignment=WD_ALIGN_PARAGRAPH.CENTER
     p.add_run().add_picture(str(path),width=width)
-    return p
+    doc.add_paragraph().paragraph_format.space_after=Pt(1)
+    return t
 def header_footer(section):
     h=section.header.paragraphs[0];h.alignment=WD_ALIGN_PARAGRAPH.RIGHT;r=h.add_run('NEXO KLAR SPA · PLAN COMERCIAL');r.font.name='Arial';r.font.size=Pt(7.5);r.font.color.rgb=hexrgb(MUTED)
     f=section.footer.paragraphs[0];f.alignment=WD_ALIGN_PARAGRAPH.CENTER;r=f.add_run('Confidencial · Plan comercial 2026–2027');r.font.name='Arial';r.font.size=Pt(7.5);r.font.color.rgb=hexrgb(MUTED)
@@ -125,7 +146,7 @@ p=doc.add_paragraph();r=p.add_run('NEXO KLAR SPA');r.bold=True;r.font.name='Aria
 p=doc.add_paragraph();p.paragraph_format.space_after=Pt(10);r=p.add_run('Plan Comercial\n2026–2027');r.bold=True;r.font.name='Arial';r.font.size=Pt(31);r.font.color.rgb=hexrgb(NAVY)
 p=doc.add_paragraph();p.paragraph_format.space_after=Pt(28);r=p.add_run('Funcionalidad, propuesta de valor, ventajas competitivas y estrategia para vender una plataforma SaaS de control operacional.');r.font.name='Arial';r.font.size=Pt(13);r.font.color.rgb=hexrgb(MUTED)
 add_callout(doc,'Objetivo','Transformar la funcionalidad existente en una oferta comercial simple: demostrar control, reducir riesgo operativo, acelerar la preparación de servicios y conservar la información dentro de cada empresa.',TEAL_D)
-add_centered_picture(doc,IMG,Inches(6.25))
+add_centered_picture(doc,IMG,Inches(6.0))
 p=doc.add_paragraph();p.alignment=WD_ALIGN_PARAGRAPH.CENTER;r=p.add_run('Documento interno para dirección, ventas y pilotos comerciales · 12 de agosto de 2026');r.font.name='Arial';r.font.size=Pt(8.5);r.font.color.rgb=hexrgb(MUTED)
 page_break(doc)
 
