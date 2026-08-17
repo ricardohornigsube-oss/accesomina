@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nexo Klar | Sistema visual Pulso</title>
+  <style>
+    :root{--navy:#071B4A;--blue:#1358C8;--teal:#00B8B0;--sky:#6E9EEB;--ink:#101B33;--muted:#5D6B82;--line:#DCE4F0;--surface:#F6F8FC;--white:#fff}
+    *{box-sizing:border-box} body{margin:0;background:var(--surface);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .wrap{max-width:1240px;margin:auto;padding:54px 28px 78px}.eyebrow{font-size:12px;letter-spacing:.15em;text-transform:uppercase;font-weight:800;color:var(--blue);margin:0 0 12px}
+    h1{font-size:clamp(36px,5vw,62px);line-height:1.02;letter-spacing:-.045em;margin:0;max-width:850px}h2{font-size:24px;letter-spacing:-.02em;margin:0 0 9px}p{line-height:1.55;color:var(--muted);margin:0}.intro{font-size:19px;max-width:780px;margin:18px 0 36px}
+    .top{display:flex;justify-content:space-between;gap:22px;align-items:center;padding-bottom:26px;border-bottom:1px solid var(--line);margin-bottom:56px}.top small{font-weight:800;color:var(--muted);letter-spacing:.06em}.pill{padding:9px 13px;border:1px solid var(--line);border-radius:999px;background:white;font-size:13px;font-weight:700;color:var(--navy)}
+    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:24px}.card{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:28px}.card.dark{background:var(--navy);border-color:var(--navy);color:white}.card.dark p{color:#CCDAF5}.lockup{display:flex;align-items:center;gap:19px}.wordmark{font-size:38px;line-height:.95;letter-spacing:-.055em;font-weight:800;color:var(--navy)}.tagline{margin-top:7px;color:var(--muted);font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}.dark .wordmark{color:#fff}.dark .tagline{color:#B4D9F5}
+    .pulse{height:84px;width:100px;display:grid;grid-template-columns:repeat(4,1fr);gap:7px;align-items:end;transform:skewY(-5deg)}.pulse span{display:flex;flex-direction:column-reverse;gap:6px;align-items:stretch}.pulse i{display:block;height:10px;border-radius:999px;background:var(--navy)}.pulse span:nth-child(2) i{background:var(--blue)}.pulse span:nth-child(3) i{background:var(--teal)}.pulse span:nth-child(4) i{background:var(--sky)}.pulse span:nth-child(1) i:nth-child(1),.pulse span:nth-child(4) i:nth-child(4){opacity:.45}.pulse.compact{height:54px;width:64px;gap:4px}.pulse.compact i{height:7px}.vertical{text-align:center;display:grid;place-items:center;gap:15px}.vertical .pulse{transform:skewY(-5deg)}.vertical .wordmark{font-size:31px;line-height:.92}
+    .section{margin-top:58px}.section-head{display:flex;justify-content:space-between;align-items:end;gap:18px;margin-bottom:18px}.section-head p{max-width:570px}.palettes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.palette{border:1px solid var(--line);background:#fff;border-radius:12px;padding:18px;cursor:pointer;transition:.18s box-shadow,.18s transform}.palette:hover{box-shadow:0 10px 24px rgba(7,27,74,.1);transform:translateY(-2px)}.palette.active{outline:3px solid var(--teal);outline-offset:1px}.palette b{display:block;font-size:15px;margin-bottom:5px}.palette small{color:var(--muted);display:block;line-height:1.35;min-height:34px}.swatches{display:flex;gap:7px;margin-top:15px}.swatches span{width:29px;height:29px;border-radius:8px;border:1px solid rgba(16,27,51,.12)}
+    .rules{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.rule{border-left:4px solid var(--teal);padding:5px 4px 5px 14px}.rule b{font-size:15px;display:block;margin-bottom:5px}.rule p{font-size:14px}.applications{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:14px}.app{min-height:210px;border:1px solid var(--line);border-radius:12px;padding:22px;background:white;display:flex;align-items:center;justify-content:center}.app.night{background:var(--navy);border-color:var(--navy)}.app.credit{background:linear-gradient(135deg,#061330,#102E69)}.app .lockup{transform:scale(.86)}.app .vertical{transform:scale(.82)}
+    .recommend{margin-top:26px;padding:24px 26px;background:#E9FBF9;border:1px solid #A7E9E3;border-radius:12px;display:grid;grid-template-columns:auto 1fr;gap:18px}.recommend strong{font-size:13px;color:var(--teal);letter-spacing:.1em}.recommend p{color:#174550;font-size:15px}.footer{margin-top:55px;padding-top:20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:14px;color:var(--muted);font-size:12px}
+    @media(max-width:760px){.wrap{padding:28px 18px 45px}.top{margin-bottom:38px}.grid,.palettes,.rules,.applications{grid-template-columns:1fr}.section{margin-top:40px}.wordmark{font-size:30px}.pulse{transform:scale(.8);transform-origin:left center;margin-right:-18px}.footer{display:block}.footer span{display:block;margin:6px 0}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="top"><div><p class="eyebrow">Nexo Klar · Sistema visual</p><small>Logo Pulso · Corrección de color y aplicaciones</small></div><span class="pill">Versión recomendada 2026</span></header>
+    <p class="eyebrow">Concepto aprobado</p><h1>Flujo inteligente.<br>Conecta. Optimiza. Impulsa.</h1><p class="intro">Se mantiene el isotipo Pulso: una secuencia de bloques que representa cómo la información, las personas y los recursos se conectan para mover la operación con claridad.</p>
+
+    <section class="grid">
+      <article class="card"><p class="eyebrow">Logo horizontal</p><div class="lockup"><div class="pulse"><span><i></i><i></i></span><span><i></i><i></i><i></i></span><span><i></i><i></i><i></i><i></i></span><span><i></i><i></i></span></div><div><div class="wordmark">Nexo Klar</div><div class="tagline">Gestión inteligente de recursos</div></div></div></article>
+      <article class="card dark"><p class="eyebrow" style="color:#67D9D3">Aplicación oscura</p><div class="lockup"><div class="pulse"><span><i></i><i></i></span><span><i></i><i></i><i></i></span><span><i></i><i></i><i></i><i></i></span><span><i></i><i></i></span></div><div><div class="wordmark">Nexo Klar</div><div class="tagline">Datos claros · Operación conectada</div></div></div></article>
+    </section>
+
+    <section class="section"><div class="section-head"><div><p class="eyebrow">Paletas de color</p><h2>Alternativas para el mismo logo</h2></div><p>Selecciona una alternativa para ver el logo y las aplicaciones. Todas conservan el símbolo Pulso y privilegian contraste, claridad y uso corporativo.</p></div>
+      <div class="palettes" id="palettes"></div>
+    </section>
+
+    <section class="section"><div class="section-head"><div><p class="eyebrow">Criterios de uso</p><h2>Correcciones recomendadas</h2></div></div>
+      <div class="rules"><div class="rule"><b>Azul noche como estructura</b><p>Para tipografía principal, fondos institucionales y navegación. Entrega presencia corporativa sin verse pesado.</p></div><div class="rule"><b>Turquesa como acción</b><p>Reservado para conexión, avance, interacción y elementos clave; no se utiliza como color dominante de texto largo.</p></div><div class="rule"><b>Sin ámbar ni coral en la marca</b><p>Se eliminan de la identidad para reservar los colores cálidos a alertas, advertencias y estados del producto.</p></div></div>
+      <div class="recommend"><strong>RECOMENDACIÓN</strong><p><b>Usar “Pulso Azul” como versión oficial.</b> Es la que mejor conserva el lenguaje del logo original, funciona sobre blanco y azul noche, y permite que los colores funcionales de la plataforma mantengan una semántica clara.</p></div>
+    </section>
+
+    <section class="section"><div class="section-head"><div><p class="eyebrow">Aplicaciones</p><h2>El mismo sistema, en distintos contextos</h2></div></div>
+      <div class="applications"><div class="app"><div class="lockup"><div class="pulse"><span><i></i><i></i></span><span><i></i><i></i><i></i></span><span><i></i><i></i><i></i><i></i></span><span><i></i><i></i></span></div><div><div class="wordmark">Nexo Klar</div><div class="tagline">Gestión inteligente de recursos</div></div></div></div><div class="app night"><div class="vertical"><div class="pulse"><span><i></i><i></i></span><span><i></i><i></i><i></i></span><span><i></i><i></i><i></i><i></i></span><span><i></i><i></i></span></div><div><div class="wordmark" style="color:#fff">Nexo<br>Klar</div><div class="tagline" style="color:#B4D9F5">Operación conectada</div></div></div></div><div class="app credit"><div class="pulse compact"><span><i></i><i></i></span><span><i></i><i></i><i></i></span><span><i></i><i></i><i></i><i></i></span><span><i></i><i></i></span></div></div></div>
+    </section>
+    <footer class="footer"><span>Nexo Klar · Identidad visual Pulso</span><span>Azul Nexo + Turquesa · Fondo blanco y modo oscuro</span></footer>
+  </main>
+  <script>
+    const choices=[
+      {name:'Pulso Azul · Recomendada',note:'Corporativa, tecnológica y de alto contraste.',navy:'#071B4A',blue:'#1358C8',teal:'#00B8B0',sky:'#6E9EEB',surface:'#F6F8FC'},
+      {name:'Pulso Profundo',note:'Más sobria para industria, contratos y gobierno.',navy:'#041738',blue:'#236AC9',teal:'#00A9A5',sky:'#A2C0F4',surface:'#F5F8FC'},
+      {name:'Pulso Petróleo',note:'Cercana a servicios en terreno y sostenibilidad.',navy:'#0A3840',blue:'#14608E',teal:'#00B8B0',sky:'#80C8D2',surface:'#F4FAFA'},
+      {name:'Pulso Nocturno',note:'Versión para producto oscuro y aplicaciones premium.',navy:'#0A1230',blue:'#255DCF',teal:'#1BD1C5',sky:'#7FA6F5',surface:'#F5F7FD'},
+      {name:'Pulso Monocromo',note:'Uso institucional, timbres, grabado y bordado.',navy:'#15243D',blue:'#15243D',teal:'#15243D',sky:'#93A5BD',surface:'#F7F9FC'},
+      {name:'Pulso Claro',note:'Alternativa amable para comunicaciones y onboarding.',navy:'#123C79',blue:'#2875D9',teal:'#00AFA9',sky:'#8DB8F2',surface:'#FAFCFF'}
+    ];
+    const root=document.documentElement, box=document.getElementById('palettes'); let active=0;
+    function paint(n){active=n;const c=choices[n];root.style.setProperty('--navy',c.navy);root.style.setProperty('--blue',c.blue);root.style.setProperty('--teal',c.teal);root.style.setProperty('--sky',c.sky);root.style.setProperty('--surface',c.surface);box.innerHTML=choices.map((x,i)=>`<button class="palette ${i===active?'active':''}" aria-label="Aplicar ${x.name}"><b>${x.name}</b><small>${x.note}</small><span class="swatches"><span style="background:${x.navy}"></span><span style="background:${x.blue}"></span><span style="background:${x.teal}"></span><span style="background:${x.sky}"></span></span></button>`).join('');[...box.children].forEach((el,i)=>el.onclick=()=>paint(i));}
+    paint(0);
+  </script>
+</body>
+</html>
