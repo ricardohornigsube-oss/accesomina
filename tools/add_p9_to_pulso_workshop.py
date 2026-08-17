@@ -1,4 +1,5 @@
 from pathlib import Path
+import base64
 
 source = Path('/Users/ricardo.hornig/Library/Containers/net.whatsapp.WhatsApp/Data/tmp/documents/1D21FF2C-6571-4CEE-A488-EBD2F17601A2/Nexo Klar - Pulso - Taller de cierre.html')
 root = Path('/Users/ricardo.hornig/Desktop/Acceso Mina /Acceso Mina')
@@ -7,6 +8,11 @@ outputs = (
     root / 'docs/Nexo Klar - Pulso - Taller de cierre P9.html',
     Path('/Users/ricardo.hornig/Documents/Acceso Mina /Acceso Mina/docs/Nexo Klar - Pulso - Taller de cierre P9.html'),
 )
+
+assets = Path('/Users/ricardo.hornig/Desktop/Nexo Klar/Logo Pulso - Recursos')
+p9_horizontal = base64.b64encode((assets / 'Nexo Klar - Logo horizontal.png').read_bytes()).decode('ascii')
+p9_isotipo = base64.b64encode((assets / 'Nexo Klar - Isotipo.png').read_bytes()).decode('ascii')
+p9_vertical = base64.b64encode((assets / 'Nexo Klar - Logo vertical.png').read_bytes()).decode('ascii')
 
 text = source.read_text(encoding='utf-8')
 
@@ -19,12 +25,12 @@ def replace_once(before: str, after: str) -> None:
 
 replace_once(
     '[\\"P8\\",\\"Diagonal\\",\\"Base inclinada\\"]\\n];',
-    '[\\"P8\\",\\"Diagonal\\",\\"Base inclinada\\"],\\n  [\\"P9\\",\\"Pulso · referencia\\",\\"Logo recibido\\"]\\n];',
+    '[\\"P8\\",\\"Diagonal\\",\\"Base inclinada\\"],\\n  [\\"P9\\",\\"Pulso · logo final\\",\\"Aplicaciones recibidas\\"]\\n];',
 )
 replace_once('variante: \\"P5\\", m1:', 'variante: \\"P9\\", m1:')
 replace_once('Ocho variantes del concepto aprobado.', 'Nueve variantes del concepto aprobado, incluida P9 como referencia del logo recibido.')
 replace_once('P5 Tejido como marca, P1 Pulso como reducción.', 'P5 Tejido como marca, P1 Pulso como reducción y P9 como referencia del logo recibido.')
-replace_once('variante: s.variante, nombreVar,', 'variante: s.variante, marcaVariante: s.variante === \\"P9\\" ? \\"P1\\" : s.variante, nombreVar,')
+replace_once('variante: s.variante, nombreVar,', 'variante: s.variante, marcaVariante: s.variante === \\"P9\\" ? \\"P1\\" : s.variante, esP9: s.variante === \\"P9\\", nombreVar,')
 replace_once(
     'VARIANTES.map(([id, nombre]) => ({\\n        id, nombre,',
     'VARIANTES.map(([id, nombre]) => ({\\n        id, nombre, marcaVariante: id === \\"P9\\" ? \\"P1\\" : id,',
@@ -36,6 +42,12 @@ replace_once(
 text = text.replace('variante=\\"{{ variante }}\\"', 'variante=\\"{{ marcaVariante }}\\"')
 text = text.replace('variante=\\"{{ v.id }}\\"', 'variante=\\"{{ v.marcaVariante }}\\"')
 text = text.replace('variante=\\"{{ g.id }}\\"', 'variante=\\"{{ g.marcaVariante }}\\"')
+
+p9_panel = f'''\n  <sc-if value=\\"{{{{ esP9 }}}}\\" hint-placeholder-val=\\"{{{{ true }}}}\\">\n    <div style=\\"display:grid;grid-template-columns:minmax(220px,1.5fr) 110px 160px;gap:18px;align-items:center;border:1px solid #2A2A8C;border-left:5px solid #00CFC1;border-radius:6px;background:#FFFFFF;padding:18px 20px;\\">\n      <div><div style=\\"font:700 10px/1 Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#2A2A8C;margin-bottom:8px;\\">P9 · Pulso · logo final</div><img alt=\\"Nexo Klar P9 horizontal\\" src=\\"data:image/png;base64,{p9_horizontal}\\" style=\\"display:block;width:100%;max-width:430px;height:auto;\\"></div>\n      <div style=\\"border-left:1px solid #DCD5C6;padding-left:18px;\\"><img alt=\\"Nexo Klar P9 isotipo\\" src=\\"data:image/png;base64,{p9_isotipo}\\" style=\\"display:block;width:90px;height:auto;\\"></div>\n      <div style=\\"border-left:1px solid #DCD5C6;padding-left:18px;\\"><img alt=\\"Nexo Klar P9 vertical\\" src=\\"data:image/png;base64,{p9_vertical}\\" style=\\"display:block;width:125px;height:auto;\\"></div>\n    </div>\n  <\\u002Fsc-if>\n'''
+replace_once(
+    '<main style=\\"display:flex;flex-direction:column;gap:20px;min-width:0;\\">\\n\\n  <div style=',
+    '<main style=\\"display:flex;flex-direction:column;gap:20px;min-width:0;\\">' + p9_panel + '\\n  <div style=',
+)
 
 for output in outputs:
     output.parent.mkdir(parents=True, exist_ok=True)
