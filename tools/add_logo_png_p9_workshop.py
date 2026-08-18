@@ -5,10 +5,10 @@ source = Path('/Users/ricardo.hornig/Downloads/Nexo Klar - Pulso - Taller de cie
 logo = Path('/Users/ricardo.hornig/Downloads/Logo.png')
 root = Path('/Users/ricardo.hornig/Desktop/Acceso Mina /Acceso Mina')
 outputs = (
-    Path('/Users/ricardo.hornig/Downloads/Nexo Klar - Pulso - Taller de cierre P9 - Logo integrado.html'),
-    Path('/Users/ricardo.hornig/Desktop/Nexo Klar/Nexo Klar - Pulso - Taller de cierre P9 - Logo integrado.html'),
-    root / 'docs/Nexo Klar - Pulso - Taller de cierre P9 - Logo integrado.html',
-    Path('/Users/ricardo.hornig/Documents/Acceso Mina /Acceso Mina/docs/Nexo Klar - Pulso - Taller de cierre P9 - Logo integrado.html'),
+    Path('/Users/ricardo.hornig/Downloads/Nexo Klar - Pulso - Taller de cierre P9 - Logo integrado v2.html'),
+    Path('/Users/ricardo.hornig/Desktop/Nexo Klar/Nexo Klar - Pulso - Taller de cierre P9 - Logo integrado v2.html'),
+    root / 'docs/Nexo Klar - Pulso - Taller de cierre P9 - Logo integrado v2.html',
+    Path('/Users/ricardo.hornig/Documents/Acceso Mina /Acceso Mina/docs/Nexo Klar - Pulso - Taller de cierre P9 - Logo integrado v2.html'),
 )
 
 text = source.read_text(encoding='utf-8')
@@ -21,15 +21,14 @@ def replace_once(before: str, after: str) -> None:
         raise RuntimeError(f'Reemplazo esperado una vez, encontrado {count}: {before[:70]}')
     text = text.replace(before, after, 1)
 
-# Se conserva la selección inicial, las paletas y toda la lógica del taller. P9 usa P1 como geometría
-# editable para que los controles existentes continúen funcionando, y agrega el PNG real como referencia.
+# P1 a P8 y todos sus componentes se conservan tal cual. Solo se agrega P9.
 replace_once(
     '[\\"P8\\",\\"Diagonal\\",\\"Base inclinada\\"]\\n];',
     '[\\"P8\\",\\"Diagonal\\",\\"Base inclinada\\"],\\n  [\\"P9\\",\\"Logo integrado\\",\\"Referencia PNG final\\"]\\n];',
 )
 replace_once(
     'variante: s.variante, nombreVar,',
-    'variante: s.variante, marcaVariante: s.variante === \\"P9\\" ? \\"P1\\" : s.variante, esP9: s.variante === \\"P9\\", nombreVar,',
+    'variante: s.variante, marcaVariante: s.variante === \\"P9\\" ? \\"P1\\" : s.variante, esP9: s.variante === \\"P9\\", heroDisplay: s.variante === \\"P9\\" ? \\"none\\" : \\"block\\", nombreVar,',
 )
 replace_once(
     'VARIANTES.map(([id, nombre]) => ({\\n        id, nombre,',
@@ -43,10 +42,15 @@ text = text.replace('variante=\\"{{ variante }}\\"', 'variante=\\"{{ marcaVarian
 text = text.replace('variante=\\"{{ v.id }}\\"', 'variante=\\"{{ v.marcaVariante }}\\"')
 text = text.replace('variante=\\"{{ g.id }}\\"', 'variante=\\"{{ g.marcaVariante }}\\"')
 
-p9_panel = f'''\n  <sc-if value=\\"{{{{ esP9 }}}}\\" hint-placeholder-val=\\"{{{{ false }}}}\\">\n    <div style=\\"background:#FFFFFF;border:1px solid #DCD5C6;border-left:5px solid #00CFC1;border-radius:6px;padding:20px 24px;display:flex;flex-direction:column;gap:12px;\\">\n      <div style=\\"font:600 10px/1 Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#2A2A8C;\\">P9 · Logo integrado</div>\n      <img alt=\\"Nexo Klar P9 logo integrado\\" src=\\"data:image/png;base64,{logo_data}\\" style=\\"display:block;width:min(100%,760px);height:auto;align-self:center;\\">\n      <div style=\\"font-size:12px;line-height:1.55;color:#5D6B7A;\\">Logo PNG incorporado como referencia visual. Los controles de color y las aplicaciones del Taller permanecen activos para evaluar esta alternativa.</div>\n    </div>\n  <\\u002Fsc-if>\n'''
+# En P9 se reemplaza únicamente la vista principal por el PNG proporcionado.
+replace_once(
+    '<div style=\\"border-radius:6px;border:1px solid #DCD5C6;overflow:hidden;background:{{ fondo }};\\">',
+    '<div style=\\"display:{{ heroDisplay }};border-radius:6px;border:1px solid #DCD5C6;overflow:hidden;background:{{ fondo }};\\">',
+)
+p9_hero = f'''\n  <sc-if value=\\"{{{{ esP9 }}}}\\" hint-placeholder-val=\\"{{{{ false }}}}\\">\n    <div style=\\"border-radius:6px;border:1px solid #DCD5C6;overflow:hidden;background:{{{{ fondo }}}};padding:clamp(32px,4vw,60px) clamp(20px,3vw,44px);min-height:270px;display:flex;align-items:center;justify-content:center;\\">\n      <img alt=\\"Nexo Klar · P9 logo integrado\\" src=\\"data:image/png;base64,{logo_data}\\" style=\\"display:block;width:min(100%,900px);height:auto;max-height:310px;object-fit:contain;\\">\n    </div>\n  <\\u002Fsc-if>\n'''
 replace_once(
     '<main style=\\"display:flex;flex-direction:column;gap:20px;min-width:0;\\">\\n\\n  <div style=',
-    '<main style=\\"display:flex;flex-direction:column;gap:20px;min-width:0;\\">' + p9_panel + '\\n  <div style=',
+    '<main style=\\"display:flex;flex-direction:column;gap:20px;min-width:0;\\">' + p9_hero + '\\n  <div style=',
 )
 
 for output in outputs:
