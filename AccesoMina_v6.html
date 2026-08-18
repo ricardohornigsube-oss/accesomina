@@ -891,11 +891,11 @@ td { padding:12px 14px; }
       <div class="industry-card"><small>02</small><b>Energía</b><span>Cuadrillas, permisos, mantenimiento y seguridad operacional en terreno.</span></div>
       <div class="industry-card"><small>03</small><b>Construcción</b><span>Contratistas, avances, turnos, evidencias y control por obra.</span></div>
       <div class="industry-card"><small>04</small><b>Mantenimiento industrial</b><span>Despacho de técnicos, herramientas, repuestos, costos y trazabilidad.</span></div>
-      <div class="industry-card"><small>05</small><b>Gestión de instalaciones</b><span>Personal externo, acuerdos de nivel de servicio, alojamiento, servicios y reportes por cliente.</span></div>
-      <div class="industry-card"><small>06</small><b>Logística</b><span>Turnos, vehículos, credenciales, rutas operativas y respaldo documental.</span></div>
+      <div class="industry-card"><small>05</small><b>Gestión de instalaciones</b><span>Servicios recurrentes, personal externo, alojamiento, recursos y reportes por cliente.</span></div>
+      <div class="industry-card"><small>06</small><b>Logística</b><span>Turnos, vehículos, credenciales, despachos operativos y respaldo documental.</span></div>
       <div class="industry-card"><small>07</small><b>Seguridad privada</b><span>Dotación, credenciales, turnos, asistencia y cumplimiento por instalación.</span></div>
       <div class="industry-card"><small>08</small><b>Agroindustria</b><span>Temporadas, cuadrillas, EPP, asistencia y documentación del personal.</span></div>
-      <div class="industry-card"><small>09</small><b>Servicios técnicos</b><span>Agenda, recursos, contratos, documentación, costos y margen operativo.</span></div>
+      <div class="industry-card"><small>09</small><b>Servicios técnicos</b><span>Órdenes de servicio, recursos, contratos, documentación, costos y trazabilidad.</span></div>
     </div>
   </div></section>
   <section class="public-band" id="implementacion"><div class="public-inner implementation-layout"><div class="implementation-main"><div class="public-eyebrow">Puesta en marcha simple</div><h2 class="public-heading">Empieza ordenado, sin detener tu operación.</h2><p class="public-lead">Partimos con una estructura clara, acompañamos la carga inicial y dejamos la información disponible para cada equipo autorizado.</p><div class="steps"><div class="step"><b>PASO 1</b><h3>Configura tu empresa</h3><p>Define clientes, contratos, órdenes de servicio y los requisitos operacionales que necesitas controlar.</p></div><div class="step"><b>PASO 2</b><h3>Incorpora tu información</h3><p>Registra personas y recursos de forma individual o utiliza importación masiva para comenzar más rápido.</p></div><div class="step"><b>PASO 3</b><h3>Gestiona desde el panel</h3><p>Asigna responsables, revisa alertas, actualiza documentos y consulta el avance desde una sola vista.</p></div></div></div><div class="implementation-privacy"><div><h3>Tu información es de tu empresa.</h3><p class="public-lead">Cada empresa trabaja en un espacio privado e independiente. Sus usuarios, permisos, configuraciones y datos permanecen separados de las demás organizaciones.</p></div><div class="privacy-points"><div class="privacy-point"><b>Acceso individual</b><span>Cada integrante utiliza su propia cuenta autorizada.</span></div><div class="privacy-point"><b>Roles y permisos</b><span>Configura administración, edición o consulta según responsabilidades.</span></div><div class="privacy-point"><b>Datos separados</b><span>La información de una empresa no se mezcla con la de otra.</span></div><div class="privacy-point"><b>Historial y trazabilidad</b><span>Conserva registros para revisar cambios, estados y antecedentes.</span></div></div></div></div></section>
@@ -7036,11 +7036,11 @@ const INDUSTRIAS_V97=[
   {name:'Energía',need:'cuadrillas, permisos, mantenimiento y seguridad operacional en terreno'},
   {name:'Construcción',need:'contratistas, avances, turnos, evidencias y control por obra'},
   {name:'Mantenimiento industrial',need:'despacho de técnicos, herramientas, repuestos, costos y trazabilidad'},
-  {name:'Facilities',need:'personal externo, SLA, hotelería, servicios y reportes por cliente'},
-  {name:'Logística',need:'turnos, vehículos, credenciales, rutas operativas y respaldo documental'},
+  {name:'Gestión de instalaciones',need:'servicios recurrentes, personal externo, alojamiento, recursos y reportes por cliente'},
+  {name:'Logística',need:'turnos, vehículos, credenciales, despachos operativos y respaldo documental'},
   {name:'Seguridad privada',need:'dotación, credenciales, turnos, asistencia y cumplimiento por instalación'},
   {name:'Agroindustria',need:'temporadas, cuadrillas, EPP, asistencia y documentación del personal'},
-  {name:'Servicios técnicos',need:'agenda, recursos, contratos, documentación, costos y margen operativo'}
+  {name:'Servicios técnicos',need:'órdenes de servicio, recursos, contratos, documentación, costos y trazabilidad'}
 ];
 function escV97(value){return typeof esc94==='function'?esc94(value):String(value??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
 function moneyV97(value){return typeof money94==='function'?money94(value):'$'+Math.round(Number(value)||0).toLocaleString('es-CL');}

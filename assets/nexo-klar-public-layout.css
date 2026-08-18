@@ -241,3 +241,30 @@
   .public-shell #industrias .industry-card b { margin-top:4px; font-size:14px; line-height:1.2; }
   .public-shell #industrias .industry-card span { margin-top:4px; font-size:11px; line-height:1.28; }
 }
+
+/* Final public-page rhythm: every selected view starts at the same visual
+   point below the navigation and keeps its own content isolated. */
+@media (min-width:981px) {
+  .public-shell {
+    --public-section-top:28px;
+    --public-section-bottom:32px;
+  }
+
+  #public-site[data-public-page] > .public-band[id] {
+    align-items:flex-start;
+    min-height:calc(100svh - var(--public-nav-offset));
+    padding:var(--public-section-top) var(--public-gutter) var(--public-section-bottom);
+  }
+
+  #public-site[data-public-page="resultados"] > #resultados,
+  #public-site[data-public-page="industrias"] > #industrias {
+    align-items:flex-start;
+  }
+
+  .public-shell #industrias .industry-grid { margin-top:20px; }
+  .public-shell #industrias .industry-card { height:112px; min-height:112px; }
+}
+
+@media (max-width:980px) {
+  .public-shell .public-band { padding-top:48px; padding-bottom:52px; }
+}
