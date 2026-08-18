@@ -22,6 +22,12 @@ def replace_once(before: str, after: str) -> None:
     text = text.replace(before, after, 1)
 
 # P1 a P8 y todos sus componentes se conservan tal cual. Solo se agrega P9.
+replace_once('Ocho variantes del concepto aprobado.', 'Nueve variantes del concepto aprobado.')
+replace_once('Los ocho logos completos en la paleta elegida', 'Los nueve logos completos en la paleta elegida')
+replace_once(
+    '<sc-for list=\\"{{ galeria }}\\" as=\\"g\\" hint-placeholder-count=\\"8\\">',
+    '<sc-for list=\\"{{ galeria }}\\" as=\\"g\\" hint-placeholder-count=\\"9\\">',
+)
 replace_once(
     '[\\"P8\\",\\"Diagonal\\",\\"Base inclinada\\"]\\n];',
     '[\\"P8\\",\\"Diagonal\\",\\"Base inclinada\\"],\\n  [\\"P9\\",\\"Logo integrado\\",\\"Referencia PNG final\\"]\\n];',
