@@ -1,4 +1,24 @@
 /* Nexo Klar public site: canonical full-screen layout. */
+.public-footer-actions { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.public-footer-actions button { appearance:none; border:0; padding:0; background:transparent; color:inherit; cursor:pointer; font:inherit; }
+.public-footer-actions button:hover, .public-footer-actions a:hover { color:var(--orange); }
+.public-dialog { position:fixed; inset:0; z-index:1200; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(10,16,31,.48); }
+.public-dialog.open { display:flex; }
+.public-dialog-card { position:relative; width:min(100%,700px); max-height:min(720px,calc(100svh - 40px)); overflow:auto; padding:28px; border:1px solid var(--border-light); border-radius:12px; background:var(--bg2); box-shadow:0 24px 70px rgba(15,22,40,.28); }
+.public-dialog-card h2 { max-width:540px; color:var(--text); font-size:28px; line-height:1.13; }
+.public-dialog-card > p { margin:10px 0 18px; color:var(--text-muted); font-size:14px; line-height:1.5; }
+.public-dialog-close { position:absolute; top:12px; right:12px; width:34px; height:34px; border:1px solid var(--border-light); border-radius:7px; background:var(--bg3); color:var(--text); cursor:pointer; font-size:24px; line-height:1; }
+.public-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.public-dialog label { display:grid; gap:6px; color:var(--text); font-size:12px; font-weight:800; }
+.public-dialog input, .public-dialog select, .public-dialog textarea { width:100%; border:1px solid var(--border-light); border-radius:7px; padding:10px 11px; background:var(--bg4); color:var(--text); font:inherit; font-size:14px; }
+.public-dialog input:focus, .public-dialog select:focus, .public-dialog textarea:focus { outline:2px solid color-mix(in srgb, var(--orange) 25%, transparent); border-color:var(--orange); }
+.public-form-wide { margin-top:12px; }
+.public-dialog-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+.public-dialog-info details { border-top:1px solid var(--border); padding:14px 0; }
+.public-dialog-info details:last-child { border-bottom:1px solid var(--border); }
+.public-dialog-info summary { color:var(--text); cursor:pointer; font-size:14px; font-weight:850; }
+.public-dialog-info details p { margin-top:8px; color:var(--text-muted); font-size:13px; line-height:1.48; }
+@media (max-width:600px) { .public-footer-actions { gap:12px; } .public-dialog { padding:12px; align-items:flex-end; } .public-dialog-card { max-height:calc(100svh - 24px); padding:24px 18px; border-radius:12px; } .public-dialog-card h2 { padding-right:32px; font-size:24px; } .public-form-grid { grid-template-columns:1fr; } .public-dialog-actions { flex-direction:column; } .public-dialog-actions .btn { width:100%; justify-content:center; } }
 .public-shell {
   --public-nav-offset:124px;
   --public-content-max:1320px;
