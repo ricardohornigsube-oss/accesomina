@@ -21,13 +21,13 @@
       "environment": [
         { "name": "NODE_ENV", "value": "production" },
         { "name": "PORT", "value": "8088" },
-        { "name": "APP_ORIGIN", "value": "https://nexo.domian.cl" },
+        { "name": "APP_ORIGIN", "value": "<app-origin>" },
         { "name": "REGISTRATION_ENABLED", "value": "false" },
         { "name": "MFA_REQUIRED", "value": "true" },
         { "name": "COOKIE_SECURE", "value": "true" },
         { "name": "FILE_STORAGE", "value": "s3" },
         { "name": "AWS_REGION", "value": "us-east-1" },
-        { "name": "AWS_S3_BUCKET", "value": "nexo-klar-prod-private-documents" },
+        { "name": "AWS_S3_BUCKET", "value": "<private-documents-bucket>" },
         { "name": "RUN_MIGRATIONS_ON_START", "value": "false" }
       ],
       "secrets": [

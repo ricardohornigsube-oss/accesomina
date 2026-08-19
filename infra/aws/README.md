@@ -23,6 +23,10 @@ Esta carpeta deja preparado el paquete base para cargar Nexo Klar en AWS con ope
 9. CloudWatch Logs y alarmas.
 10. Proveedor HTTPS de antivirus de archivos, con endpoint de escaneo y endpoint de salud.
 
+## Capacidad y salida controlada
+
+Usa `service-capacity.template.json` como configuración mínima para el servicio ECS: dos tareas, despliegue con rollback, balanceador HTTPS y escalamiento por CPU, memoria y solicitudes. Antes de habilitar clientes reales, completa `PRODUCTION_GATE.md` y conserva la evidencia de cada validación.
+
 ## Flujo productivo recomendado
 
 1. GitHub ejecuta pruebas.
@@ -40,6 +44,8 @@ No edites los identificadores AWS dentro de la plantilla. Para revisar una defin
 
 ```bash
 AWS_ACCOUNT_ID=123456789012 ECR_IMAGE_TAG=preflight \
+APP_ORIGIN=https://app.nexoklar.cl \
+AWS_S3_BUCKET=nexo-klar-prod-private-documents \
 node infra/aws/render-ecs-task-definition.mjs
 ECS_TASK_DEFINITION_PATH=infra/aws/ecs-task-definition.rendered.json \
 pnpm run validate:production
@@ -73,3 +79,12 @@ S3 privado
 - Probar MFA.
 - Probar correo, WhatsApp, firma y OCR con proveedores reales.
 - Activar monitoreo externo y alertas.
+
+## Paquete de seguridad y operación
+
+- `iam-app-role-private-documents.json`: permisos mínimos para que ECS acceda únicamente al bucket privado de documentos y a los secretos autorizados.
+- `cloudwatch-alarms.template.json`: alarmas para disponibilidad, errores, latencia, tareas ECS y RDS.
+- `s3-private-documents.template.json`: configuración exigida para cifrado, versionado, bloqueo público y conservación del repositorio documental.
+- `PRODUCTION_GATE.md`: lista de evidencia obligatoria antes de activar una empresa cliente.
+
+Estos archivos se preparan en el repositorio. La creación efectiva de los recursos debe hacerla una cuenta AWS autorizada, usando sus identificadores reales, dominios y secretos de producción.
